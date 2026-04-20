@@ -29,7 +29,6 @@ export async function GET(req: NextRequest) {
       payment_method_types: ['card'],
       line_items: [{ price: priceId, quantity: 1 }],
       metadata: { plan },
-      customer_creation: 'always',
       success_url: `${baseUrl}/gracias?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/soluciones/boe#precios`,
       locale: 'es',
