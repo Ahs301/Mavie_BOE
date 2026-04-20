@@ -214,27 +214,31 @@ MAVIE_BOE_WEB/
 
 **Detalle técnico completo** → leer [nuevo-proyecto/CLAUDE.md](nuevo-proyecto/CLAUDE.md) antes de tocar código.
 
-### 11.1 Estado real por módulo (código ↔ plan de negocio)
+### 11.1 Estado real por módulo (código ↔ plan de negocio) — actualizado 2026-04-20
 
 | Módulo | Código | Estado | Desbloquea |
 |---|---|---|---|
-| Mavie web pública | `nuevo-proyecto/web-app/app/` (rutas públicas) | Deployada, P0 seguridad hecho | Fase 3 (imán) |
-| Panel admin CRM | `nuevo-proyecto/web-app/app/(admin)/dashboard/` | Funcional (clientes, captación, leads, BOE, emails, incidencias) | Gestión interna |
-| Onboarding público | `nuevo-proyecto/web-app/app/onboarding/` + `actions/submitOnboarding.ts` | Funcional, crea `clients` con status `listo_para_activar` | Entrada cliente |
-| **BOE-Worker** | `nuevo-proyecto/BOE-Worker/src/index.js` | **STUB — scraping real comentado (línea 31)** | **Fase 2 (MRR)** |
-| Scraper B2B captación | `ScrapperEmpresasBOE - copia/src/` | Funcional standalone (scraper/classify/email/tracking) | Fase 1 (leads) |
-| Integración Brevo | `nuevo-proyecto/web-app/app/api/brevo/*` | Proxy REST implementado | Emailing admin |
-| Stripe + planes | — | **NO existe** | **Fase 2 (MRR)** |
-| Auth self-service cliente | — | Solo admin via `ADMIN_EMAILS` whitelist | Fase 2 (SaaS) |
-| Panel cliente self-service | — | **NO existe** | Fase 2 (SaaS) |
+| Mavie web pública | `web-app/app/page.tsx` + rutas públicas | ✅ Deployada, seguridad P0 parcheada | Fase 3 (imán) |
+| Panel admin CRM | `web-app/app/(admin)/dashboard/` | ✅ Funcional — 9 páginas (clientes, leads, captación, BOE, emails, incidencias, config) | Gestión interna |
+| Onboarding público | `web-app/app/onboarding/boe/` + `actions/submitOnboarding.ts` | ✅ Funcional — honeypot + captcha + crea `clients` status `listo_para_activar` | Entrada cliente |
+| **BOE-Worker multi-tenant** | `BOE-Worker/src/index.js` + `src/scrapers/` + `src/services/` | ✅ **FUNCIONAL** — pipeline completo: fetch BOE → filtrar por keywords → email digest → log Supabase | **MRR directo** |
+| Landing Radar BOE + precios | `web-app/app/soluciones/boe/page.tsx` | ✅ Completa — precios 79/179/399€, CTAs a Stripe Checkout | Conversión |
+| Stripe Checkout + Webhook | `web-app/app/api/stripe/checkout/` + `webhook/` + `portal/` | ✅ Código completo — 4 eventos webhook, activación automática. **Pendiente: config externa** | MRR |
+| Página post-pago `/gracias` | `web-app/app/gracias/page.tsx` | ✅ Existe | Funnel pago |
+| Auth admin fail-closed | `web-app/middleware.ts` + `lib/auth.ts` | ✅ `ADMIN_EMAILS` whitelist, fail-closed. **Pendiente: configurar en Vercel** | Seguridad |
+| Brevo API routes | `web-app/app/api/brevo/*` | ✅ 4 endpoints, todos protegidos con `requireAdminApi()` | Emailing admin |
+| Scraper B2B captación | `ScrapperEmpresasBOE - copia/src/` | ✅ Funcional standalone (scraper/classify/email/tracking) | Fase 1 (leads) |
+| **Auth self-service cliente** | `web-app/app/acceso/page.tsx` + `lib/auth.ts:requireClienteAuth()` | ✅ **FUNCIONAL** — login en `/acceso`, middleware protege `/panel/*` | **Fase 2 (SaaS)** |
+| **Panel cliente `/panel`** | `web-app/app/(cliente)/panel/` + `actions/clienteActions.ts` | ✅ **FUNCIONAL** — panel + keywords + destinatarios. **Pendiente: crear usuario Supabase Auth para cliente** | **Fase 2 (SaaS)** |
+| BOE-Worker como cron | — | ❌ Solo ejecución manual (`node src/index.js`) | Producción autónoma |
 
-### 11.2 Bloqueadores directos de ingreso (orden de ataque)
+### 11.2 Bloqueadores directos de ingreso (orden de ataque) — actualizado 2026-04-20
 
-1. **Portar scraping real al BOE-Worker.** Migrar lógica desde `ScrapperEmpresasBOE - copia/src/scraper/` → `nuevo-proyecto/BOE-Worker/src/scrapers/`. Descomentar `runScraperForClient` en `BOE-Worker/src/index.js:31`. Sin esto, nuevos clientes Radar BOE no reciben alertas → no se puede facturar plan 49/149/399.
-2. **Landing Radar BOE con precios públicos + CTA onboarding.** Ya existe `web-app/app/soluciones/boe/` → añadir sección precios conectada a Stripe Checkout.
-3. **Stripe Checkout + webhook.** Crear `app/api/stripe/checkout` + `app/api/stripe/webhook`. Tras pago: flip `clients.status` a `activo` + poblar `client_boe_configs`.
-4. **Auth self-service cliente.** Separar route group `(cliente)` vs `(admin)`. Supabase Auth ya está. Middleware ya filtra admin; añadir ruta `/panel/*` para usuarios no-admin con su propio `tenant_id`.
-5. **Playbook outbound vertical 1 (despachos abogados).** Reutilizar `ScrapperEmpresasBOE - copia/` + copy nuevo con caso cliente BOE real. No requiere código nuevo, requiere operación.
+1. ✅ ~~Portar scraping real al BOE-Worker~~ → HECHO. Pipeline multi-tenant completo en `BOE-Worker/src/`.
+2. ✅ ~~Landing Radar BOE con precios públicos~~ → HECHO. `web-app/app/soluciones/boe/page.tsx` con precios 79/179/399€.
+3. ✅ ~~Stripe Checkout + webhook~~ → HECHO en código. **Pendiente: configuración externa (ver Sesión Chat A abajo).**
+4. ✅ **Auth self-service cliente + Panel** → HECHO. `/acceso` login, `/panel` + keywords + destinatarios. Ver Chat C.
+5. ❌ **Playbook outbound vertical 1** → Operación, no código. Ver Chat D abajo.
 
 ### 11.3 Reglas de trabajo específicas de este repo
 
@@ -411,7 +415,288 @@ El modelo anterior de la landing (`397€ setup + 40€/mes`) queda **eliminado*
 
 ---
 
+---
+
+## 14. Auditoría completa del estado real (2026-04-20, segunda sesión)
+
+### 14.1 Inventario de lo que FUNCIONA en código (no tocar sin razón)
+
+| Pieza | Archivos clave | Qué hace |
+|---|---|---|
+| BOE-Worker pipeline | `BOE-Worker/src/index.js`, `src/scrapers/orchestrator.js`, `src/scrapers/BoeScraper.js`, `src/scrapers/BaseScraper.js`, `src/services/filter.js`, `src/services/email.js` | Fetch BOE API → filtrar por keywords/antikeywords por cliente → email digest HTML vía Brevo SMTP → log en `boe_match_history` |
+| Stripe Checkout | `web-app/app/api/stripe/checkout/route.ts` | GET `?plan=basico\|pro\|business` → crea Stripe session → redirige a hosted checkout |
+| Stripe Webhook | `web-app/app/api/stripe/webhook/route.ts` | 4 eventos: `checkout.session.completed` (activa cliente), `subscription.deleted` (cancela), `subscription.updated` (cambia plan), `invoice.payment_failed` (marca fallo) |
+| Stripe Portal | `web-app/app/api/stripe/portal/route.ts` | Auth-protected. Abre Billing Portal de Stripe para el cliente autenticado |
+| Landing BOE + precios | `web-app/app/soluciones/boe/page.tsx` | 3 planes (79/179/399€), CTAs a Stripe, feature list por plan |
+| Página post-pago | `web-app/app/gracias/page.tsx` | Confirmación de pago + 3 pasos + link a portal Stripe |
+| Admin dashboard | `web-app/app/(admin)/dashboard/` | 9 páginas: clientes, clientes/[id], leads, captación, BOE, emails, configuracion, incidencias |
+| Onboarding público | `web-app/app/onboarding/boe/page.tsx` + `actions/submitOnboarding.ts` | 2 pasos (empresa → keywords), honeypot + HCaptcha, crea `clients` con status `listo_para_activar` |
+| Auth admin | `web-app/middleware.ts` + `web-app/lib/auth.ts` | `ADMIN_EMAILS` whitelist fail-closed. `requireAuth()` para páginas, `requireAdminApi()` para API routes |
+| Brevo routes | `web-app/app/api/brevo/{campaigns,contacts,emails,stats}/route.ts` | 4 endpoints proxy a Brevo API, todos auth-protected |
+| Homepage | `web-app/app/page.tsx` | Landing Mavie completa: hero, proceso, productos, social proof |
+| DB schema | `database/schema.sql` + `supabase_migrations/07_stripe_columns.sql` | Multi-tenant via `client_id` FK en todas las tablas. RLS activado. Columnas Stripe añadidas |
+
+### 14.2 Lo que FALTA en código
+
+| Pieza | Impacto | Complejidad estimada |
+|---|---|---|
+| Panel cliente self-service `/panel` | Alto — sin esto Josep gestiona todo a mano | 1 chat de trabajo |
+| Auth cliente (signup/login no-admin) | Alto — vinculado al panel | Incluido en lo anterior |
+| BOE-Worker como cron automático | Medio — ahora es manual | 1 chat corto |
+
+### 14.3 % de completitud real
+
+- **Para vender el primer cliente nuevo (esta semana):** ~85% — falta solo configuración externa (Chat A)
+- **Para SaaS self-service completo:** ~58% — falta panel cliente + cron
+- **Para Fase 2 completada:** ~75% — falta panel cliente
+
+---
+
+## 15. Misiones para chats futuros — plan por pasos
+
+> **Instrucción para la IA de cada chat:** Lee la misión asignada, haz SOLO esa misión, actualiza el estado en esta sección al terminar.
+
+---
+
+### CHAT A — Configuración externa (Josep lo hace solo, sin IA)
+**Objetivo:** Dejar el sistema listo para recibir el primer pago real.
+**Tipo:** Pasos manuales en dashboards externos. No requiere IA.
+
+**Checklist (en orden):**
+- [ ] 1. Rotar `STRIPE_WEBHOOK_SECRET` → Stripe Dashboard → Webhooks → Roll secret
+- [ ] 2. Rotar `STRIPE_SECRET_KEY` → Stripe Dashboard → Developers → API keys → Roll key
+- [ ] 3. Rotar `SUPABASE_SERVICE_ROLE_KEY` → Supabase → Settings → API → Regenerate
+- [ ] 4. Rotar `BREVO_API_KEY` → Brevo → Profile → SMTP & API → Recrear
+- [ ] 5. En Vercel → Settings → Environment Variables, añadir/actualizar:
+  - `STRIPE_SECRET_KEY` (la nueva)
+  - `STRIPE_WEBHOOK_SECRET` (la nueva — aún no existe, viene del paso 7)
+  - `STRIPE_PRICE_BASICO=price_1TNzyhIh4VV7YNOJqepFPBUc`
+  - `STRIPE_PRICE_PRO=price_1TNzz5Ih4VV7YNOJqLBmilPw`
+  - `STRIPE_PRICE_BUSINESS=price_1TO01MIh4VV7YNOJtOBUCW8C`
+  - `SUPABASE_URL` (la tuya de Supabase)
+  - `SUPABASE_SERVICE_ROLE_KEY` (la nueva rotada)
+  - `ADMIN_EMAILS=xuso30118@gmail.com`
+  - `NEXT_PUBLIC_SITE_URL=https://mavieautomations.com`
+- [ ] 6. En Supabase SQL Editor → ejecutar `supabase_migrations/07_stripe_columns.sql`
+- [ ] 7. En Supabase SQL Editor → ejecutar también:
+  ```sql
+  DROP POLICY IF EXISTS "Admin full access incidents" ON public.incidents;
+  CREATE POLICY "Admin full access incidents"
+      ON public.incidents FOR ALL
+      USING (auth.role() = 'authenticated')
+      WITH CHECK (auth.role() = 'authenticated');
+  ```
+- [ ] 8. En Stripe Dashboard → Developers → Webhooks → Add endpoint:
+  - URL: `https://mavieautomations.com/api/stripe/webhook`
+  - Eventos: `checkout.session.completed`, `customer.subscription.deleted`, `customer.subscription.updated`, `invoice.payment_failed`
+  - Copiar `whsec_...` a Vercel como `STRIPE_WEBHOOK_SECRET`
+- [ ] 9. En Stripe Dashboard → Settings → Billing → Customer Portal → Activar
+- [ ] 10. En Vercel → Deployments → Redeploy (para que cojan las nuevas vars)
+
+**Verificación:** Ir a `https://mavieautomations.com/soluciones/boe` → pulsar "Contratar Básico" → flujo de pago Stripe completo → redirige a `/gracias`.
+
+**Estado:** ⏳ PENDIENTE
+
+---
+
+### CHAT B — Probar BOE-Worker con cliente real
+**Objetivo:** Verificar que el worker scraping llega al cliente existente.
+**Tipo:** Test local + debug. Requiere IA si hay errores.
+
+**Contexto para la IA:**
+- Worker en `nuevo-proyecto/BOE-Worker/`
+- `.env` del worker necesita: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `BREVO_SMTP_HOST`, `BREVO_SMTP_USER`, `BREVO_SMTP_PASS`, `BREVO_SMTP_PORT`
+- Comando: `node src/index.js`
+- El worker hace: fetch `client_boe_configs` donde `is_active=true` → para cada cliente, scraping BOE + filtrado + email
+
+**Checklist:**
+- [ ] Confirmar que `.env` del BOE-Worker tiene todas las vars reales
+- [ ] Ejecutar `node src/index.js` desde `nuevo-proyecto/BOE-Worker/`
+- [ ] Verificar logs: debe mostrar clientes encontrados, artículos scrapeados, emails enviados
+- [ ] Verificar email llegado al destinatario del cliente real
+- [ ] Si hay errores, debuggear en esa sesión
+
+**Estado:** ⏳ PENDIENTE (hacer después de Chat A)
+
+---
+
+### CHAT C — Panel self-service cliente (pieza grande de código)
+**Objetivo:** Que un cliente pueda hacer login, ver su estado y editar sus keywords/destinatarios sin que Josep intervenga.
+**Tipo:** Nueva feature de código. 1 sesión de trabajo estimada.
+
+**Contexto para la IA:**
+- Stack: Next.js 14 App Router + Supabase Auth (ya configurado para admin)
+- Auth actual en `web-app/middleware.ts`: protege `/dashboard/*` para ADMIN_EMAILS
+- NO existe route group `(cliente)` ni rutas `/panel/*`
+- Tablas relevantes: `clients` (email, status, plan_activo), `client_boe_configs` (keywords_positive, keywords_negative, destination_emails, is_active)
+- Supabase Auth ya está instalado — `@supabase/ssr` ya en el proyecto
+
+**Lo que hay que construir (mínimo viable):**
+1. Route group `(cliente)` con layout propio (no el del admin)
+2. `/panel` → página principal del cliente: estado suscripción, plan activo, próxima ejecución
+3. `/panel/keywords` → editar `keywords_positive` y `keywords_negative` del cliente (textarea simple)
+4. `/panel/destinatarios` → editar `destination_emails` (lista de emails)
+5. Auth pages: `/login` para clientes (distinta del admin login) → Supabase Auth email+password
+6. Middleware update: añadir regla para `/panel/*` → requiere sesión Supabase pero NO requiere ADMIN_EMAILS → solo que `clients.primary_email = auth.email`
+7. RLS en Supabase: políticas para que el cliente autenticado solo vea/edite SU fila en `client_boe_configs`
+
+**Reglas para esta misión:**
+- Feo y funcional > bonito. No CSS personalizado hasta que fluya.
+- No tocar middleware admin (`/dashboard/*` debe seguir igual).
+- No tocar tabla `clients` directamente desde el panel cliente — solo `client_boe_configs`.
+- El cliente NO puede cambiar su plan desde el panel → redirigir al portal Stripe.
+
+**Estado:** ✅ HECHO (2026-04-20)
+
+**Qué se hizo:**
+- `lib/supabase/admin.ts` → cliente service role (server-side only)
+- `lib/auth.ts:requireClienteAuth()` → auth + lookup cliente por email
+- `app/acceso/page.tsx` → login cliente → redirige a `/panel`
+- `app/(cliente)/layout.tsx` → sidebar: Panel / Keywords / Destinatarios / Facturación / Logout
+- `app/(cliente)/panel/page.tsx` → estado, plan, última ejecución, acciones rápidas
+- `app/(cliente)/panel/keywords/page.tsx` → editor keywords positivas/negativas
+- `app/(cliente)/panel/destinatarios/page.tsx` → editor emails destinatarios
+- `app/actions/clienteActions.ts` → getClienteData, updateKeywords, updateDestinatarios (Zod)
+- `middleware.ts` → `/panel/*` requiere sesión, sin whitelist admin
+- `supabase_migrations/08_rls_cliente.sql` → RLS cliente solo ve su fila
+- Build: 39 páginas, 0 errores ✅
+
+**Pasos manuales pendientes (Josep):**
+1. Aplicar `supabase_migrations/08_rls_cliente.sql` en Supabase SQL Editor
+2. Crear usuario Supabase Auth para el cliente: Dashboard → Authentication → Users → Invite user
+
+---
+
+### CHAT D — Playbook outbound vertical 1 (despachos de abogados)
+**Objetivo:** Primera campaña de captación activa con el scraper existente.
+**Tipo:** Operación + generación de copy. Sin código nuevo.
+
+**Contexto para la IA:**
+- Scraper funcional en `ScrapperEmpresasBOE - copia/src/cli.js`
+- Vertical objetivo: **despachos de abogados especializados en licitación, subvenciones, contratación pública**
+- Prueba social disponible: 1 cliente real de Radar BOE (despacho/consultora) — usar anonimizado
+- Objetivo: 500-1000 contactos scrapeados → secuencia 3 emails → 2-5 reuniones/semana
+
+**Lo que hay que producir:**
+1. Revisar y ejecutar `ScrapperEmpresasBOE - copia/src/cli.js` para vertical despachos abogados
+2. Generar copy secuencia 3 emails:
+   - Email 1: introducción + prueba social (caso cliente real anonimizado)
+   - Email 2: follow-up con demo/caso concreto
+   - Email 3: cierre con urgencia suave
+3. Configurar tracking en Brevo (aperturas, clics, respuestas)
+4. Guardar plantillas de copy en el sistema (proponer dónde)
+
+**Estado:** ⏳ PENDIENTE (puede hacerse en paralelo con Chat B/C)
+
+---
+
+### CHAT E — BOE-Worker como cron automático en producción
+**Objetivo:** Que el worker ejecute solo cada día a las 8:00 AM sin intervención manual.
+**Tipo:** Infraestructura + código corto.
+
+**Opciones (en orden de preferencia para el stack actual):**
+1. **Vercel Cron Jobs** (más simple si web-app ya está en Vercel) → añadir `vercel.json` con cron + endpoint `GET /api/boe/cron` que llame al worker
+2. **Cron en VPS** con PM2 o crontab → `node src/index.js` a las 8:00
+
+**Contexto para la IA:**
+- BOE-Worker es Node.js standalone, no Next.js
+- Si se usa Vercel Cron, el endpoint cron debe estar en `web-app/app/api/boe/cron/route.ts` y llamar a la lógica del worker o a un webhook que dispare el worker en el VPS
+- Alternativa más simple: si hay VPS, añadir crontab `0 8 * * * node /ruta/BOE-Worker/src/index.js`
+
+**Estado:** ⏳ PENDIENTE (hacer después de Chat B)
+
+---
+
+### Estado global de las misiones
+
+| Chat | Misión | Estado |
+|---|---|---|
+| A | Config externa (Stripe + Vercel + Supabase) | ⏳ PENDIENTE |
+| B | Test BOE-Worker con cliente real | ⏳ PENDIENTE |
+| C | Panel self-service cliente | ✅ HECHO (2026-04-20) |
+| D | Playbook outbound despachos abogados | ⏳ PENDIENTE |
+| E | BOE-Worker como cron automático | ⏳ PENDIENTE |
+
+**Orden recomendado:** A → B → C (en paralelo con D) → E
+
+**Regla para cualquier IA futura:** Cuando termines tu misión, marca su estado como ✅ HECHO en esta tabla y añade una línea de lo que hiciste bajo el chat correspondiente.
+
+---
+
 **Última actualización:** 2026-04-20
 **Dueño:** Josep
-**Versión del plan:** v1.5 (seguridad crítica parcheada, pasos manuales de rotación de secretos pendientes)
+**Versión del plan:** v2.0 (auditoría completa, misiones por chat definidas)
+
+---
+
+## 16. Estado actual y pasos pendientes (actualizado 2026-04-20)
+
+### 16.1 Pasos manuales que debe hacer Josep (en orden)
+
+#### 🔴 URGENTE — Seguridad (hacer antes de cualquier sesión de código)
+- [ ] Rotar `STRIPE_WEBHOOK_SECRET` → Stripe Dashboard → Webhooks → Roll secret
+- [ ] Rotar `STRIPE_SECRET_KEY` → Stripe Dashboard → Developers → API keys → Roll key
+- [ ] Rotar `SUPABASE_SERVICE_ROLE_KEY` → Supabase → Settings → API → Regenerate
+- [ ] Rotar `BREVO_API_KEY` → Brevo → Profile → SMTP & API → Delete + recrear
+
+#### 🟡 Configuración externa (desbloquea primer pago real)
+- [ ] En Vercel → Settings → Environment Variables, añadir/actualizar:
+  - `STRIPE_SECRET_KEY` (la nueva rotada)
+  - `STRIPE_PRICE_BASICO=price_1TNzyhIh4VV7YNOJqepFPBUc`
+  - `STRIPE_PRICE_PRO=price_1TNzz5Ih4VV7YNOJqLBmilPw`
+  - `STRIPE_PRICE_BUSINESS=price_1TO01MIh4VV7YNOJtOBUCW8C`
+  - `SUPABASE_URL`
+  - `SUPABASE_SERVICE_ROLE_KEY` (la nueva rotada)
+  - `BREVO_API_KEY` (la nueva rotada)
+  - `ADMIN_EMAILS=xuso30118@gmail.com`
+  - `NEXT_PUBLIC_SITE_URL=https://mavieautomations.com`
+- [ ] En Supabase SQL Editor → ejecutar `supabase_migrations/07_stripe_columns.sql`
+- [ ] En Supabase SQL Editor → ejecutar este fix:
+  ```sql
+  DROP POLICY IF EXISTS "Admin full access incidents" ON public.incidents;
+  CREATE POLICY "Admin full access incidents" ON public.incidents FOR ALL
+    USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+  ```
+- [ ] En Stripe Dashboard → Developers → Webhooks → Add endpoint:
+  - URL: `https://mavieautomations.com/api/stripe/webhook`
+  - Eventos: `checkout.session.completed`, `customer.subscription.deleted`, `customer.subscription.updated`, `invoice.payment_failed`
+  - Copiar `whsec_...` a Vercel como `STRIPE_WEBHOOK_SECRET`
+- [ ] En Stripe Dashboard → Settings → Billing → Customer Portal → Activar
+- [ ] En Vercel → Deployments → Redeploy
+
+#### 🟢 Panel cliente (desbloquea que el cliente se autogestioné)
+- [ ] En Supabase SQL Editor → ejecutar `supabase_migrations/08_rls_cliente.sql`
+- [ ] Crear usuario Supabase Auth para el cliente existente: Supabase Dashboard → Authentication → Users → "Invite user" con el email del cliente real
+- [ ] Decirle al cliente que acceda en `https://mavieautomations.com/acceso`
+
+---
+
+### 16.2 Qué se ha hecho en código (estado real del repo)
+
+| Sesión | Qué se hizo | Estado |
+|---|---|---|
+| 2026-04-19 #1 | BOE-Worker multi-tenant completo (`orchestrator`, `BoeScraper`, `filter`, `email`) | ✅ |
+| 2026-04-19 #2 | Stripe Checkout + Webhook básico + landing 79/179/399€ | ✅ |
+| 2026-04-19 #3 | Webhook robusto (4 eventos), portal Stripe, página `/gracias`, checkout mejorado | ✅ |
+| 2026-04-20 #1 | Auditoría seguridad: `ADMIN_EMAILS` fail-closed, `requireAdminApi()`, 4 rutas Brevo protegidas, IDOR Stripe eliminado | ✅ |
+| 2026-04-20 #2 | **Chat C — Panel self-service cliente:** `/acceso` login, `/panel` dashboard, `/panel/keywords`, `/panel/destinatarios`, server actions, middleware extendido, migración RLS 08 | ✅ |
+
+---
+
+### 16.3 Qué falta para el siguiente chat (en orden de prioridad)
+
+1. **Chat B — Probar BOE-Worker** (requiere que Chat A esté hecho):
+   - Ejecutar `node src/index.js` desde `nuevo-proyecto/BOE-Worker/` con `.env` real
+   - Verificar que el email llega al cliente existente
+   - Debuggear si hay errores
+
+2. **Chat D — Playbook outbound vertical 1** (puede hacerse en paralelo con B):
+   - Ejecutar scraper para despachos de abogados (`ScrapperEmpresasBOE - copia/src/cli.js`)
+   - Generar copy secuencia 3 emails con prueba social del cliente actual
+   - Configurar tracking en Brevo
+
+3. **Chat E — BOE-Worker como cron automático** (después de Chat B):
+   - Opción A: Vercel Cron → endpoint `GET /api/boe/cron` en web-app que dispara el worker
+   - Opción B: crontab en VPS → `0 8 * * * node /ruta/BOE-Worker/src/index.js`
+   - Estimación: 1 chat corto
 

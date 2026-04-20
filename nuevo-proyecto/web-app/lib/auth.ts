@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { redirect } from "next/navigation"
 import { NextResponse } from "next/server"
 
@@ -27,6 +28,33 @@ export async function requireAuth() {
   }
 
   return user
+}
+
+/**
+ * Para Server Components y Server Actions del panel de cliente.
+ * Solo requiere sesión válida — sin whitelist de admin.
+ * Devuelve el user + el registro de clients (o redirige si no existe).
+ */
+export async function requireClienteAuth() {
+  const supabase = createClient()
+  const { data: { user }, error } = await supabase.auth.getUser()
+
+  if (error || !user?.email) {
+    redirect("/acceso")
+  }
+
+  const adminDb = createAdminClient()
+  const { data: cliente } = await adminDb
+    .from('clients')
+    .select('id, company_name, contact_name, primary_email, status, plan_activo, activation_date')
+    .eq('primary_email', user.email)
+    .single()
+
+  if (!cliente) {
+    redirect("/acceso?error=no_client")
+  }
+
+  return { user, cliente }
 }
 
 /**
