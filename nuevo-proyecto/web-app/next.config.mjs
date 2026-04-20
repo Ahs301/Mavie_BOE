@@ -1,4 +1,4 @@
-/** @type {import('next').NextConfig} */
+/** @type {import('next').NextConfig} */ // build: 2026-04-20
 
 const supabaseHost = (() => {
   try {
