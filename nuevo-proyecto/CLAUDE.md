@@ -495,7 +495,9 @@ El modelo anterior de la landing (`397€ setup + 40€/mes`) queda **eliminado*
 
 **Verificación:** Ir a `https://mavieautomations.com/soluciones/boe` → pulsar "Contratar Básico" → flujo de pago Stripe completo → redirige a `/gracias`.
 
-**Estado:** ⏳ PENDIENTE
+**Estado:** ✅ HECHO (2026-04-20)
+
+**Qué se hizo:** Josep completó todos los pasos manuales: secrets rotados, variables en Vercel (STRIPE_*, SUPABASE_*, BREVO_API_KEY, ADMIN_EMAILS, NEXT_PUBLIC_SITE_URL), migraciones SQL 07 y 08 aplicadas en Supabase, webhook Stripe registrado, Billing Portal activado, Redeploy ejecutado. Sistema listo para recibir pagos reales.
 
 ---
 
@@ -611,13 +613,13 @@ El modelo anterior de la landing (`397€ setup + 40€/mes`) queda **eliminado*
 
 | Chat | Misión | Estado |
 |---|---|---|
-| A | Config externa (Stripe + Vercel + Supabase) | ⏳ PENDIENTE |
-| B | Test BOE-Worker con cliente real | ⏳ PENDIENTE |
+| A | Config externa (Stripe + Vercel + Supabase) | ✅ HECHO (2026-04-20) |
+| B | Test BOE-Worker con cliente real | ⏳ PENDIENTE — **SIGUIENTE CHAT** |
 | C | Panel self-service cliente | ✅ HECHO (2026-04-20) |
 | D | Playbook outbound despachos abogados | ⏳ PENDIENTE |
 | E | BOE-Worker como cron automático | ⏳ PENDIENTE |
 
-**Orden recomendado:** A → B → C (en paralelo con D) → E
+**Orden recomendado:** ~~A~~ ✅ → **B (siguiente chat)** → C ✅ → D (paralelo con B) → E
 
 **Regla para cualquier IA futura:** Cuando termines tu misión, marca su estado como ✅ HECHO en esta tabla y añade una línea de lo que hiciste bajo el chat correspondiente.
 
@@ -625,47 +627,28 @@ El modelo anterior de la landing (`397€ setup + 40€/mes`) queda **eliminado*
 
 **Última actualización:** 2026-04-20
 **Dueño:** Josep
-**Versión del plan:** v2.0 (auditoría completa, misiones por chat definidas)
+**Versión del plan:** v2.1 (Chat A completado — siguiente: Chat B)
 
 ---
 
 ## 16. Estado actual y pasos pendientes (actualizado 2026-04-20)
 
-### 16.1 Pasos manuales que debe hacer Josep (en orden)
+### 16.1 Pasos manuales — estado
 
-#### 🔴 URGENTE — Seguridad (hacer antes de cualquier sesión de código)
-- [ ] Rotar `STRIPE_WEBHOOK_SECRET` → Stripe Dashboard → Webhooks → Roll secret
-- [ ] Rotar `STRIPE_SECRET_KEY` → Stripe Dashboard → Developers → API keys → Roll key
-- [ ] Rotar `SUPABASE_SERVICE_ROLE_KEY` → Supabase → Settings → API → Regenerate
-- [ ] Rotar `BREVO_API_KEY` → Brevo → Profile → SMTP & API → Delete + recrear
+#### ✅ COMPLETADO — Seguridad + configuración externa (hecho por Josep el 2026-04-20)
+- [x] Rotar `STRIPE_WEBHOOK_SECRET`
+- [x] Rotar `STRIPE_SECRET_KEY`
+- [x] Rotar `SUPABASE_SERVICE_ROLE_KEY`
+- [x] Rotar `BREVO_API_KEY`
+- [x] Variables en Vercel (STRIPE_*, SUPABASE_*, BREVO_API_KEY, ADMIN_EMAILS, NEXT_PUBLIC_SITE_URL)
+- [x] Migración `07_stripe_columns.sql` aplicada en Supabase
+- [x] Fix RLS incidents aplicado en Supabase
+- [x] Migración `08_rls_cliente.sql` aplicada en Supabase
+- [x] Webhook Stripe registrado con los 4 eventos
+- [x] Billing Portal Stripe activado
+- [x] Redeploy Vercel ejecutado
 
-#### 🟡 Configuración externa (desbloquea primer pago real)
-- [ ] En Vercel → Settings → Environment Variables, añadir/actualizar:
-  - `STRIPE_SECRET_KEY` (la nueva rotada)
-  - `STRIPE_PRICE_BASICO=price_1TNzyhIh4VV7YNOJqepFPBUc`
-  - `STRIPE_PRICE_PRO=price_1TNzz5Ih4VV7YNOJqLBmilPw`
-  - `STRIPE_PRICE_BUSINESS=price_1TO01MIh4VV7YNOJtOBUCW8C`
-  - `SUPABASE_URL`
-  - `SUPABASE_SERVICE_ROLE_KEY` (la nueva rotada)
-  - `BREVO_API_KEY` (la nueva rotada)
-  - `ADMIN_EMAILS=xuso30118@gmail.com`
-  - `NEXT_PUBLIC_SITE_URL=https://mavieautomations.com`
-- [ ] En Supabase SQL Editor → ejecutar `supabase_migrations/07_stripe_columns.sql`
-- [ ] En Supabase SQL Editor → ejecutar este fix:
-  ```sql
-  DROP POLICY IF EXISTS "Admin full access incidents" ON public.incidents;
-  CREATE POLICY "Admin full access incidents" ON public.incidents FOR ALL
-    USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
-  ```
-- [ ] En Stripe Dashboard → Developers → Webhooks → Add endpoint:
-  - URL: `https://mavieautomations.com/api/stripe/webhook`
-  - Eventos: `checkout.session.completed`, `customer.subscription.deleted`, `customer.subscription.updated`, `invoice.payment_failed`
-  - Copiar `whsec_...` a Vercel como `STRIPE_WEBHOOK_SECRET`
-- [ ] En Stripe Dashboard → Settings → Billing → Customer Portal → Activar
-- [ ] En Vercel → Deployments → Redeploy
-
-#### 🟢 Panel cliente (desbloquea que el cliente se autogestioné)
-- [ ] En Supabase SQL Editor → ejecutar `supabase_migrations/08_rls_cliente.sql`
+#### 🟢 Panel cliente — pendiente operativo (Josep)
 - [ ] Crear usuario Supabase Auth para el cliente existente: Supabase Dashboard → Authentication → Users → "Invite user" con el email del cliente real
 - [ ] Decirle al cliente que acceda en `https://mavieautomations.com/acceso`
 
