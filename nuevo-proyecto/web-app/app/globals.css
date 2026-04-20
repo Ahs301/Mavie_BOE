@@ -1,0 +1,316 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* =============================================
+     LIGHT MODE (por defecto)
+     Paleta: Blanco limpio, grises slate, profesional
+  ============================================= */
+  :root {
+    --background: 0 0% 99%;
+    --foreground: 220 15% 10%;
+
+    /* Escala de neutrales - Light Mode */
+    --neutral-950: #f8fafc;
+    --neutral-900: #f1f5f9;
+    --neutral-800: #e2e8f0;
+    --neutral-700: #cbd5e1;
+    --neutral-600: #94a3b8;
+    --neutral-500: #64748b;
+    --neutral-400: #475569;
+    --neutral-300: #334155;
+    --neutral-200: #1e293b;
+    --neutral-100: #0f172a;
+    --neutral-50:  #020617;
+
+    /* Blanco/negro semánticos que se invierten */
+    --white: #0f172a;
+    --black: #f8fafc;
+
+    /* Colores de sistema UI */
+    --border: 214 32% 88%;
+    --input: 214 32% 88%;
+    --ring: 213 94% 57%;
+    --radius: 0.5rem;
+
+    /* Colores de componentes */
+    --card: 0 0% 100%;
+    --card-foreground: 220 15% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 15% 10%;
+    --primary: 210 100% 45%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 214 32% 94%;
+    --secondary-foreground: 220 15% 10%;
+    --muted: 214 32% 96%;
+    --muted-foreground: 215 20% 50%;
+    --accent: 214 32% 93%;
+    --accent-foreground: 220 15% 10%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+  }
+
+  /* =============================================
+     DARK MODE
+     Paleta: Near-black premium, estilo Linear/Vercel
+  ============================================= */
+  .dark {
+    --background: 0 0% 2%;
+    --foreground: 0 0% 96%;
+
+    /* Escala de neutrales - Dark Mode */
+    --neutral-950: #0a0a0a;
+    --neutral-900: #171717;
+    --neutral-800: #262626;
+    --neutral-700: #404040;
+    --neutral-600: #525252;
+    --neutral-500: #737373;
+    --neutral-400: #a3a3a3;
+    --neutral-300: #d4d4d4;
+    --neutral-200: #e5e5e5;
+    --neutral-100: #f5f5f5;
+    --neutral-50:  #fafafa;
+
+    --white: #ffffff;
+    --black: #000000;
+
+    /* Colores de sistema UI */
+    --border: 0 0% 15%;
+    --input: 0 0% 15%;
+    --ring: 213 94% 60%;
+
+    /* Colores de componentes */
+    --card: 0 0% 5%;
+    --card-foreground: 0 0% 96%;
+    --popover: 0 0% 7%;
+    --popover-foreground: 0 0% 96%;
+    --primary: 210 100% 56%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 10%;
+    --secondary-foreground: 0 0% 90%;
+    --muted: 0 0% 12%;
+    --muted-foreground: 0 0% 55%;
+    --accent: 0 0% 12%;
+    --accent-foreground: 0 0% 90%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
+  }
+}
+
+@layer base {
+  * { box-sizing: border-box; }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: var(--font-inter, 'Inter', sans-serif);
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-syne, 'Syne', sans-serif);
+    @apply font-bold tracking-tight;
+  }
+}
+
+@layer utilities {
+  .font-sans { font-family: var(--font-inter, 'Inter', sans-serif); }
+  .font-heading { font-family: var(--font-syne, 'Syne', sans-serif); }
+
+  /* Grid de fondo - adapta al tema */
+  .dark .bg-grid {
+    background-image:
+      linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+
+  .bg-grid {
+    background-image:
+      linear-gradient(rgba(0,0,0,0.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,0,0,0.045) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+
+  /* Gradientes de texto */
+  .dark .text-gradient {
+    background: linear-gradient(135deg, #ffffff 0%, #94a3b8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .text-gradient {
+    background: linear-gradient(135deg, #0f172a 0%, #475569 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .blue-gradient {
+    background: linear-gradient(135deg, #2563eb, #0ea5e9);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .glow-blue {
+    box-shadow: 0 0 40px rgba(37,99,235,0.12);
+  }
+}
+
+html { scroll-behavior: smooth; }
+
+::selection {
+  background: rgba(37,99,235,0.15);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; }
+.dark ::-webkit-scrollbar-track { background: #050505; }
+.dark ::-webkit-scrollbar-thumb { background: #1a1a1a; border-radius: 3px; }
+::-webkit-scrollbar-track { background: #f1f5f9; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+
+/* =============================================
+   ANIMATION KEYFRAMES
+============================================= */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-6px); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(37,99,235,0); }
+  50%       { box-shadow: 0 0 24px 4px rgba(37,99,235,0.18); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+@keyframes spin-slow {
+  to { transform: rotate(360deg); }
+}
+
+/* =============================================
+   ANIMATION UTILITY CLASSES
+============================================= */
+@layer utilities {
+  .animate-fade-in-up {
+    animation: fadeInUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.4s ease-out both;
+  }
+
+  .animate-float {
+    animation: float 4s ease-in-out infinite;
+  }
+
+  .animate-pulse-glow {
+    animation: pulse-glow 2.5s ease-in-out infinite;
+  }
+
+  .animate-spin-slow {
+    animation: spin-slow 8s linear infinite;
+  }
+
+  /* Delay helpers */
+  .delay-100 { animation-delay: 100ms; }
+  .delay-200 { animation-delay: 200ms; }
+  .delay-300 { animation-delay: 300ms; }
+  .delay-400 { animation-delay: 400ms; }
+  .delay-500 { animation-delay: 500ms; }
+
+  /* =============================================
+     GLASSMORPHISM
+  ============================================= */
+  .glass {
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(14px) saturate(1.4);
+    -webkit-backdrop-filter: blur(14px) saturate(1.4);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .dark .glass {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .glass-card {
+    background: rgba(10, 10, 10, 0.6);
+    backdrop-filter: blur(20px) saturate(1.5);
+    -webkit-backdrop-filter: blur(20px) saturate(1.5);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+  }
+
+  /* =============================================
+     GRADIENT BORDER (conic shimmer)
+  ============================================= */
+  .gradient-border {
+    position: relative;
+    background: transparent;
+  }
+
+  .gradient-border::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(37,99,235,0.7) 0%, rgba(139,92,246,0.5) 50%, rgba(37,99,235,0.1) 100%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  /* =============================================
+     SHIMMER TEXT
+  ============================================= */
+  .shimmer-text {
+    background: linear-gradient(
+      90deg,
+      #94a3b8 0%,
+      #ffffff 40%,
+      #94a3b8 60%,
+      #ffffff 100%
+    );
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: shimmer 3s linear infinite;
+  }
+
+  /* =============================================
+     GLOW UTILITIES
+  ============================================= */
+  .glow-blue-sm {
+    box-shadow: 0 0 20px rgba(37,99,235,0.12), 0 0 40px rgba(37,99,235,0.06);
+  }
+
+  .glow-blue-md {
+    box-shadow: 0 0 40px rgba(37,99,235,0.18), 0 0 80px rgba(37,99,235,0.08);
+  }
+
+  .icon-glow-hover {
+    transition: color 0.2s, box-shadow 0.2s, background 0.2s;
+  }
+
+  .icon-glow-hover:hover {
+    box-shadow: 0 0 20px rgba(37,99,235,0.35);
+    background: rgba(37,99,235,0.15);
+    border-color: rgba(37,99,235,0.4);
+  }
+}
