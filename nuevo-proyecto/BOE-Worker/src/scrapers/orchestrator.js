@@ -22,12 +22,20 @@ async function runWorker() {
   } catch (err) {
     console.error('[Worker] SMTP no configurado:', err.message);
     console.error('[Worker] Revisa SMTP_HOST / SMTP_USER / SMTP_PASS en .env');
-    process.exit(1);
+    await logExecution({ startedAt, status: 'error', totalClients: 0 });
+    return;
   }
 
   // --- 2. Fetch BOE (una vez para todos los clientes) ---
   const scraper = new BoeScraper();
-  const allItems = await scraper.fetchItems();
+  let allItems;
+  try {
+    allItems = await scraper.fetchItems();
+  } catch (err) {
+    console.error('[Worker] Error inesperado en scraper:', err.message);
+    await logExecution({ startedAt, status: 'error', totalClients: 0 });
+    return;
+  }
 
   if (allItems.length === 0) {
     console.log('[Worker] Sin items BOE hoy. Finalizando.');

@@ -35,11 +35,11 @@ export function Footer() {
             </p>
             <div className="space-y-2">
               <a
-                href="mailto:contacto@mavieautomations.com"
+                href="mailto:mavie.contact.dev@gmail.com"
                 className="flex items-center gap-2 text-sm text-neutral-500 hover:text-foreground transition-colors"
               >
                 <Mail className="w-3.5 h-3.5 shrink-0" />
-                contacto@mavieautomations.com
+                mavie.contact.dev@gmail.com
               </a>
               <a
                 href="tel:+34633448806"

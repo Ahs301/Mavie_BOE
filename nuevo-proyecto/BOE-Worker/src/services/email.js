@@ -19,12 +19,30 @@ function initEmailService() {
   });
 }
 
+function escapeHtml(s) {
+  return String(s ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function safeUrl(u) {
+  try {
+    const parsed = new URL(u);
+    return ['http:', 'https:'].includes(parsed.protocol) ? u : '';
+  } catch {
+    return '';
+  }
+}
+
 function generateEmailHtml(items, clientConfig) {
   const today = new Date().toLocaleDateString('es-ES', {
+    timeZone: 'Europe/Madrid',
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
   });
   const todayFormatted = today.charAt(0).toUpperCase() + today.slice(1);
-  const companyName = clientConfig.clients?.company_name || 'Mavie';
+  const companyName = escapeHtml(clientConfig.clients?.company_name || 'Mavie');
 
   const categoryColors = {
     subvenci: { bg: '#E8F5E9', border: '#4CAF50', text: '#1B5E20', emoji: '💰', label: 'SUBVENCIÓN' },
@@ -43,9 +61,16 @@ function generateEmailHtml(items, clientConfig) {
 
   const cards = items.map((item, i) => {
     const cat = getCategoryStyle(item.title);
-    const description = item.description
+    const title = escapeHtml(item.title);
+    const rawDesc = item.description
       ? item.description.substring(0, 350) + (item.description.length > 350 ? '…' : '')
       : 'Sin descripción.';
+    const description = escapeHtml(rawDesc);
+    const budget = escapeHtml(item.budget || '');
+    const deadline = escapeHtml(item.deadline || '');
+    const itemUrl = safeUrl(item.url || '');
+    const pdfUrl = safeUrl(item.pdf_url || '');
+
     const pubDate = item.publication_date
       ? new Date(item.publication_date.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3'))
           .toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })
@@ -70,7 +95,7 @@ function generateEmailHtml(items, clientConfig) {
           </div>
 
           <p style="margin:0 0 12px 0;font-size:15px;font-weight:700;color:#1A237E;line-height:1.4;">
-            ${item.title}
+            ${title}
           </p>
 
           <table width="100%" cellpadding="0" cellspacing="0" border="0"
@@ -86,24 +111,24 @@ function generateEmailHtml(items, clientConfig) {
           <table cellpadding="0" cellspacing="0" border="0" style="margin-bottom:14px;">
             <tr>
               ${pubDate ? `<td style="padding-right:16px;font-size:12px;color:#546E7A;">📅&nbsp;<strong>Publicación:</strong>&nbsp;${pubDate}</td>` : ''}
-              ${item.budget ? `<td style="padding-right:16px;font-size:12px;color:#1565C0;">💶&nbsp;<strong>Importe:</strong>&nbsp;${item.budget}</td>` : ''}
-              ${item.deadline ? `<td style="font-size:12px;color:#E65100;">⏰&nbsp;<strong>Plazo:</strong>&nbsp;${item.deadline}</td>` : ''}
+              ${budget ? `<td style="padding-right:16px;font-size:12px;color:#1565C0;">💶&nbsp;<strong>Importe:</strong>&nbsp;${budget}</td>` : ''}
+              ${deadline ? `<td style="font-size:12px;color:#E65100;">⏰&nbsp;<strong>Plazo:</strong>&nbsp;${deadline}</td>` : ''}
             </tr>
           </table>
 
           <table cellpadding="0" cellspacing="0" border="0">
             <tr>
-              ${item.url ? `
+              ${itemUrl ? `
               <td style="padding-right:8px;">
-                <a href="${item.url}" style="display:inline-block;padding:8px 18px;
+                <a href="${itemUrl}" style="display:inline-block;padding:8px 18px;
                    background:#1E88E5;color:#FFFFFF;text-decoration:none;
                    border-radius:6px;font-size:13px;font-weight:600;">
                   🔗 Ver convocatoria
                 </a>
               </td>` : ''}
-              ${item.pdf_url ? `
+              ${pdfUrl ? `
               <td>
-                <a href="${item.pdf_url}" style="display:inline-block;padding:8px 18px;
+                <a href="${pdfUrl}" style="display:inline-block;padding:8px 18px;
                    background:#FFFFFF;color:#E53935;text-decoration:none;
                    border-radius:6px;font-size:13px;font-weight:600;
                    border:2px solid #E53935;">
@@ -182,12 +207,6 @@ function generateEmailHtml(items, clientConfig) {
 </html>`;
 }
 
-/**
- * Envía el digest de alertas BOE a los destinatarios del cliente.
- * @param {Object} clientConfig - fila de client_boe_configs (con .clients join)
- * @param {Array} items - items filtrados
- * @returns {Promise<boolean>}
- */
 async function sendDigest(clientConfig, items) {
   if (!transporter) throw new Error('Email service no inicializado. Llamar initEmailService() primero.');
   if (!items?.length) return false;
@@ -198,20 +217,21 @@ async function sendDigest(clientConfig, items) {
     return false;
   }
 
+  const fromAddress = process.env.SMTP_FROM || process.env.SMTP_USER;
   const html = generateEmailHtml(items, clientConfig);
-  const subject = `🎯 Radar BOE — ${items.length} nueva${items.length !== 1 ? 's' : ''} oportunidad${items.length !== 1 ? 'es' : ''} (${new Date().toLocaleDateString('es-ES')})`;
+  const subject = `🎯 Radar BOE — ${items.length} nueva${items.length !== 1 ? 's' : ''} oportunidad${items.length !== 1 ? 'es' : ''} (${new Date().toLocaleDateString('es-ES', { timeZone: 'Europe/Madrid' })})`;
 
   try {
     const info = await transporter.sendMail({
-      from: `"Radar BOE · Mavie" <${process.env.SMTP_USER}>`,
-      to: recipients.join(', '),
+      from: `"Radar BOE · Mavie" <${fromAddress}>`,
+      to: recipients,
       subject,
       html,
     });
     console.log(`[Email] Enviado a ${recipients.join(', ')} — messageId: ${info.messageId}`);
     return true;
   } catch (error) {
-    console.error(`[Email] Error enviando a ${recipients.join(', ')}: ${error.message}`);
+    console.error(`[Email] Error enviando a ${recipients.join(', ')}: SMTP auth failed — revisa SMTP_PASS`);
     return false;
   }
 }

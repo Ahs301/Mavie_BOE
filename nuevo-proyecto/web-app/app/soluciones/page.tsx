@@ -4,6 +4,12 @@ import { MoveRight, Zap, Target, Search, Database } from "lucide-react";
 export const metadata = {
   title: "Catálogo de Soluciones | Mavie Automations",
   description: "Explora nuestros productos de automatización empaquetados y soluciones a medida para empresas y consultoras B2B.",
+  keywords: ["soluciones automatización", "B2B", "captación B2B", "Radar BOE", "Extracción de datos", "CRM automático"],
+  openGraph: {
+    title: "Catálogo de Soluciones | Mavie Automations",
+    description: "Nuestros productos de automatización empaquetados y soluciones a medida para empresas B2B.",
+    type: "website",
+  },
 };
 
 export default function SolucionesPage() {

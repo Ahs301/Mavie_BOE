@@ -4,6 +4,12 @@ import { MoveRight, Cpu, LineChart, ShieldCheck } from "lucide-react";
 export const metadata = {
   title: "Sobre Mavie | Ingeniería de Automatización y Datos B2B",
   description: "Conoce la visión de Mavie Automations. Transformamos procesos manuales ineficientes en ecosistemas digitales autónomos para empresas tecnológicas y consultoras.",
+  keywords: ["automatización B2B", "datos B2B", "ingeniería de datos", "ecosistemas digitales", "Mavie Automations", "procesos ineficientes"],
+  openGraph: {
+    title: "Sobre Mavie | Ingeniería de Automatización y Datos B2B",
+    description: "Transformamos procesos manuales ineficientes en ecosistemas digitales autónomos.",
+    type: "website",
+  },
 };
 
 export default function SobreMaviePage() {

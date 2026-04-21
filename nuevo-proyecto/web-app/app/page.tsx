@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import {
   ArrowRight, Bell, Filter, Zap, Database, Activity,
   Shield, Clock, ChevronRight, Settings2, Send, BarChart3,
@@ -184,21 +183,18 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative">
-            {/* Connector line */}
-            <div className="hidden md:block absolute top-10 left-[calc(16.666%+24px)] right-[calc(16.666%+24px)] h-px bg-gradient-to-r from-neutral-800 via-blue-900/50 to-neutral-800" />
-
-            {steps.map((step, i) => (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {steps.map((step) => (
               <div
                 key={step.number}
-                className="relative rounded-2xl border border-neutral-800 bg-neutral-950/60 p-8 hover:border-neutral-700 hover:-translate-y-1 transition-all duration-300 group"
+                className="rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950/60 p-8 hover:border-blue-200 dark:hover:border-neutral-700 hover:-translate-y-1 transition-all duration-300 group shadow-sm dark:shadow-none"
               >
-                {/* Step number */}
-                <div className="absolute -top-3.5 left-6 text-xs font-bold tracking-widest text-blue-500 bg-background px-2">
-                  {step.number}
+                <div className="flex items-center gap-3 mb-6">
+                  <span className="text-xs font-bold tracking-[0.2em] text-blue-500">{step.number}</span>
+                  <div className="flex-1 h-px bg-neutral-200 dark:bg-neutral-800" />
                 </div>
-                <div className="w-11 h-11 rounded-xl bg-neutral-900 border border-neutral-800 flex items-center justify-center mb-6 mt-2 group-hover:border-blue-900/60 group-hover:bg-blue-950/30 transition-colors icon-glow-hover">
-                  <step.icon className="w-5 h-5 text-neutral-400 group-hover:text-blue-400 transition-colors" />
+                <div className="w-11 h-11 rounded-xl bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 flex items-center justify-center mb-5 group-hover:border-blue-200 dark:group-hover:border-blue-900/60 group-hover:bg-blue-50 dark:group-hover:bg-blue-950/30 transition-colors">
+                  <step.icon className="w-5 h-5 text-neutral-500 dark:text-neutral-400 group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-colors" />
                 </div>
                 <h3 className="text-base font-semibold text-foreground mb-2">{step.title}</h3>
                 <p className="text-sm text-neutral-500 leading-relaxed">{step.desc}</p>
@@ -259,21 +255,74 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Dashboard Mockup */}
-            <div className="rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-950 overflow-hidden shadow-[0_0_60px_rgba(59,130,246,0.12)] relative aspect-[4/3] w-full group glow-blue-sm hover:glow-blue-md transition-all duration-500">
-              <Image
-                src="/radar_boe_mockup.png"
-                alt="Mavie Automations Ecosystem Dashboard"
-                fill
-                priority
-                sizes="(max-width: 1024px) 100vw, 50vw"
-                className="object-cover transition-transform duration-700 group-hover:scale-105"
-              />
-              <div className="absolute inset-0 shadow-[inset_0_0_100px_rgba(0,0,0,0.5)] pointer-events-none" />
-              <div className="absolute inset-0 ring-1 ring-inset ring-neutral-700/50 rounded-2xl pointer-events-none" />
-              <div className="absolute bottom-4 left-4 flex items-center gap-2 px-4 py-2 border border-white/10 bg-black/50 backdrop-blur-md rounded-xl glass-card">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-xs text-neutral-300 font-medium">Bandeja de Entrada Sincronizada</span>
+            {/* Dashboard Mockup — inline terminal UI */}
+            <div className="rounded-2xl border border-neutral-800 bg-neutral-950 overflow-hidden shadow-[0_0_60px_rgba(59,130,246,0.10)] relative w-full">
+              {/* Title bar */}
+              <div className="flex items-center gap-2 px-4 py-3 bg-neutral-900 border-b border-neutral-800">
+                <div className="flex gap-1.5">
+                  <div className="w-2.5 h-2.5 rounded-full bg-red-500/70" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/70" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/70" />
+                </div>
+                <span className="text-xs text-neutral-500 ml-2 font-mono">mavie — radar-boe · monitor</span>
+                <div className="ml-auto flex items-center gap-1.5 text-xs text-emerald-400 font-mono">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  activo
+                </div>
+              </div>
+
+              {/* Log entries */}
+              <div className="p-5 space-y-2 font-mono text-xs">
+                <div className="flex gap-3 items-start">
+                  <span className="text-neutral-600 shrink-0 pt-px">08:02:11</span>
+                  <span className="text-blue-400 shrink-0 pt-px font-semibold">SCAN</span>
+                  <span className="text-neutral-500">BOE-A-2026 · 143 entradas procesadas</span>
+                </div>
+                <div className="flex gap-3 items-start">
+                  <span className="text-neutral-600 shrink-0 pt-px">08:02:14</span>
+                  <span className="text-emerald-400 shrink-0 pt-px font-semibold">MATCH</span>
+                  <span className="text-neutral-300">Convocatoria subvención digitalización PYMES · <span className="bg-blue-900/50 text-blue-300 px-1 rounded">digitalización</span></span>
+                </div>
+                <div className="flex gap-3 items-start">
+                  <span className="text-neutral-600 shrink-0 pt-px">08:02:14</span>
+                  <span className="text-emerald-400 shrink-0 pt-px font-semibold">MATCH</span>
+                  <span className="text-neutral-300">Licitación servicios jurídicos contratación pública · <span className="bg-blue-900/50 text-blue-300 px-1 rounded">licitación</span></span>
+                </div>
+                <div className="flex gap-3 items-start opacity-35">
+                  <span className="text-neutral-600 shrink-0 pt-px">08:02:15</span>
+                  <span className="text-neutral-600 shrink-0 pt-px font-semibold">SKIP</span>
+                  <span className="text-neutral-600">Resolución nombramiento personal funcionario interino…</span>
+                </div>
+                <div className="flex gap-3 items-start">
+                  <span className="text-neutral-600 shrink-0 pt-px">08:02:15</span>
+                  <span className="text-emerald-400 shrink-0 pt-px font-semibold">MATCH</span>
+                  <span className="text-neutral-300">Ayudas I+D empresas innovación tecnológica 2026 · <span className="bg-blue-900/50 text-blue-300 px-1 rounded">ayudas</span></span>
+                </div>
+                <div className="flex gap-3 items-start opacity-35">
+                  <span className="text-neutral-600 shrink-0 pt-px">08:02:16</span>
+                  <span className="text-neutral-600 shrink-0 pt-px font-semibold">SKIP</span>
+                  <span className="text-neutral-600">Orden ministerial regulación horarios comerciales…</span>
+                </div>
+                <div className="flex gap-3 items-start">
+                  <span className="text-neutral-600 shrink-0 pt-px">08:02:16</span>
+                  <span className="text-emerald-400 shrink-0 pt-px font-semibold">MATCH</span>
+                  <span className="text-neutral-300">Concurso público consultoría estratégica sector público · <span className="bg-blue-900/50 text-blue-300 px-1 rounded">consultoría</span></span>
+                </div>
+              </div>
+
+              {/* Summary footer */}
+              <div className="mx-5 mb-5 mt-1 rounded-xl border border-neutral-800 bg-neutral-900 px-5 py-4 flex items-center justify-between gap-4">
+                <div>
+                  <div className="text-xs text-neutral-500 font-mono mb-1">resultados hoy</div>
+                  <div className="text-2xl font-bold text-foreground">4 <span className="text-emerald-400 text-sm font-normal">coincidencias</span></div>
+                </div>
+                <div className="text-right">
+                  <div className="text-xs text-neutral-500 font-mono mb-1">próximo escaneo</div>
+                  <div className="text-sm text-neutral-300 font-mono">en 43 min</div>
+                </div>
+                <div className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 transition-colors text-white text-xs font-semibold cursor-default">
+                  Ver resumen →
+                </div>
               </div>
             </div>
           </div>

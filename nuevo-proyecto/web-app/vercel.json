@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/boe/cron",
+      "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/captacion/cron",
+      "schedule": "0 9 * * *"
+    }
+  ]
+}

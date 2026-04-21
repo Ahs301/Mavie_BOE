@@ -617,9 +617,9 @@ El modelo anterior de la landing (`397€ setup + 40€/mes`) queda **eliminado*
 | B | Test BOE-Worker con cliente real | ⏳ PENDIENTE — **SIGUIENTE CHAT** |
 | C | Panel self-service cliente | ✅ HECHO (2026-04-20) |
 | D | Playbook outbound despachos abogados | ⏳ PENDIENTE |
-| E | BOE-Worker como cron automático | ⏳ PENDIENTE |
+| E | BOE-Worker como cron automático | ✅ HECHO (2026-04-21) |
 
-**Orden recomendado:** ~~A~~ ✅ → **B (siguiente chat)** → C ✅ → D (paralelo con B) → E
+**Orden recomendado:** ~~A~~ ✅ → **B (siguiente chat)** → C ✅ → D (paralelo con B) → ~~E~~ ✅
 
 **Regla para cualquier IA futura:** Cuando termines tu misión, marca su estado como ✅ HECHO en esta tabla y añade una línea de lo que hiciste bajo el chat correspondiente.
 
