@@ -640,5 +640,194 @@ Tu único trabajo: revisar stats, contestar respuestas, cerrar reuniones.
 
 ---
 
+## FASE 7 — SISTEMA DE VIDEOS AUTOMÁTICO (sesiones futuras)
+
+> Contexto para la IA que retome esto: Josep ya tiene un sistema de reels animados en React (HTML+JSX) en `videosMavie/`. El objetivo es convertirlo en un pipeline completo: guión → voz → video MP4 → publicación automática en RRSS, todo gestionable desde el panel Mavie `/dashboard/videos`.
+
+### Decisiones ya tomadas
+- **GPU en VPS:** NO. CPU solo → ~2 min/video de renderizado. Aceptado.
+- **Voz:** ElevenLabs voz clonada de Josep (no voz genérica). Josep graba 1 min de voz → ElevenLabs crea su clon → todos los videos suenan como él.
+- **Integración:** nueva sección `/dashboard/videos` en el panel Mavie existente (Next.js, ya deployado en Vercel).
+
+### Stack decidido
+
+| Pieza | Tool | Coste | Estado |
+|-------|------|-------|--------|
+| React scenes → MP4 | **Remotion** (open source) | 0€ | ⏳ pendiente |
+| Voz clonada Josep | **ElevenLabs** (free 10k chars/mes) | 0€ | ⏳ pendiente — Josep graba muestra |
+| Generación guión | **OpenAI GPT-4o-mini** (ya tienen key) | ~0.01€/video | ⏳ pendiente |
+| Mezcla audio+video | **FFmpeg** en VPS | 0€ | ⏳ pendiente |
+| Música fondo | **Pixabay/Mixkit API** royalty-free | 0€ | ⏳ pendiente |
+| Subida YouTube | YouTube Data API | 0€ | ⏳ pendiente |
+| Subida LinkedIn | LinkedIn API | 0€ | ⏳ pendiente |
+| Subida Instagram | Meta Graph API | 0€ | ❌ bloqueado — requiere revisión Meta (semanas) |
+| Subida TikTok | TikTok Developer API | 0€ | ❌ bloqueado — requiere revisión TikTok |
+| Panel gestión | `/dashboard/videos` Next.js | 0€ | ⏳ pendiente |
+
+### Arquitectura del pipeline
+
+```
+Panel Mavie /dashboard/videos
+  │
+  ├── Josep define: tema + tono + duración + plataforma destino
+  │
+  ▼
+[Sesión 1 — Generación]
+  OpenAI GPT-4o-mini
+    → guión estructurado por escenas (JSON)
+    → cada escena: texto, timing, mood
+  OpenAI TTS / ElevenLabs (voz Josep)
+    → MP3 por escena
+  Pixabay API
+    → descarga música de fondo (royalty-free por mood)
+
+[Sesión 2 — Renderizado]
+  Remotion en VPS (CPU, ~2min/video)
+    → toma scenes JSX existentes en videosMavie/
+    → inyecta guión + timings dinámicos
+    → exporta MP4 sin audio (1080x1920 9:16)
+  FFmpeg en VPS
+    → mezcla MP4 + voz MP3 + música fondo
+    → ajusta volúmenes (voz 100%, música 30%)
+    → exporta video final MP4
+
+[Sesión 3 — Publicación]
+  Panel preview → Josep aprueba en 30 segundos
+  → YouTube Data API → sube con título/descripción/tags generados por GPT
+  → LinkedIn API → sube con copy adaptado a LinkedIn
+  → Instagram → MANUAL hasta que Meta apruebe la app (aviso en panel)
+  → TikTok → MANUAL hasta que TikTok apruebe la app
+```
+
+### Lo que existe ya (base de trabajo)
+
+- `videosMavie/animations.jsx` → sistema Stage/Sprite/Easing completo ✅
+- `videosMavie/scenes.jsx` → reel 30s Radar BOE completo ✅
+- `videosMavie/scenes-promo-20s.jsx` → reel 20s Mavie general ✅
+- `videosMavie/Mavie Reel 30s.html` → preview en browser ✅
+- `videosMavie/Mavie Promo 20s.html` → preview en browser ✅
+- Assets en `videosMavie/assets/` → logos Mavie ✅
+
+### Plan de sesiones
+
+#### Sesión Videos 1 — Remotion + TTS + FFmpeg (~8h código)
+**Objetivo:** guión → voz → video MP4 final funcionando en VPS
+
+Pasos:
+1. Instalar Remotion en VPS: `npm install @remotion/renderer remotion`
+2. Convertir `scenes-promo-20s.jsx` a componente Remotion compatible
+3. Endpoint `POST /api/videos/generate` en web-app:
+   - Recibe: `{ tema, tono, duracion }`
+   - Llama VPS worker → genera guión GPT → TTS ElevenLabs → renderiza MP4 → mezcla FFmpeg
+   - Devuelve: URL del video generado
+4. Página `/dashboard/videos` básica:
+   - Formulario: tema + tono + plataforma
+   - Estado: generando / listo
+   - Preview del video
+   - Botón descargar
+
+#### Sesión Videos 2 — YouTube + LinkedIn auto-upload (~4h código)
+**Objetivo:** botón "Publicar" en panel → sube automáticamente
+
+Pasos:
+1. Google OAuth en web-app → YouTube Data API v3
+2. `POST /api/videos/publish/youtube` → sube MP4 + metadata
+3. LinkedIn OAuth → LinkedIn Video Upload API
+4. `POST /api/videos/publish/linkedin` → sube + post
+5. Panel: estado de publicación por plataforma
+
+#### Sesión Videos 3 — Instagram + TikTok (cuando aprueben)
+**Objetivo:** publicación completa en todas las plataformas
+
+- Meta Business App → Instagram Graph API → reels upload
+- TikTok for Developers → Content Posting API
+- Ambos requieren revisión manual de las plataformas (días o semanas)
+
+### Antes de empezar Sesión Videos 1 — Josep hace esto
+
+1. **Clonar voz en ElevenLabs** (15 min):
+   - elevenvoices.com → Sign up gratis
+   - Voices → Add Voice → Instant Voice Cloning
+   - Grabar o subir 1-2 minutos de audio de Josep hablando claro
+   - Copiar `ELEVENLABS_VOICE_ID` y `ELEVENLABS_API_KEY`
+   - Añadir a `.env.local` de web-app
+
+2. **Instalar FFmpeg en VPS**:
+   ```bash
+   apt-get install -y ffmpeg
+   ffmpeg -version  # verificar
+   ```
+
+3. **Instalar Remotion en VPS**:
+   ```bash
+   cd /opt/boe-worker  # o crear /opt/video-worker
+   npm install @remotion/renderer remotion react react-dom
+   ```
+
+### Formatos de video por plataforma
+
+| Plataforma | Formato | Duración ideal | Resolución |
+|------------|---------|----------------|------------|
+| Instagram Reels | 9:16 MP4 | 15-30s | 1080×1920 |
+| TikTok | 9:16 MP4 | 15-60s | 1080×1920 |
+| LinkedIn | 16:9 o 1:1 | 30-90s | 1920×1080 |
+| YouTube Shorts | 9:16 MP4 | hasta 60s | 1080×1920 |
+| YouTube normal | 16:9 MP4 | 5-15min | 1920×1080 |
+
+Los reels React actuales son 1080×1920 (9:16) → perfectos para Instagram/TikTok/Shorts.  
+Para LinkedIn/YouTube normal → crear variante Stage `width={1920} height={1080}`.
+
+### Ideas de videos a generar (contenido que convierte)
+
+1. **"¿Qué es el Radar BOE?"** — explicación 20s + CTA → `/soluciones/boe`
+2. **"Caso cliente real"** — cómo el cliente detectó 3 licitaciones (anonimizado)
+3. **"3 cosas que el BOE publica hoy"** → viral, educativo, engagement
+4. **"Antes vs después de automatizar"** → contraste visual, emocional
+5. **"¿Cuánto te cuesta NO automatizar?"** → hook numérico como el reel 30s
+6. **"Tutorial: cómo configurar alertas BOE"** → SEO YouTube long-tail
+
+---
+
+## CHECKLIST GLOBAL ACTUALIZADO
+
+### Infraestructura core
+- [ ] VPS: Node 22 + Chrome deps + Scraper PM2 + BOE Worker PM2
+- [ ] VPS: Listmonk Docker + puertos abiertos
+- [ ] VPS: FFmpeg instalado
+- [ ] VPS: Remotion instalado (`npm i @remotion/renderer`)
+- [ ] Vercel: todos los crons + env vars
+
+### Email stack
+- [ ] Brevo + Resend + SendGrid + Gmail rotación activa
+
+### Producto (ya hecho)
+- [x] Radar BOE pipeline multi-tenant
+- [x] Stripe checkout + webhook
+- [x] Panel cliente `/panel`
+- [x] Landing precios + CTAs
+
+### SEO
+- [ ] next-seo + páginas programáticas + sitemap
+
+### Captación activa
+- [ ] 18k leads en SQLite + envío automático activo
+- [ ] LinkedIn DMs rutina
+
+### Sistema de videos
+- [ ] ElevenLabs: voz Josep clonada + API key en .env
+- [ ] FFmpeg en VPS
+- [ ] Remotion en VPS
+- [ ] Sesión Videos 1: pipeline generación completo
+- [ ] Sesión Videos 2: YouTube + LinkedIn auto-upload
+- [ ] `/dashboard/videos` en panel Mavie
+
+---
+
+**Cuando todos los checks estén en verde:**  
+Tienes captación 24/7 + conversión automática + videos que se generan y publican solos.  
+Tu único trabajo diario: revisar stats, aprobar videos, cerrar reuniones.
+
+---
+
 *Josep Cervera · Mavie Automations · mavieautomations.com*  
 *Actualizado: 2026-04-21*
