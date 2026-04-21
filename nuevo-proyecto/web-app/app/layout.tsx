@@ -57,11 +57,13 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: '/mavie-icon.png', type: 'image/png' },
-      { url: '/favicon.ico' },
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/icon.png', type: 'image/png', sizes: '512x512' },
     ],
-    apple: '/logo-mavie-icon.png',
-    shortcut: '/mavie-icon.png',
+    apple: [
+      { url: '/apple-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
+    shortcut: '/favicon.ico',
   },
   alternates: {
     canonical: BASE_URL,
