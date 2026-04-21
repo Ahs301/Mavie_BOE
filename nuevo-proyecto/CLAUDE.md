@@ -588,7 +588,9 @@ El modelo anterior de la landing (`397€ setup + 40€/mes`) queda **eliminado*
 3. Configurar tracking en Brevo (aperturas, clics, respuestas)
 4. Guardar plantillas de copy en el sistema (proponer dónde)
 
-**Estado:** ⏳ PENDIENTE (puede hacerse en paralelo con Chat B/C)
+**Estado:** ✅ HECHO (2026-04-21)
+
+**Qué se hizo:** Copy completo de secuencia 3 emails para despachos de abogados en sección 17.3. Instrucciones de configuración Brevo y ejecución del scraper incluidas. Listo para lanzar.
 
 ---
 
@@ -605,7 +607,9 @@ El modelo anterior de la landing (`397€ setup + 40€/mes`) queda **eliminado*
 - Si se usa Vercel Cron, el endpoint cron debe estar en `web-app/app/api/boe/cron/route.ts` y llamar a la lógica del worker o a un webhook que dispare el worker en el VPS
 - Alternativa más simple: si hay VPS, añadir crontab `0 8 * * * node /ruta/BOE-Worker/src/index.js`
 
-**Estado:** ⏳ PENDIENTE (hacer después de Chat B)
+**Estado:** ✅ HECHO (2026-04-21)
+
+**Qué se hizo:** `vercel.json` creado con cron `0 7 * * 1-5`. Endpoint `app/api/boe/cron/route.ts` implementado: fetch BOE → filtrar keywords → email Brevo API → logs Supabase. Protegido con `CRON_SECRET`. Josep debe añadir `CRON_SECRET` y `SMTP_USER` en Vercel env vars y hacer redeploy.
 
 ---
 
@@ -646,9 +650,9 @@ El modelo anterior de la landing (`397€ setup + 40€/mes`) queda **eliminado*
 - [x] Billing Portal Stripe activado
 - [x] Redeploy Vercel ejecutado
 
-#### 🟢 Panel cliente — pendiente operativo (Josep)
-- [ ] Crear usuario Supabase Auth para el cliente existente: Supabase Dashboard → Authentication → Users → "Invite user" con el email del cliente real
-- [ ] Decirle al cliente que acceda en `https://mavieautomations.com/acceso`
+#### 🟢 Panel cliente — estado (2026-04-21)
+- [x] Nuevos clientes que pagan vía Stripe: **reciben automáticamente** el invite de Supabase Auth (webhook lo hace solo desde 2026-04-21)
+- [ ] **Cliente existente** (el que ya estaba antes de Stripe): crear su usuario Auth manualmente → Supabase Dashboard → Authentication → Users → "Invite user" con su email → accede en `https://mavieautomations.com/acceso`
 
 ---
 
