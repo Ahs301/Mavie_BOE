@@ -97,3 +97,23 @@ export function jsonLdScript({ data }: JsonLdProps) {
     __html: JSON.stringify(data),
   }
 }
+
+interface FaqItem {
+  pregunta: string
+  respuesta: string
+}
+
+export function faqPageSchema(faqs: FaqItem[]) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map((faq) => ({
+      "@type": "Question",
+      name: faq.pregunta,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: faq.respuesta,
+      },
+    })),
+  }
+}

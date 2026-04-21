@@ -1,10 +1,11 @@
 import { MetadataRoute } from 'next'
+import { getAllVerticalSlugs } from './radar-boe/_data/verticales'
+import { getAllCiudadSlugs } from './radar-boe/_data/ciudades'
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  // Ajusta esta URL cuando tengas el dominio definitivo comprado
   const baseUrl = 'https://mavieautomations.com';
 
-  return [
+  const staticPages: MetadataRoute.Sitemap = [
     {
       url: `${baseUrl}`,
       lastModified: new Date(),
@@ -67,4 +68,32 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
     // No añadimos /dashboard ni /onboarding porque son procesos privados/técnicos
   ]
+
+  // Hub page
+  const hubPage: MetadataRoute.Sitemap = [
+    {
+      url: `${baseUrl}/radar-boe`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.9,
+    },
+  ]
+
+  // 12 vertical pages
+  const verticalPages: MetadataRoute.Sitemap = getAllVerticalSlugs().map((slug) => ({
+    url: `${baseUrl}/radar-boe/${slug}`,
+    lastModified: new Date(),
+    changeFrequency: 'monthly' as const,
+    priority: 0.8,
+  }))
+
+  // 20 city pages
+  const ciudadPages: MetadataRoute.Sitemap = getAllCiudadSlugs().map((slug) => ({
+    url: `${baseUrl}/radar-boe/ciudad/${slug}`,
+    lastModified: new Date(),
+    changeFrequency: 'monthly' as const,
+    priority: 0.7,
+  }))
+
+  return [...staticPages, ...hubPage, ...verticalPages, ...ciudadPages]
 }

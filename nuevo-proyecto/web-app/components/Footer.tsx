@@ -8,6 +8,14 @@ const footerLinks = {
     { href: "/soluciones/boe", label: "Radar BOE / DOUE" },
     { href: "/soluciones", label: "Outreach B2B AI" },
   ],
+  radarBoe: [
+    { href: "/radar-boe", label: "Todos los sectores" },
+    { href: "/radar-boe/despachos-abogados", label: "Despachos de Abogados" },
+    { href: "/radar-boe/consultoras-subvenciones", label: "Consultoras Subvenciones" },
+    { href: "/radar-boe/empresas-licitacion", label: "Empresas Licitación" },
+    { href: "/radar-boe/gestorias-asesorias", label: "Gestorías y Asesorías" },
+    { href: "/radar-boe/constructoras", label: "Constructoras" },
+  ],
   empresa: [
     { href: "/servicios", label: "Servicios" },
     { href: "/sobre-nosotros", label: "Sobre Nosotros" },
@@ -24,7 +32,7 @@ export function Footer() {
   return (
     <footer className="border-t border-neutral-800 bg-neutral-950">
       <div className="max-w-7xl mx-auto px-6 py-14 md:py-20">
-        <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-5">
           {/* Brand */}
           <div className="lg:col-span-1 space-y-5">
             <Link href="/" aria-label="Mavie Automations">
@@ -66,6 +74,20 @@ export function Footer() {
             <ul className="space-y-2.5">
               {footerLinks.soluciones.map((l) => (
                 <li key={l.label}>
+                  <Link href={l.href} className="text-sm text-neutral-500 hover:text-foreground transition-colors">
+                    {l.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Radar BOE Verticales */}
+          <div>
+            <h4 className="mb-4 text-sm font-semibold text-foreground">Radar BOE</h4>
+            <ul className="space-y-2.5">
+              {footerLinks.radarBoe.map((l) => (
+                <li key={l.href}>
                   <Link href={l.href} className="text-sm text-neutral-500 hover:text-foreground transition-colors">
                     {l.label}
                   </Link>
