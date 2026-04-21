@@ -609,6 +609,29 @@ El modelo anterior de la landing (`397€ setup + 40€/mes`) queda **eliminado*
 
 ---
 
+### Sesión 2026-04-21 — Fix animación fondo móvil (ParticleBackground)
+
+**Contexto:** Josep reportó que en móvil el fondo de partículas del hero se rayaba y se actualizaba de forma extraña al tocar la pantalla.
+
+**Tres bugs raíz identificados y corregidos en `web-app/components/ParticleBackground.tsx`:**
+
+| Bug | Causa | Fix |
+|---|---|---|
+| "Se actualiza raro" al hacer scroll | El evento `resize` reiniciaba todas las partículas cuando la barra de dirección iOS/Android aparecía/desaparecía (~55-70px de cambio de altura) | Solo reiniciar si ancho cambia O altura cambia >100px (cambio de orientación real) |
+| "Se raya" al tocar | Navegadores móviles sintetizan `mousemove` tras cada `touchmove` → dos handlers actualizaban `mouseRef` en conflicto, generando artefactos al levantar el dedo | Flag `isTouchActive`: mientras hay toque activo, los handlers de `mousemove`/`mouseleave` se ignoran |
+| Partículas que snapean al soltar | Al terminar el toque, el cursor saltaba a `-9999,-9999` en un frame → snap visual | Delay de 250ms antes de mover el cursor fuera + deceleración natural (`vx *= 0.99`) |
+
+**Mejoras de rendimiento móvil adicionales:**
+- Partículas de **140 → 55** en pantallas <768px (los cálculos O(n²) de conexiones causaban frame drops)
+- `CONNECTION_DISTANCE` y `MOUSE_REPEL_DISTANCE` reducidos en móvil para interacción táctil
+- Handlers de touch propios (`touchstart`, `touchmove`, `touchend`, `touchcancel`) con `{ passive: true }`
+- Resize debounceado 150ms + `clientWidth` (más estable que `innerWidth` en móvil)
+
+**Rama:** `claude/fix-mobile-background-animation-eoRp3` — pusheada a GitHub.
+**Build:** sin errores propios (errores previos del entorno sin node_modules no relacionados).
+
+---
+
 ### Estado global de las misiones
 
 | Chat | Misión | Estado |
@@ -625,9 +648,9 @@ El modelo anterior de la landing (`397€ setup + 40€/mes`) queda **eliminado*
 
 ---
 
-**Última actualización:** 2026-04-20
+**Última actualización:** 2026-04-21
 **Dueño:** Josep
-**Versión del plan:** v2.1 (Chat A completado — siguiente: Chat B)
+**Versión del plan:** v2.2 (fix mobile ParticleBackground — siguiente: Chat B)
 
 ---
 
@@ -663,6 +686,7 @@ El modelo anterior de la landing (`397€ setup + 40€/mes`) queda **eliminado*
 | 2026-04-19 #3 | Webhook robusto (4 eventos), portal Stripe, página `/gracias`, checkout mejorado | ✅ |
 | 2026-04-20 #1 | Auditoría seguridad: `ADMIN_EMAILS` fail-closed, `requireAdminApi()`, 4 rutas Brevo protegidas, IDOR Stripe eliminado | ✅ |
 | 2026-04-20 #2 | **Chat C — Panel self-service cliente:** `/acceso` login, `/panel` dashboard, `/panel/keywords`, `/panel/destinatarios`, server actions, middleware extendido, migración RLS 08 | ✅ |
+| 2026-04-21 #1 | **Fix UX móvil — ParticleBackground:** animación del fondo de partículas en el hero corregida para móvil (3 bugs: reinicio por address bar, conflicto mouse+touch sintético, snap abrupto al soltar). Partículas reducidas de 140 a 55 en móvil. Rama: `claude/fix-mobile-background-animation-eoRp3` | ✅ |
 
 ---
 
