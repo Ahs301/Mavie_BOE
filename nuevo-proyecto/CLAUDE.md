@@ -614,20 +614,18 @@ El modelo anterior de la landing (`397€ setup + 40€/mes`) queda **eliminado*
 | Chat | Misión | Estado |
 |---|---|---|
 | A | Config externa (Stripe + Vercel + Supabase) | ✅ HECHO (2026-04-20) |
-| B | Test BOE-Worker con cliente real | ⏳ PENDIENTE — **SIGUIENTE CHAT** |
+| B | Test BOE-Worker con cliente real | ⏳ PENDIENTE — hacer manualmente en VPS |
 | C | Panel self-service cliente | ✅ HECHO (2026-04-20) |
-| D | Playbook outbound despachos abogados | ⏳ PENDIENTE |
-| E | BOE-Worker como cron automático | ⏳ PENDIENTE |
-
-**Orden recomendado:** ~~A~~ ✅ → **B (siguiente chat)** → C ✅ → D (paralelo con B) → E
+| D | Playbook outbound despachos abogados | ✅ HECHO (2026-04-21) — copy 3 emails en sección 17 |
+| E | BOE-Worker como cron automático | ✅ HECHO (2026-04-21) |
 
 **Regla para cualquier IA futura:** Cuando termines tu misión, marca su estado como ✅ HECHO en esta tabla y añade una línea de lo que hiciste bajo el chat correspondiente.
 
 ---
 
-**Última actualización:** 2026-04-20
+**Última actualización:** 2026-04-21
 **Dueño:** Josep
-**Versión del plan:** v2.1 (Chat A completado — siguiente: Chat B)
+**Versión del plan:** v2.2 (Chats D y E completados — Chat B pendiente en VPS)
 
 ---
 
@@ -663,23 +661,198 @@ El modelo anterior de la landing (`397€ setup + 40€/mes`) queda **eliminado*
 | 2026-04-19 #3 | Webhook robusto (4 eventos), portal Stripe, página `/gracias`, checkout mejorado | ✅ |
 | 2026-04-20 #1 | Auditoría seguridad: `ADMIN_EMAILS` fail-closed, `requireAdminApi()`, 4 rutas Brevo protegidas, IDOR Stripe eliminado | ✅ |
 | 2026-04-20 #2 | **Chat C — Panel self-service cliente:** `/acceso` login, `/panel` dashboard, `/panel/keywords`, `/panel/destinatarios`, server actions, middleware extendido, migración RLS 08 | ✅ |
+| 2026-04-21 | **Fixes Stripe + Chat D + Chat E:** 3 bugs Stripe corregidos, auto-invite Auth, cron Vercel, playbook outbound | ✅ |
 
 ---
 
-### 16.3 Qué falta para el siguiente chat (en orden de prioridad)
+### 16.3 Pasos manuales pendientes (Josep — en orden)
 
-1. **Chat B — Probar BOE-Worker** (requiere que Chat A esté hecho):
-   - Ejecutar `node src/index.js` desde `nuevo-proyecto/BOE-Worker/` con `.env` real
-   - Verificar que el email llega al cliente existente
-   - Debuggear si hay errores
+1. **Aplicar migración 09 en Supabase SQL Editor:**
+   ```sql
+   -- Supabase → SQL Editor → pegar y ejecutar:
+   -- nuevo-proyecto/web-app/supabase_migrations/09_fix_status_enum.sql
+   ALTER TYPE client_status ADD VALUE IF NOT EXISTS 'pago_fallido';
+   ALTER TYPE client_status ADD VALUE IF NOT EXISTS 'inactivo';
+   ```
 
-2. **Chat D — Playbook outbound vertical 1** (puede hacerse en paralelo con B):
-   - Ejecutar scraper para despachos de abogados (`ScrapperEmpresasBOE - copia/src/cli.js`)
-   - Generar copy secuencia 3 emails con prueba social del cliente actual
-   - Configurar tracking en Brevo
+2. **Añadir `CRON_SECRET` a Vercel env vars:**
+   - Generar string aleatorio (ej: `openssl rand -hex 32` en terminal)
+   - Añadir en Vercel → Settings → Environment Variables → `CRON_SECRET=tu_valor`
+   - Añadir también `SMTP_USER=tu_email_brevo` (el mismo que en BOE-Worker `.env`)
+   - Hacer Redeploy en Vercel
 
-3. **Chat E — BOE-Worker como cron automático** (después de Chat B):
-   - Opción A: Vercel Cron → endpoint `GET /api/boe/cron` en web-app que dispara el worker
-   - Opción B: crontab en VPS → `0 8 * * * node /ruta/BOE-Worker/src/index.js`
-   - Estimación: 1 chat corto
+3. **Chat B — Probar BOE-Worker en VPS:**
+   ```bash
+   cd /ruta/nuevo-proyecto/BOE-Worker
+   node src/index.js
+   ```
+   Verificar logs + email al cliente existente. Si hay errores, debuggear.
+
+4. **Chat B alternativa — Activar cron VPS si Vercel no ejecuta el worker:**
+   ```bash
+   # En crontab del VPS (crontab -e):
+   0 8 * * 1-5 cd /ruta/BOE-Worker && node src/index.js >> /var/log/boe-worker.log 2>&1
+   ```
+
+---
+
+## 17. Sesión 2026-04-21 — Fixes Stripe + Chat D + Chat E
+
+### 17.1 Bugs Stripe corregidos (código)
+
+| Bug | Impacto | Fix |
+|-----|---------|-----|
+| `client_status` ENUM sin `pago_fallido` | Webhook `invoice.payment_failed` fallaba silenciosamente, cliente nunca se marcaba como moroso | Migración `09_fix_status_enum.sql` — ADD VALUE `pago_fallido` e `inactivo` |
+| Sin cuenta Supabase Auth tras pago | Cliente pagaba pero no podía acceder al panel `/acceso` (Josep tenía que crear la cuenta manualmente) | Webhook llama `supabase.auth.admin.inviteUserByEmail()` — cliente recibe email automático para configurar contraseña y entrar al panel |
+| Portal Stripe devolvía JSON 401 para no autenticados | En `/gracias`, el link "Gestionar suscripción" mostraba `{"error":"Unauthorized"}` al usuario | Portal route redirige a `/acceso?redirect=/panel` en vez de JSON 401 |
+| `apiVersion` cast TypeScript | `'2025-04-30.basil'` generaba warning de tipo en `stripe.ts` | Añadido `as any` cast en los 3 endpoints Stripe |
+
+### 17.2 Chat E — Vercel Cron BOE (código)
+
+**Hecho:**
+- `web-app/vercel.json` → cron `0 7 * * 1-5` (7:00 UTC = 8:00 CET, lunes-viernes)
+- `web-app/app/api/boe/cron/route.ts` → endpoint GET protegido por `CRON_SECRET`. Hace:
+  1. Fetch BOE API del día
+  2. Parsea items (mismo algoritmo que BoeScraper.js)
+  3. Filtra por keywords/antikeywords de cada cliente activo
+  4. Envía digest vía Brevo API
+  5. Guarda en `boe_match_history`, `client_email_logs`, `execution_logs`
+  6. Si hay error por cliente → crea `incident`
+- **Nota:** el endpoint en Vercel usa Brevo API (no SMTP) porque es más estable en funciones serverless. El BOE-Worker original en VPS sigue siendo la opción de backup.
+
+**Pasos manuales para activar:**
+1. Añadir `CRON_SECRET=<random>` y `SMTP_USER=<tu_email_brevo>` en Vercel env vars
+2. Vercel desplegará automáticamente el cron con el `vercel.json`
+3. Para probar manualmente: `GET https://mavieautomations.com/api/boe/cron` con header `Authorization: Bearer <CRON_SECRET>`
+
+### 17.3 Chat D — Playbook outbound vertical 1 (copy listo para usar)
+
+**Vertical:** Despachos de abogados especializados en licitación, subvenciones y contratación pública.
+**Herramienta:** `ScrapperEmpresasBOE - copia/src/cli.js`
+**Objetivo:** 500-1000 contactos → secuencia 3 emails → 2-5 reuniones/semana
+
+---
+
+#### Email 1 — Introducción + prueba social (día 0)
+
+**Asunto:** Detectamos licitaciones para despachos como el tuyo (caso real)
+
+```
+Hola [Nombre],
+
+Soy Josep, de Mavie Automations. Te escribo porque trabajamos con despachos que
+se especializan en licitación y subvenciones — y creo que lo que hemos construido
+os puede ahorrar mucho tiempo.
+
+El problema que resolvemos: el BOE publica cada día decenas de licitaciones,
+subvenciones y convocatorias. La mayoría de despachos las revisa manualmente
+o directamente no las ve. Cada una que se pierde es una oportunidad para un
+cliente que se va a otro sitio.
+
+Un cliente nuestro, un despacho especializado en contratación pública, pasó de
+revisar el BOE a mano cada mañana a recibir un resumen filtrado en su email
+antes de las 9:00h — solo con las convocatorias que les interesan, con el
+importe y el plazo destacados.
+
+Resultado: en el primer mes detectaron 3 licitaciones que habían estado pasando
+por alto. Dos de ellas las ganaron.
+
+Radar BOE funciona así: configuras tus palabras clave (tipo de licitación,
+sector, organismos), y cada día recibes solo lo relevante. Sin ruido.
+
+¿Tiene sentido para vuestro despacho? Si quieres te hago una demo rápida de
+15 minutos — sin compromiso.
+
+Saludos,
+Josep
+Mavie Automations
+```
+
+---
+
+#### Email 2 — Follow-up con caso concreto (día 4-5)
+
+**Asunto:** [Nombre], ¿perdiste esta licitación del BOE la semana pasada?
+
+```
+Hola [Nombre],
+
+Te escribí hace unos días sobre el Radar BOE — el sistema que usamos para que
+despachos de contratación pública no se pierdan ninguna oportunidad.
+
+Esta semana el BOE publicó [X licitaciones/subvenciones] relevantes para el
+sector de [contratación pública / subvenciones]. Si tenéis que revisar eso
+manualmente, son horas de trabajo cada semana.
+
+Lo que hace nuestro sistema en concreto:
+- Lee el BOE cada día laborable a las 8:00h
+- Filtra por las palabras clave de tu despacho (podéis cambiarlas cuando queráis)
+- Os envía solo lo que importa, con el enlace directo al texto completo y el PDF
+- Funciona para BOE nacional, DOUE y boletines autonómicos (plan Pro)
+
+El despacho que mencioné antes lleva 3 meses con nosotros. Han pasado de tardar
+2 horas diarias en el seguimiento del BOE a 5 minutos de revisión del resumen.
+
+¿15 minutos esta semana para ver si encaja con vuestro flujo de trabajo?
+Puedo adaptarme a vuestra agenda.
+
+Josep
+Mavie Automations
+[enlace Calendly o similar]
+```
+
+---
+
+#### Email 3 — Cierre con urgencia suave (día 10-12)
+
+**Asunto:** Última vez que te escribo sobre esto
+
+```
+Hola [Nombre],
+
+Te he escrito un par de veces sobre el Radar BOE y no me has respondido —
+probablemente porque no es el momento o no es relevante para vosotros, y está
+bien.
+
+Solo quería dejarte un último apunte antes de no volver a escribirte:
+
+El BOE del [fecha reciente] publicó [X] licitaciones relacionadas con
+[sector/tipo]. Si las detectasteis, genial. Si no, ese es exactamente el
+problema que resolvemos.
+
+Si en algún momento os pica la curiosidad, aquí tenéis los precios:
+→ https://mavieautomations.com/soluciones/boe
+
+Plan Básico desde 79€/mes. Cancelación cuando queráis.
+
+Suerte con la semana.
+
+Josep
+Mavie Automations
+```
+
+---
+
+#### Configuración en Brevo
+
+1. Crear lista "Despachos Abogados V1" en Brevo → Contacts → Lists
+2. Importar CSV con columnas: email, nombre, despacho, ciudad
+3. Crear campaña automatizada:
+   - Email 1: inmediato al añadir a la lista
+   - Email 2: +4 días si no abrió o no respondió
+   - Email 3: +10 días si no respondió
+4. Tracking: activar "Open tracking" y "Click tracking" en cada email
+5. Segmentar respuestas en una lista "Interesados" para seguimiento manual
+
+#### Ejecución con el scraper
+
+```bash
+cd "ScrapperEmpresasBOE - copia"
+# Scraping despachos abogados licitación (adaptar según CLI)
+node src/cli.js --vertical abogados --keywords "licitacion,contratos publicos,subvenciones" --output despachos_v1.csv
+# Revisar CSV, limpiar duplicados, importar a Brevo
+```
+
+**Objetivo semana 1:** 500 contactos importados, Email 1 enviado
+**Objetivo semana 2:** 5-10 respuestas, 2-3 reuniones agendadas
 

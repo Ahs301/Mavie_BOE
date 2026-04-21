@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2025-04-30.basil' })
+export const dynamic = 'force-dynamic'
 
-const PRICE_IDS: Record<string, string> = {
-  basico: process.env.STRIPE_PRICE_BASICO!,
-  pro: process.env.STRIPE_PRICE_PRO!,
-  business: process.env.STRIPE_PRICE_BUSINESS!,
+const PRICE_IDS: Record<string, string | undefined> = {
+  basico: process.env.STRIPE_PRICE_BASICO,
+  pro: process.env.STRIPE_PRICE_PRO,
+  business: process.env.STRIPE_PRICE_BUSINESS,
 }
 
 export async function GET(req: NextRequest) {
@@ -23,6 +23,9 @@ export async function GET(req: NextRequest) {
 
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2025-04-30.basil' as any })
+
   try {
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
@@ -33,9 +36,7 @@ export async function GET(req: NextRequest) {
       cancel_url: `${baseUrl}/soluciones/boe#precios`,
       locale: 'es',
       billing_address_collection: 'required',
-      // Permitir códigos promocionales (futuro)
       allow_promotion_codes: true,
-      // Configurar facturación automática
       subscription_data: {
         metadata: { plan },
       },

@@ -2,17 +2,18 @@ import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@/lib/supabase/server'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2025-04-30.basil' })
+export const dynamic = 'force-dynamic'
 
 // GET /api/stripe/portal
 // Abre el Billing Portal de Stripe para el cliente autenticado.
 // El customer_id se obtiene de la BD — nunca se acepta desde la URL.
 export async function GET(_req: NextRequest) {
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
   const supabase = createClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
 
   if (authError || !user?.email) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return NextResponse.redirect(`${baseUrl}/acceso?redirect=/panel`, 303)
   }
 
   const { data: client, error: dbError } = await supabase
@@ -22,10 +23,11 @@ export async function GET(_req: NextRequest) {
     .single()
 
   if (dbError || !client?.stripe_customer_id) {
-    return NextResponse.json({ error: 'No se encontró suscripción activa para este usuario' }, { status: 404 })
+    return NextResponse.redirect(`${baseUrl}/acceso?error=no_subscription`, 303)
   }
 
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2025-04-30.basil' as any })
 
   try {
     const portalSession = await stripe.billingPortal.sessions.create({

@@ -2,7 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2025-04-30.basil' })
+export const dynamic = 'force-dynamic'
+
+// Instancia lazy para evitar error en build sin STRIPE_SECRET_KEY
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function getStripe() {
+  return new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2025-04-30.basil' as any })
+}
 
 // Service role client — bypasses RLS, safe only in server-side webhook
 function createServiceClient() {
@@ -26,6 +32,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Sin firma Stripe' }, { status: 400 })
   }
 
+  const stripe = getStripe()
   let event: Stripe.Event
   try {
     event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET!)
@@ -129,6 +136,20 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     console.error('[webhook] Error upsert boe_config:', configError)
   }
 
+  // Crear cuenta Supabase Auth → el cliente recibe email para configurar contraseña y acceder a /panel
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://mavieautomations.com'
+  const { error: inviteError } = await supabase.auth.admin.inviteUserByEmail(email, {
+    redirectTo: `${baseUrl}/panel`,
+    data: { company_name: company || email, plan_activo: plan },
+  })
+
+  if (inviteError) {
+    // No es fatal — el registro en BD existe. Si el error es "User already registered" está bien.
+    console.warn(`[webhook] Invite Auth (${email}):`, inviteError.message)
+  } else {
+    console.log(`[webhook] ✉️ Invite panel enviado a ${email}`)
+  }
+
   console.log(`[webhook] ✅ Cliente activado: ${email} — plan: ${plan}`)
 }
 
@@ -229,10 +250,15 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
   }
 
   // Marcar como moroso — Stripe reintentará, si falla 3 veces cancela y llega subscription.deleted
-  await supabase
+  const { error: updateError } = await supabase
     .from('clients')
     .update({ status: 'pago_fallido' })
     .eq('id', cliente.id)
+
+  if (updateError) {
+    console.error(`[webhook] Error marcando pago_fallido para ${cliente.primary_email}:`, updateError.message)
+    return
+  }
 
   console.log(`[webhook] ⚠️ Pago fallido: ${cliente.primary_email}`)
 }
