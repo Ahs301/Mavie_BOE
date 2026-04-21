@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2025-04-30.basil' })
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2024-09-30.acacia' })
 
 const PRICE_IDS: Record<string, string> = {
   basico: process.env.STRIPE_PRICE_BASICO!,
@@ -47,9 +47,10 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.redirect(session.url, 303)
   } catch (err) {
-    console.error('[stripe/checkout] Error:', err)
+    const msg = err instanceof Error ? err.message : String(err)
+    console.error('[stripe/checkout] Error:', msg)
     return NextResponse.json(
-      { error: 'Error interno al crear la sesión de pago. Inténtalo de nuevo o contacta con soporte.' },
+      { error: 'Error interno al crear la sesión de pago. Inténtalo de nuevo o contacta con soporte.', detail: msg },
       { status: 500 }
     )
   }
