@@ -1,6 +1,6 @@
 import { requireAuth } from "@/lib/auth"
 import { createClient } from "@/lib/supabase/server"
-import { Activity, Users, AlertCircle, MailCheck, TrendingUp, CheckCircle } from "lucide-react"
+import { Activity, Users, AlertCircle, MailCheck, TrendingUp, CheckCircle, ChevronRight } from "lucide-react"
 import type { Metadata } from "next"
 
 export const dynamic = 'force-dynamic'
@@ -9,6 +9,8 @@ export const metadata: Metadata = {
   title: "Dashboard — Mavie Admin",
   robots: { index: false, follow: false },
 }
+
+type AccentKey = "green" | "red" | "amber" | "blue" | "default"
 
 function StatCard({
   label,
@@ -21,33 +23,42 @@ function StatCard({
   value: string | number
   sub?: string
   icon: React.ElementType
-  accent?: "green" | "red" | "amber" | "blue" | "default"
+  accent?: AccentKey
 }) {
-  const colors = {
+  const key: AccentKey = accent ?? "default"
+
+  const valueColors: Record<AccentKey, string> = {
     green: "text-emerald-400",
     red: "text-red-400",
     amber: "text-amber-400",
     blue: "text-blue-400",
     default: "text-neutral-200",
   }
-  const iconColors = {
-    green: "text-emerald-500",
-    red: "text-red-500",
-    amber: "text-amber-500",
-    blue: "text-blue-500",
-    default: "text-neutral-500",
+  const iconBg: Record<AccentKey, string> = {
+    green: "bg-emerald-950/40 border-emerald-900/50 text-emerald-400",
+    red: "bg-red-950/40 border-red-900/50 text-red-400",
+    amber: "bg-amber-950/40 border-amber-900/50 text-amber-400",
+    blue: "bg-blue-950/40 border-blue-900/50 text-blue-400",
+    default: "bg-neutral-900 border-neutral-700 text-neutral-400",
   }
-  const color = colors[accent ?? "default"]
-  const iconColor = iconColors[accent ?? "default"]
+  const leftBorder: Record<AccentKey, string> = {
+    green: "border-l-emerald-500/70",
+    red: "border-l-red-500/70",
+    amber: "border-l-amber-500/70",
+    blue: "border-l-blue-500/70",
+    default: "border-l-neutral-700",
+  }
 
   return (
-    <div className="rounded-xl border border-neutral-800 bg-card p-6 flex flex-col gap-3 shadow-sm">
-      <div className="flex items-center justify-between">
-        <span className="text-sm font-medium text-neutral-400">{label}</span>
-        <Icon className={`h-4 w-4 ${iconColor}`} />
+    <div className={`rounded-xl border border-neutral-800 border-l-[3px] ${leftBorder[key]} bg-card p-5 flex flex-col gap-2 hover:bg-neutral-900/60 transition-colors`}>
+      <div className="flex items-center justify-between mb-1">
+        <span className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">{label}</span>
+        <div className={`w-8 h-8 rounded-lg border flex items-center justify-center shrink-0 ${iconBg[key]}`}>
+          <Icon className="h-4 w-4" />
+        </div>
       </div>
-      <div className={`text-3xl font-bold tracking-tight ${color}`}>{value}</div>
-      {sub && <div className="text-xs text-neutral-600">{sub}</div>}
+      <div className={`text-3xl font-bold tracking-tight tabular-nums ${valueColors[key]}`}>{value}</div>
+      {sub && <div className="text-xs text-neutral-600 mt-0.5">{sub}</div>}
     </div>
   )
 }
@@ -82,18 +93,20 @@ export default async function DashboardPage() {
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-8">
       {/* ── Header ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-neutral-800/60">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
-            Mavie <span className="text-blue-500 font-light">Ecosystem</span>
+            Mavie <span className="text-blue-400 font-light">Ecosystem</span>
           </h1>
           <p className="text-sm text-neutral-500 mt-1">
-            Centro de Control Operativo. {new Date().toLocaleDateString("es-ES", { year: "numeric", month: "long", day: "numeric" })}
+            Centro de Control · {new Date().toLocaleDateString("es-ES", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
           </p>
         </div>
-        <div className="flex items-center gap-2 text-xs font-medium text-emerald-400 bg-emerald-950/30 border border-emerald-900/40 px-3 py-1.5 rounded-lg">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-          Sistemas estables
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 text-xs font-semibold text-emerald-400 bg-emerald-950/30 border border-emerald-900/40 px-3 py-1.5 rounded-lg">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            Sistemas estables
+          </div>
         </div>
       </div>
 
@@ -185,36 +198,36 @@ export default async function DashboardPage() {
             <h2 className="text-sm font-semibold text-neutral-300 uppercase tracking-widest mb-6 border-b border-neutral-800 pb-2">Módulos de Negocio</h2>
             
             <div className="space-y-3">
-              <a href="/dashboard/clientes" className="flex items-center justify-between p-3.5 rounded-xl bg-neutral-900/40 hover:bg-neutral-800 border border-neutral-800/60 hover:border-neutral-700 transition-all group">
+              <a href="/dashboard/clientes" className="flex items-center justify-between p-3.5 rounded-xl bg-neutral-900/40 hover:bg-neutral-900 border border-neutral-800/60 hover:border-blue-900/40 transition-all group cursor-pointer">
                 <span className="text-sm font-medium text-foreground flex items-center gap-3">
-                  <span className="p-1.5 bg-blue-500/10 text-blue-500 rounded-md group-hover:bg-blue-500/20 transition-colors"><Users className="w-4 h-4"/></span> 
+                  <span className="p-1.5 bg-blue-500/10 text-blue-400 rounded-md border border-blue-900/30 group-hover:bg-blue-500/20 transition-colors"><Users className="w-4 h-4"/></span>
                   CRM Central
                 </span>
-                <span className="text-neutral-500 group-hover:text-blue-400 transition-colors">→</span>
+                <ChevronRight className="w-4 h-4 text-neutral-600 group-hover:text-blue-400 group-hover:translate-x-0.5 transition-all" />
               </a>
 
-              <a href="/dashboard/leads" className="flex items-center justify-between p-3.5 rounded-xl bg-neutral-900/40 hover:bg-neutral-800 border border-neutral-800/60 hover:border-neutral-700 transition-all group">
+              <a href="/dashboard/leads" className="flex items-center justify-between p-3.5 rounded-xl bg-neutral-900/40 hover:bg-neutral-900 border border-neutral-800/60 hover:border-amber-900/40 transition-all group cursor-pointer">
                 <span className="text-sm font-medium text-foreground flex items-center gap-3">
-                  <span className="p-1.5 bg-amber-500/10 text-amber-500 rounded-md group-hover:bg-amber-500/20 transition-colors"><Activity className="w-4 h-4"/></span> 
+                  <span className="p-1.5 bg-amber-500/10 text-amber-400 rounded-md border border-amber-900/30 group-hover:bg-amber-500/20 transition-colors"><Activity className="w-4 h-4"/></span>
                   Gestión Leads Web
                 </span>
-                <span className="text-neutral-500 group-hover:text-amber-400 transition-colors">→</span>
+                <ChevronRight className="w-4 h-4 text-neutral-600 group-hover:text-amber-400 group-hover:translate-x-0.5 transition-all" />
               </a>
 
-              <a href="/dashboard/captacion" className="flex items-center justify-between p-3.5 rounded-xl bg-neutral-900/40 hover:bg-neutral-800 border border-neutral-800/60 hover:border-neutral-700 transition-all group">
+              <a href="/dashboard/captacion" className="flex items-center justify-between p-3.5 rounded-xl bg-neutral-900/40 hover:bg-neutral-900 border border-neutral-800/60 hover:border-purple-900/40 transition-all group cursor-pointer">
                 <span className="text-sm font-medium text-foreground flex items-center gap-3">
-                  <span className="p-1.5 bg-purple-500/10 text-purple-500 rounded-md group-hover:bg-purple-500/20 transition-colors"><TrendingUp className="w-4 h-4"/></span> 
+                  <span className="p-1.5 bg-purple-500/10 text-purple-400 rounded-md border border-purple-900/30 group-hover:bg-purple-500/20 transition-colors"><TrendingUp className="w-4 h-4"/></span>
                   Outreach Engine
                 </span>
-                <span className="text-neutral-500 group-hover:text-purple-400 transition-colors">→</span>
+                <ChevronRight className="w-4 h-4 text-neutral-600 group-hover:text-purple-400 group-hover:translate-x-0.5 transition-all" />
               </a>
 
-              <a href="/dashboard/boe" className="flex items-center justify-between p-3.5 rounded-xl bg-neutral-900/40 hover:bg-neutral-800 border border-neutral-800/60 hover:border-neutral-700 transition-all group">
+              <a href="/dashboard/boe" className="flex items-center justify-between p-3.5 rounded-xl bg-neutral-900/40 hover:bg-neutral-900 border border-neutral-800/60 hover:border-emerald-900/40 transition-all group cursor-pointer">
                 <span className="text-sm font-medium text-foreground flex items-center gap-3">
-                  <span className="p-1.5 bg-emerald-500/10 text-emerald-500 rounded-md group-hover:bg-emerald-500/20 transition-colors"><CheckCircle className="w-4 h-4"/></span> 
+                  <span className="p-1.5 bg-emerald-500/10 text-emerald-400 rounded-md border border-emerald-900/30 group-hover:bg-emerald-500/20 transition-colors"><CheckCircle className="w-4 h-4"/></span>
                   Control Radar BOE
                 </span>
-                <span className="text-neutral-500 group-hover:text-emerald-400 transition-colors">→</span>
+                <ChevronRight className="w-4 h-4 text-neutral-600 group-hover:text-emerald-400 group-hover:translate-x-0.5 transition-all" />
               </a>
             </div>
           </div>

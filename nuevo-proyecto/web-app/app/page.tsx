@@ -2,7 +2,6 @@ import Link from "next/link";
 import {
   ArrowRight, Bell, Filter, Zap, Database, Activity,
   Shield, Clock, ChevronRight, Settings2, Send, BarChart3,
-  Quote,
 } from "lucide-react";
 import type { Metadata } from "next";
 import { ParticleBackground } from "@/components/ParticleBackground";
@@ -15,35 +14,50 @@ export const metadata: Metadata = {
 const features = [
   {
     icon: Database,
+    color: "blue",
     title: "Sistemas Core (CRM & ERP)",
     desc: "Desarrollo de cuadros de mando y paneles operativos desde cero. Conectamos toda tu operativa en una interfaz única, rápida y sin licenciamientos tóxicos.",
   },
   {
     icon: Filter,
+    color: "violet",
     title: "Pipelines de Extracción",
     desc: "Bases de datos autogeneradas. Rastreamos la web, directorios o registros públicos buscando clientes o competidores, 24/7.",
   },
   {
     icon: Activity,
+    color: "amber",
     title: "Motores de Outreach",
     desc: "Secuencias frías totalmente orquestadas (Brevo, Outlook). La máquina prospecta, filtra y entrega el lead templado a tu equipo humano.",
   },
   {
     icon: Zap,
+    color: "emerald",
     title: "Automatización n8n/Make",
     desc: "Adiós al copiar y pegar. Tu ecosistema se hablará de forma nativa vía APIs y Webhooks; desde la factura hasta el onboarding.",
   },
   {
     icon: Shield,
+    color: "indigo",
     title: "Arquitectura Privada",
     desc: "Datos encriptados bajo RLS (Row Level Security). Tus bases de clientes no se comparten en plataformas de terceros genéricas.",
   },
   {
     icon: Clock,
+    color: "cyan",
     title: "Soporte DevOps B2B",
     desc: "Nuestras construcciones incluyen alertas de fallos en Slack/Discord y monitorización de scripts para un uptime impecable.",
   },
 ]
+
+const featureIconStyles: Record<string, { wrap: string; icon: string }> = {
+  blue:    { wrap: "group-hover:bg-blue-950/30 group-hover:border-blue-900/50",    icon: "group-hover:text-blue-400" },
+  violet:  { wrap: "group-hover:bg-violet-950/30 group-hover:border-violet-900/50", icon: "group-hover:text-violet-400" },
+  amber:   { wrap: "group-hover:bg-amber-950/30 group-hover:border-amber-900/50",  icon: "group-hover:text-amber-400" },
+  emerald: { wrap: "group-hover:bg-emerald-950/30 group-hover:border-emerald-900/50", icon: "group-hover:text-emerald-400" },
+  indigo:  { wrap: "group-hover:bg-indigo-950/30 group-hover:border-indigo-900/50", icon: "group-hover:text-indigo-400" },
+  cyan:    { wrap: "group-hover:bg-cyan-950/30 group-hover:border-cyan-900/50",    icon: "group-hover:text-cyan-400" },
+}
 
 const stats = [
   { value: "24/7", label: "Monitoreo continuo" },
@@ -153,13 +167,13 @@ export default function Home() {
       </section>
 
       {/* ── STATS BAR ── */}
-      <div className="border-y border-neutral-200 dark:border-neutral-800 bg-white/80 dark:bg-neutral-950/50 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto px-6 py-5">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+      <div className="border-y border-neutral-200 dark:border-neutral-800 bg-white/80 dark:bg-neutral-950/60 backdrop-blur-sm">
+        <div className="max-w-7xl mx-auto px-6 py-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-neutral-200 dark:divide-neutral-800">
             {stats.map(s => (
-              <div key={s.label} className="text-center">
-                <div className="text-2xl font-bold text-foreground mb-0.5" style={{ fontFamily: 'var(--font-syne)' }}>{s.value}</div>
-                <div className="text-xs text-neutral-500">{s.label}</div>
+              <div key={s.label} className="text-center px-6 first:pl-0 last:pr-0">
+                <div className="text-3xl md:text-4xl font-bold text-foreground mb-1 tabular-nums" style={{ fontFamily: 'var(--font-syne)' }}>{s.value}</div>
+                <div className="text-xs text-neutral-500 font-medium uppercase tracking-wide">{s.label}</div>
               </div>
             ))}
           </div>
@@ -345,19 +359,22 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {features.map(f => (
-              <div
-                key={f.title}
-                className="rounded-xl border border-neutral-800 bg-neutral-950/50 p-6 hover:border-neutral-700 hover:-translate-y-0.5 transition-all group"
-              >
-                <div className="w-10 h-10 rounded-lg bg-neutral-900 border border-neutral-800 flex items-center justify-center mb-5 group-hover:border-blue-900/50 group-hover:bg-blue-950/20 transition-all icon-glow-hover">
-                  <f.icon className="w-5 h-5 text-neutral-400 group-hover:text-blue-400 transition-colors" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {features.map(f => {
+              const s = featureIconStyles[f.color] ?? featureIconStyles.blue
+              return (
+                <div
+                  key={f.title}
+                  className="rounded-xl border border-neutral-800 bg-neutral-950/50 p-6 hover:border-neutral-700 hover:-translate-y-0.5 transition-all duration-200 group cursor-default"
+                >
+                  <div className={`w-10 h-10 rounded-lg bg-neutral-900 border border-neutral-800 flex items-center justify-center mb-5 ${s.wrap} transition-all duration-200`}>
+                    <f.icon className={`w-5 h-5 text-neutral-400 ${s.icon} transition-colors duration-200`} />
+                  </div>
+                  <h3 className="text-base font-semibold text-foreground mb-2">{f.title}</h3>
+                  <p className="text-sm text-neutral-500 leading-relaxed">{f.desc}</p>
                 </div>
-                <h3 className="text-base font-semibold text-foreground mb-2">{f.title}</h3>
-                <p className="text-sm text-neutral-500 leading-relaxed">{f.desc}</p>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       </section>
@@ -375,24 +392,30 @@ export default function Home() {
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {testimonials.map((t, i) => (
               <div
                 key={i}
-                className="rounded-2xl border border-neutral-800 bg-neutral-950/60 p-8 flex flex-col gap-6 hover:border-neutral-700 transition-all group relative overflow-hidden"
+                className="rounded-2xl border border-neutral-800 bg-neutral-950/60 p-7 flex flex-col gap-5 hover:border-neutral-700 transition-all duration-200 group relative overflow-hidden"
               >
-                {/* Subtle gradient top-left corner */}
                 <div className="absolute -top-10 -left-10 w-32 h-32 rounded-full bg-blue-600/5 blur-2xl pointer-events-none" />
 
-                <Quote className="w-6 h-6 text-blue-900 shrink-0" />
+                {/* Stars */}
+                <div className="flex gap-0.5 relative">
+                  {[...Array(5)].map((_, si) => (
+                    <svg key={si} className="w-3.5 h-3.5 text-amber-400 fill-amber-400" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                  ))}
+                </div>
 
-                <p className="text-sm text-neutral-400 leading-relaxed flex-1 italic">
-                  "{t.quote}"
+                <p className="text-sm text-neutral-300 leading-relaxed flex-1">
+                  &ldquo;{t.quote}&rdquo;
                 </p>
 
-                <div className="flex items-center gap-3 pt-2 border-t border-neutral-800">
-                  <div className="w-9 h-9 rounded-full bg-neutral-800 border border-neutral-700 flex items-center justify-center shrink-0 group-hover:border-blue-900/50 group-hover:bg-blue-950/20 transition-colors">
-                    <t.icon className="w-4 h-4 text-neutral-500 group-hover:text-blue-400 transition-colors" />
+                <div className="flex items-center gap-3 pt-2 border-t border-neutral-800/80">
+                  <div className="w-9 h-9 rounded-full bg-neutral-800 border border-neutral-700 flex items-center justify-center shrink-0 group-hover:border-blue-900/50 group-hover:bg-blue-950/20 transition-colors duration-200">
+                    <t.icon className="w-4 h-4 text-neutral-500 group-hover:text-blue-400 transition-colors duration-200" />
                   </div>
                   <div>
                     <div className="text-xs font-semibold text-foreground">{t.author}</div>

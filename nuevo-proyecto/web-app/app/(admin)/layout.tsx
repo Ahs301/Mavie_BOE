@@ -34,12 +34,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return (
     <div className="flex h-screen bg-background text-foreground overflow-hidden">
       {/* Sidebar */}
-      <aside className="w-60 border-r border-neutral-800 bg-card flex flex-col shrink-0">
+      <aside className="w-60 border-r border-neutral-800 bg-neutral-950 flex flex-col shrink-0">
         {/* Logo */}
-        <div className="h-14 flex items-center px-5 border-b border-neutral-800">
-          <Link href="/dashboard" className="hover:opacity-80 transition-opacity">
-            <MavieLogo size={24} showWordmark />
+        <div className="h-16 flex items-center px-5 border-b border-neutral-800 gap-2">
+          <Link href="/dashboard" className="hover:opacity-80 transition-opacity flex items-center">
+            <MavieLogo size={22} showWordmark />
           </Link>
+          <span className="ml-auto text-[10px] font-semibold text-neutral-600 bg-neutral-900 border border-neutral-800 px-2 py-0.5 rounded-full shrink-0 tracking-wide">
+            Admin
+          </span>
         </div>
 
         {/* Nav */}
@@ -51,13 +54,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
+                  "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-150 cursor-pointer",
                   isActive
-                    ? "bg-neutral-800/80 text-foreground font-medium"
-                    : "text-neutral-500 hover:text-foreground hover:bg-neutral-800/40"
+                    ? "bg-blue-950/30 text-white font-medium border border-blue-900/30"
+                    : "text-neutral-500 hover:text-neutral-200 hover:bg-neutral-800/50"
                 )}
               >
-                <item.icon className={cn("w-4 h-4", isActive ? "text-foreground" : "text-neutral-500")} />
+                <item.icon className={cn("w-4 h-4 shrink-0", isActive ? "text-blue-400" : "text-neutral-500")} />
                 {item.label}
               </Link>
             )
@@ -68,16 +71,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="p-3 border-t border-neutral-800 space-y-0.5">
           <Link
             href="/dashboard/configuracion"
-            className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-neutral-500 hover:text-foreground hover:bg-neutral-800/40 transition-colors"
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-neutral-500 hover:text-neutral-200 hover:bg-neutral-800/50 transition-all cursor-pointer"
           >
-            <Settings className="w-4 h-4 text-neutral-500" />
+            <Settings className="w-4 h-4 shrink-0" />
             Configuración
           </Link>
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-red-500/70 hover:text-red-500 hover:bg-red-500/10 transition-colors"
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-red-500/60 hover:text-red-400 hover:bg-red-500/10 transition-all cursor-pointer"
           >
-            <LogOut className="w-4 h-4" />
+            <LogOut className="w-4 h-4 shrink-0" />
             Cerrar Sesión
           </button>
         </div>

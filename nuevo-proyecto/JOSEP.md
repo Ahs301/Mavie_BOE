@@ -1,7 +1,137 @@
 # MAVIE MASTER PLAN — Josep
 > Última actualización: 2026-04-21  
 > Objetivo: máximo impacto, 0€ invertido, solo tiempo + código  
-> Principio: dinero real antes que perfección técnica
+> Principio: dinero real antes que perfección técnica, pero que el producto sea bueno y agrade.
+
+---
+
+## ⚠️ ANÁLISIS DE COHERENCIA — LEER ANTES DE EMPEZAR CUALQUIER SESIÓN
+
+> Revisado 2026-04-21. Conflictos detectados y corregidos para que los chats futuros no metan la pata.
+
+### CONFLICTOS REALES (ya corregidos en este doc)
+
+**1. PASO 1.2 — Multi-SMTP va en el worker VPS, NO en el scraper viejo**
+- El archivo original decía editar `ScrapperEmpresasBOE - copia/src/services/email.js`
+- INCORRECTO: CLAUDE.md prohíbe extender el scraper copia in-place
+- CORRECTO: La rotación multi-SMTP va en el módulo captación que se despliega en `/opt/captacion` del VPS
+- El scraper copia es solo REFERENCIA de código a portar, no el lugar donde escribir features nuevas
+
+**2. FASE 7 Videos — gateada en MRR, no antes**
+- CLAUDE.md dice: "no construir productos nuevos hasta Radar BOE facture 3.000€/mes"
+- Videos es herramienta de marketing, pero el pipeline completo (Remotion+ElevenLabs+APIs publicación) es una feature grande
+- **Gate explícito: no empezar Sesión Videos 1 hasta tener 10+ clientes activos o 1.500€ MRR**
+- Antes del gate: crear videos manualmente y publicar a mano (30 min cada uno) → misma cámara
+- Antes de empezar Sesión Videos 1: instalar skill "Editor Pro Max" de tododeia.com — ya resuelve 80% del pipeline Remotion+FFmpeg
+
+**3. Listmonk — útil pero no urgente**
+- Listmonk es para newsletter broadcast masivo (18k leads de una vez)
+- No compite con Brevo (alertas BOE) ni con multi-SMTP outbound (cold email personalizado)
+- Instalar en VPS solo si se van a hacer newsletters semanales reales desde el mes 1
+- Si no hay tiempo: Brevo gratuito aguanta las primeras newsletters mientras se valida el canal
+
+**4. Falta de sincronía con estado real del repo (CLAUDE.md)**
+- Chat A ✅ HECHO: Stripe, Vercel, Supabase configurados
+- Chat C ✅ HECHO: Panel self-service cliente `/panel` funcionando
+- Chat E ✅ HECHO: BOE-Worker como cron automático
+- **PENDIENTE más urgente: Chat B — probar BOE-Worker con cliente real** → esto antes que cualquier FASE nueva
+
+### SINERGIAS A EXPLOTAR
+
+- **FASE 3 SEO + FASE 4 GitHub + skill "Claude SEO" (FASE 8)** → mismo sprint, semana 2. El README del repo GitHub indexa en Google, las páginas programáticas también. Hacer todo junto.
+- **FASE 1 Multi-SMTP + FASE 2 VPS** → NO son dos fases separadas. Son un solo deployment. El multi-SMTP se configura durante el deploy VPS, no antes ni después.
+- **FASE 5 LinkedIn + FASE 7 Videos** → Los clips de video son el contenido de los posts LinkedIn. Cuando llegue FASE 7, LinkedIn gets automated content.
+- **Skill "Scrapling" (FASE 8 Tier 1)** → complementa el scraper propio para Google Maps. Instalar en paralelo con FASE 2 para enriquecer leads.
+
+### ORDEN CORRECTO DE ATAQUE (consolidado, corrige el orden original)
+
+```
+AHORA MISMO (antes que cualquier fase):
+  1. Chat B — probar BOE-Worker node src/index.js → cliente real recibe email ← BLOQUEANTE
+
+SEMANA 1 (FASE 1+2 son UN solo bloque):
+  2. Crear cuentas Resend + SendGrid (2h)
+  3. Deploy VPS: Node22 + Chrome + código captación + PM2 (3h)
+  4. Multi-SMTP en el worker captación del VPS (2h) ← NO en scraper copia
+  5. Importar 18k leads → SQLite → primer envío real (2h)
+  6. Listmonk en VPS si hay tiempo (2h, no bloqueante)
+
+SEMANA 2 (FASE 3+4 juntas):
+  7. next-seo + páginas /radar-boe/[vertical] (4h)
+  8. Sitemap + Google Search Console (1h)
+  9. GitHub repo público radar-boe-demo + README SEO (1h)
+  10. Skill "Claude SEO" de tododeia.com para auditar las páginas (1h)
+
+SEMANA 3 (FASE 5):
+  11. LinkedIn perfil optimizado + rutina 10 DMs/día
+
+CUANDO MRR ≥ 1.500€ o ≥ 10 clientes:
+  12. FASE 7 Videos — primero instalar skill "Editor Pro Max" de tododeia.com, luego Sesión Videos 1
+```
+
+---
+
+## ESTADO DEL CÓDIGO HOY — `nuevo-proyecto/` (2026-04-21)
+
+> IA que empiece aquí: lee esto. No hace falta leer CLAUDE.md para saber qué hay hecho y qué falta.
+
+### Estructura del repo (solo tocar `nuevo-proyecto/`)
+
+```
+MAVIE_BOE_WEB/
+├── nuevo-proyecto/              ← STACK PRODUCTIVO. Todo código nuevo va aquí
+│   ├── CLAUDE.md                ← referencia técnica complementaria
+│   ├── JOSEPH.md                ← este archivo — fuente de verdad principal
+│   ├── web-app/                 ← Next.js 14 + Supabase (Mavie + panel admin + panel cliente)
+│   ├── BOE-Worker/              ← Node.js worker — Radar BOE multi-tenant
+│   └── database/schema.sql      ← esquema Supabase
+├── ScrapperEmpresasBOE - copia/ ← scraper FUNCIONAL — REFERENCIA para portar, NO extender
+├── referencia-boe/              ← histórico BOE — solo consulta
+└── referencia-web-mavie/        ← web antigua — solo referencia visual
+```
+
+**Regla única:** Todo código nuevo va en `nuevo-proyecto/`. El scraper copia es fuente para LEER y PORTAR a `nuevo-proyecto/captacion-worker/` (aún no existe — de momento se despliega al VPS como `/opt/captacion`). No extender el scraper copia in-place.
+
+### Qué ESTÁ HECHO en `nuevo-proyecto/web-app/`
+
+| Módulo | Ruta | Estado |
+|--------|------|--------|
+| Landing Mavie pública | `app/page.tsx` | ✅ Deployada mavieautomations.com |
+| Landing Radar BOE + precios | `app/soluciones/boe/page.tsx` | ✅ 79/179/399€, CTAs Stripe |
+| Onboarding público BOE | `app/onboarding/boe/` + `actions/submitOnboarding.ts` | ✅ Honeypot + captcha + crea cliente |
+| Auth admin (Josep) | `middleware.ts` + `lib/auth.ts` | ✅ ADMIN_EMAILS fail-closed |
+| Dashboard admin CRM | `app/(admin)/dashboard/` | ✅ 9 páginas (clientes, leads, BOE, emails…) |
+| Auth cliente self-service | `app/acceso/page.tsx` + `lib/auth.ts:requireClienteAuth()` | ✅ Login Supabase Auth → /panel |
+| Panel cliente `/panel` | `app/(cliente)/panel/` + `actions/clienteActions.ts` | ✅ Dashboard + keywords + destinatarios |
+| Stripe Checkout | `app/api/stripe/checkout/route.ts` | ✅ 3 planes → Stripe hosted checkout |
+| Stripe Webhook | `app/api/stripe/webhook/route.ts` | ✅ 4 eventos — activa/cancela/cambia plan/fallo pago |
+| Stripe Portal | `app/api/stripe/portal/route.ts` | ✅ Billing Portal auth-protected |
+| Página post-pago `/gracias` | `app/gracias/page.tsx` | ✅ Confirmación + pasos + link portal |
+| BOE cron Vercel | `app/api/boe/cron/route.ts` | ✅ 08:00 AM automático |
+| Brevo API routes | `app/api/brevo/` | ✅ 4 endpoints auth-protected |
+
+### Qué ESTÁ HECHO en `nuevo-proyecto/BOE-Worker/`
+
+| Módulo | Ruta | Estado |
+|--------|------|--------|
+| Pipeline multi-tenant completo | `src/index.js` + `src/scrapers/` + `src/services/` | ✅ Fetch BOE → filtrar keywords → email digest → log Supabase |
+
+### Qué FALTA (orden de prioridad)
+
+| # | Tarea | Dónde | Impacto |
+|---|-------|-------|---------|
+| 1 | **Chat B: probar BOE-Worker con cliente real** | `nuevo-proyecto/BOE-Worker/` → `node src/index.js` | 🔴 BLOQUEANTE |
+| 2 | **Chat D: playbook outbound despachos abogados** | `ScrapperEmpresasBOE - copia/src/cli.js` (fuente referencia) | 🔴 ALTO |
+| 3 | **Deploy captación worker en VPS** | Ver FASE 1+2 abajo | 🔴 ALTO |
+| 4 | **SEO páginas programáticas** | `nuevo-proyecto/web-app/app/radar-boe/` | 🟡 MEDIO |
+| 5 | **Sistema videos** (gateado ≥10 clientes) | `nuevo-proyecto/` (módulo nuevo) | 🟢 BAJO |
+
+### Configuración externa hecha (no repetir)
+- ✅ Stripe: 3 productos, price IDs en .env.local, webhook registrado, Billing Portal activo
+- ✅ Supabase: migraciones 01-08 aplicadas, RLS activado
+- ✅ Vercel: STRIPE_*, SUPABASE_*, BREVO_*, ADMIN_EMAILS, NEXT_PUBLIC_SITE_URL configuradas
+- ✅ Secrets rotados (post-exposición 2026-04-20)
+- ⏳ Crear usuario Supabase Auth para cliente existente: Dashboard → Authentication → Users → Invite user
 
 ---
 
@@ -34,8 +164,8 @@ Lo que tienes es más que suficiente para generar 1.000-3.000€/mes. El problem
 │  CONVERSIÓN (leads se convierten)                        │
 │  ├── Landing Radar BOE (79/179/399€/mes)                 │
 │  ├── Landing "Automatización a medida" (2.500-5.000€)    │
-│  ├── Stripe self-serve (ya funciona)                     │
-│  └── Panel cliente self-service (ya funciona)            │
+│  ├── Stripe self-serve ✅ (3 planes, webhook 4 eventos, portal)          │
+│  └── Panel cliente self-service ✅ (`/acceso` → `/panel`)               │
 │                                                          │
 │  RETENCIÓN (clientes se quedan y pagan más)              │
 │  ├── Panel /panel con keywords/destinatarios             │
@@ -91,11 +221,11 @@ Lo que tienes es más que suficiente para generar 1.000-3.000€/mes. El problem
 
 ---
 
-#### PASO 1.2 — Añadir rotación SMTP al scraper
+#### PASO 1.2 — Añadir rotación SMTP al worker captación del VPS
 
-Archivo: `ScrapperEmpresasBOE - copia/src/services/email.js`
+> ⚠️ IMPORTANTE: Este código va en `/opt/captacion/src/services/email.js` del VPS (el código portado en FASE 2), NO en `ScrapperEmpresasBOE - copia/`. El scraper copia es solo referencia. CLAUDE.md prohíbe extenderlo in-place.
 
-Añadir al .env del scraper (después de rotar los que ya tienes):
+Añadir al `.env` de `/opt/captacion/` (después de rotar los que ya tienes):
 ```env
 # SMTP principal (Brevo — rotada)
 SMTP_HOST=smtp-relay.brevo.com
@@ -256,6 +386,8 @@ apt-get install -y ca-certificates fonts-liberation libappindicator3-1 \
 ```bash
 # ── DESDE TU MÁQUINA WINDOWS (Git Bash) ──────────────────
 # 6. Subir código del scraper al VPS
+# NOTA: Este scp sube el scraper copia como deploy inicial. Es correcto para ahora.
+# Futuro: crear nuevo-proyecto/captacion-worker/ en el repo y deployar desde ahí.
 scp -r "C:\Users\Maste\Desktop\Proyectos2026\MAVIE_BOE_WEB\ScrapperEmpresasBOE - copia" root@TU_IP_VPS:/opt/captacion
 
 # 7. Subir los leads CSV
@@ -642,6 +774,10 @@ Tu único trabajo: revisar stats, contestar respuestas, cerrar reuniones.
 
 ## FASE 7 — SISTEMA DE VIDEOS AUTOMÁTICO (sesiones futuras)
 
+> ⚠️ GATE: No empezar esta fase hasta tener 10+ clientes activos o ≥ 1.500€ MRR. Antes del gate: crear videos manualmente con las escenas HTML existentes y publicar a mano.
+>
+> ⚠️ ANTES DE CODIFICAR: Instalar skill "Editor Pro Max" de tododeia.com. Ya incluye pipeline Remotion+FFmpeg+templates. Evita construir desde cero lo que ya existe.
+>
 > Contexto para la IA que retome esto: Josep ya tiene un sistema de reels animados en React (HTML+JSX) en `videosMavie/`. El objetivo es convertirlo en un pipeline completo: guión → voz → video MP4 → publicación automática en RRSS, todo gestionable desde el panel Mavie `/dashboard/videos`.
 
 ### Decisiones ya tomadas
@@ -800,20 +936,26 @@ Para LinkedIn/YouTube normal → crear variante Stage `width={1920} height={1080
 ### Email stack
 - [ ] Brevo + Resend + SendGrid + Gmail rotación activa
 
-### Producto (ya hecho)
+### Producto (ya hecho — actualizado 2026-04-21)
 - [x] Radar BOE pipeline multi-tenant
-- [x] Stripe checkout + webhook
-- [x] Panel cliente `/panel`
-- [x] Landing precios + CTAs
+- [x] Stripe checkout + webhook (4 eventos, portal, página /gracias)
+- [x] Panel cliente `/panel` + keywords + destinatarios (Chat C ✅)
+- [x] Auth self-service `/acceso` (Supabase Auth cliente)
+- [x] Landing precios + CTAs (79/179/399€)
+- [x] BOE-Worker como cron automático Vercel (Chat E ✅)
+- [ ] **URGENTE: Probar BOE-Worker con cliente real** (Chat B — SIGUIENTE)
 
 ### SEO
 - [ ] next-seo + páginas programáticas + sitemap
+- [ ] Skill "Claude SEO" de tododeia.com instalado (hacerlo junto con las páginas)
 
 ### Captación activa
 - [ ] 18k leads en SQLite + envío automático activo
+- [ ] Multi-SMTP rotación en worker captación VPS (NO en scraper copia)
 - [ ] LinkedIn DMs rutina
 
-### Sistema de videos
+### Sistema de videos (gate: ≥10 clientes o ≥1.500€ MRR)
+- [ ] Skill "Editor Pro Max" de tododeia.com instalado (antes de codificar nada)
 - [ ] ElevenLabs: voz Josep clonada + API key en .env
 - [ ] FFmpeg en VPS
 - [ ] Remotion en VPS
@@ -831,3 +973,82 @@ Tu único trabajo diario: revisar stats, aprobar videos, cerrar reuniones.
 
 *Josep Cervera · Mavie Automations · mavieautomations.com*  
 *Actualizado: 2026-04-21*
+
+---
+
+## FASE 8 — RECURSOS TODODEIA.COM (contexto para IAs futuras)
+
+> Fuente: https://www.tododeia.com/community/proyectos-activos  
+> Todos estos proyectos son open source / gratis. Instalar según fase activa.  
+> Instrucción para la IA: antes de construir algo desde cero, revisar si alguno de estos proyectos lo resuelve.
+
+---
+
+### TIER 1 — Desbloquean MRR directo (instalar esta semana)
+
+| Proyecto | Tags clave | Para qué sirve en Mavie |
+|----------|-----------|------------------------|
+| **Protege Tu App** | supabase, RLS, CORS, security-headers | Activar RLS + headers HTTP antes de aceptar pagos reales. Supabase ya en uso. |
+| **Instant Landing** | landing, nextjs, ui | Regenerar `/soluciones/boe` completa con precios 79/179/399€ en una ejecución. |
+| **The Architect** | arquitectura, blueprint, claude-code | Genera plano de 16 secciones antes de construir Stripe, auth panel o nueva feature. Evita reescribir. |
+| **Scrapling** | leads, scraping, google-maps, mcp | Extrae emails + teléfonos de Google Maps y directorios. Despachos de abogados → outbound Fase 1. |
+| **All Deploy** | vercel, railway, vps, docker, rollback | Deploy automático de web-app a Vercel o BOE-Worker al VPS con rollback listo. |
+
+---
+
+### TIER 2 — Útiles en semanas 2-4
+
+| Proyecto | Tags clave | Para qué sirve en Mavie |
+|----------|-----------|------------------------|
+| **Cyber Neo** | seguridad, OWASP, agente, open-source | Escanea 11 dominios de seguridad antes de ir a producción con pagos reales. |
+| **Auto-CRM** | crm, local, kanban, ventas | CRM local para gestionar pipeline outbound despachos de abogados. 100% gratis. |
+| **Claude SEO** | seo, skill, auditoría, 13 comandos | 13 comandos SEO para auditar y optimizar `/soluciones/boe` y las 32+ páginas programáticas. Usar tras Fase 3 SEO. |
+| **Navega y Automatiza** | firecrawl, playwright, scraping, web | Da ojos a Claude: navega, lee y automatiza webs. Útil para enriquecer leads del scraper. |
+| **4 Superpoderes Claude** | supadata, apify, playwright, scraping | Apify para scraping de directorios B2B España. Complementa Scrapling. |
+
+---
+
+### TIER 3 — Fase 7 Videos (cuando Fase 1-3 completadas)
+
+| Proyecto | Tags clave | Para qué sirve en Mavie |
+|----------|-----------|------------------------|
+| **Editor Pro Max** | video, remotion, ffmpeg, whisper, templates | Pipeline guión→MP4 con Remotion. Base de la Sesión Videos 1. 25+ componentes, 9 templates. |
+| **Animaciones** | motion, video, assets, remotion | Pipeline de animaciones listas con Remotion. Complementa `videosMavie/animations.jsx` ya existente. |
+| **Viral Script Combo** | viral, guiones, voz, claude | Guiones virales + clonación de voz. Para los 6 tipos de video de Fase 7. |
+| **Open Carrusel** | carruseles, instagram, agente, branding | Genera carruseles Instagram desde Claude. Canal RRSS alternativo mientras Meta/TikTok revisan la app. |
+| **Humanízalo** | humanizer, escritura, 40+ patrones | Reescribe copy generado por IA para que suene como Josep. Para emails de captación y copy landing. |
+
+---
+
+### TIER 4 — Referencia / instalar si se necesita
+
+| Proyecto | Para qué sirve |
+|----------|---------------|
+| **Claude Web Builder** | No-code landing Next.js + deploy Vercel. Overlap con Instant Landing — usar solo si Instant Landing no cubre. |
+| **Arquitecto de Ingresos** | Prompt para planes de monetización. Pricing ya decidido (79/179/399€) → usar solo para upsells o nuevos productos. |
+| **The Architect** | Blueprint antes de features grandes. Siempre usar antes de sesiones de código largas. |
+| **Claude SEO** | Activar cuando tengamos tráfico en las páginas programáticas (Fase 3). |
+| **Skill Vault** | Organiza y analiza skills instalados. Útil si se acumulan muchos skills. |
+| **Gbrain** | Memoria permanente para Claude. Alternativa al sistema de memoria actual si falla. |
+
+---
+
+### NO instalar (fuera de scope Mavie hasta 10 clientes)
+
+- Game Studios, Blender, Trading, WhatsApp Agent → no relacionados con BOE/captación
+- Todos los tutoriales de principiantes (Claude Chat, Trabajar con Claude, Artefactos, etc.)
+- Apps móviles, ecommerce, Shopify → fuera de scope
+- Herramientas de diseño (Stitch, Magic UI, Awesome Design MD) → perfeccionar UI es Fase 3+
+
+---
+
+### Cómo instalar desde Claude Code
+
+La mayoría se instalan con un prompt en Claude Code:
+```
+npx skills.sh install <nombre-skill>
+```
+O clonando el repo y siguiendo el README. Pedir a Claude: "instala el skill [nombre] de tododeia.com".
+
+**Fuente original:** https://www.tododeia.com/community/proyectos-activos  
+**Actualizado:** 2026-04-21

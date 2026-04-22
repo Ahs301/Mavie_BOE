@@ -1,6 +1,6 @@
 # MAVIE MASTER — Fuente de verdad única
 
-> **Última actualización:** 2026-04-22  
+> **Última actualización:** 2026-04-22 (Stripe checkout confirmado funcional)  
 > **Dueño:** Josep Cervera  
 > **Principio:** dinero real antes que perfección técnica, pero que el producto sea bueno y agrade.  
 > **Regla:** 0€ invertido, solo tiempo + código.  
@@ -344,7 +344,7 @@ Cuando la IA proponga features o copy, debe pensar primero en vertical 1 y 2, no
 | Dashboard admin CRM | `app/(admin)/dashboard/` | ✅ 9 páginas (clientes, leads, BOE, emails…) |
 | Auth cliente self-service | `app/acceso/page.tsx` + `lib/auth.ts:requireClienteAuth()` | ✅ Login Supabase Auth → /panel |
 | Panel cliente `/panel` | `app/(cliente)/panel/` + `actions/clienteActions.ts` | ✅ Dashboard + keywords + destinatarios |
-| Stripe Checkout | `app/api/stripe/checkout/route.ts` | ✅ 3 planes → Stripe hosted checkout |
+| Stripe Checkout | `app/api/stripe/checkout/route.ts` | ✅ 3 planes → Stripe hosted checkout — **CONFIRMADO FUNCIONAL 2026-04-22** |
 | Stripe Webhook | `app/api/stripe/webhook/route.ts` | ✅ 4 eventos (activa/cancela/cambia plan/fallo pago) |
 | Stripe Portal | `app/api/stripe/portal/route.ts` | ✅ Billing Portal auth-protected |
 | Página post-pago `/gracias` | `app/gracias/page.tsx` | ✅ Confirmación + pasos + link portal |
@@ -755,6 +755,7 @@ Panel /dashboard/videos
 | C | Panel self-service cliente | ✅ HECHO (2026-04-20) |
 | D | Playbook outbound despachos abogados | ⏳ PENDIENTE |
 | E | BOE-Worker como cron automático | ✅ HECHO (2026-04-21) |
+| F | Fix Stripe 500 + confirmación funcional | ✅ HECHO (2026-04-22) — checkout funciona, redirige a Stripe |
 
 ### Detalle Chat A — ✅ HECHO
 Josep completó todos los pasos manuales: secrets rotados, variables en Vercel, migraciones SQL 07 y 08 aplicadas, webhook Stripe registrado, Billing Portal activado, Redeploy ejecutado.
@@ -942,11 +943,11 @@ Instalación: `npx skills.sh install <nombre-skill>` o clonar repo + seguir READ
 - [ ] Vercel: `CAPTACION_WORKER_URL` configurada + redeploy
 
 ### Email stack
-- [x] Brevo SMTP funcionando (300/día)
-- [ ] Resend cuenta + dominio verificado (100/día)
-- [ ] SendGrid cuenta + dominio verificado (100/día)
-- [ ] Gmail dedicado + app password (200/día warm-up)
-- [ ] Rotación SMTP en código captación
+- [x] Brevo SMTP funcionando (280/día — límite conservador en rotación)
+- [x] Resend cuenta + dominio `mail.mavieautomations.com` verificado (90/día) ✅ 2026-04-22
+- [x] Rotación multi-SMTP en código captación (`src/email/sender.js` v3) ✅ 2026-04-22
+- [ ] Gmail dedicado + app password (190/día warm-up) — **SIGUIENTE PASO**
+- [ ] SendGrid cuenta + dominio verificado (90/día) — después de Gmail
 
 ### Producto
 - [x] Radar BOE pipeline multi-tenant
@@ -998,5 +999,147 @@ Tu único trabajo diario: revisar stats, aprobar videos, cerrar reuniones.
 
 ---
 
+---
+
+## 25. PRÓXIMO CHAT — ORDEN DE ATAQUE
+
+> Instrucción para la IA del próximo chat: leer MAVIE-MASTER.md completo, luego ejecutar estas tareas en orden. No saltar a fases posteriores.
+
+### Prioridad 1 — Crear usuario Supabase Auth para cliente existente (5 min, Manual Josep)
+
+Sin esto el cliente real no puede acceder al panel `/panel`.
+
+1. Supabase Dashboard → Authentication → Users → "Invite user"
+2. Email del cliente existente (el que ya paga)
+3. El cliente recibe email de invitación → crea contraseña → accede en `https://mavieautomations.com/acceso`
+
+**No es código — es un paso manual de 2 minutos. Hacerlo antes que cualquier otra cosa.**
+
+---
+
+### Prioridad 2 — VPS: Deploy captación worker (FASE 1+2, sección 12)
+
+**Contexto para la IA:** El scraper funcional está en `ScrapperEmpresasBOE - copia/`. Tiene `server.js` HTTP wrapper ya creado. Hay ~18.678 leads en CSVs. El VPS Contabo está contratado. Falta subir el código, instalar dependencias, arrancar con PM2, y conectar Vercel con `CAPTACION_WORKER_URL`.
+
+**Lo que hay que hacer (en orden, la IA puede guiar y codificar lo que haga falta):**
+
+1. **Cuentas email gratuitas** — estado:
+   - ✅ Resend: dominio `mail.mavieautomations.com` verificado, credenciales en `.env` (2026-04-22)
+   - ❌ Gmail dedicado: cuenta nueva outreach → App Password → warm-up gradual (**PRIMER PASO**)
+   - ❌ SendGrid: `sendgrid.com` → signup → dominio `send.mavieautomations.com` → DNS Cloudflare
+
+2. **Rotación multi-SMTP** ✅ YA IMPLEMENTADA (2026-04-22):
+   - `ScrapperEmpresasBOE - copia/src/email/sender.js` v3 con `buildProviders()` + `getProvider()` + `getSmtpStats()`
+   - La IA NO necesita tocar este archivo — ya está hecho
+   - Solo añadir vars al `.env` cuando Josep configure Gmail/SendGrid
+
+3. **Deploy VPS** (sección 12.3):
+   - Node 22, Chrome deps, subir código y CSVs con `scp`
+   - `npm install`, crear `.env`, `node src/cli.js import` para los 3 CSVs
+   - `node src/cli.js stats` → verificar ~18.678 leads
+   - `node src/cli.js send-all --dry-run --limit 5` → test en seco
+   - `pm2 start src/server.js --name captacion-worker`
+   - `curl http://localhost:3002/health` → `{"ok":true}`
+   - `pm2 save && pm2 startup`
+
+4. **Conectar Vercel** (último paso):
+   - `CAPTACION_WORKER_URL=http://IP_VPS:3002` en Vercel env vars
+   - Redeploy
+
+5. **Listmonk** (no bloqueante, sección 12.4): Docker en VPS puerto 9000
+
+---
+
+### Prioridad 3 — Google Search Console (10 min, Manual Josep)
+
+1. `search.google.com/search-console` → Add property → `mavieautomations.com`
+2. Verificar dominio via Cloudflare (TXT record)
+3. Sitemaps → Submit `https://mavieautomations.com/sitemap.xml`
+
+---
+
+### Prioridad 4 — GitHub repo público (1h, FASE 4, sección 14)
+
+1. Crear repo `github.com/josepcervera622/radar-boe-demo` (o `Ahs301`)
+2. README.md con keywords SEO: `boe`, `spain`, `automatizacion`, `nodejs`, `nextjs`, `saas`
+3. Perfil GitHub: bio + website `mavieautomations.com` + pin repo
+4. Beneficio doble: credibilidad B2B + backlink SEO
+
+---
+
+### Prioridad 5 — LinkedIn optimizar perfil + primer post (FASE 5, sección 15)
+
+Solo después de tener el VPS enviando y poder mostrar métricas reales.
+
+---
+
+### Estado del sistema antes del próximo chat
+
+| Pieza | Estado |
+|-------|--------|
+| Web + landing Mavie | ✅ Deployada |
+| Stripe checkout funcional | ✅ CONFIRMADO 2026-04-22 |
+| BOE-Worker multi-tenant | ✅ Funcional (54 oportunidades, email recibido) |
+| Cron automático 08:00 AM | ✅ Activo |
+| Panel cliente `/panel` | ✅ Funcional (falta crear usuario Auth para cliente) |
+| SEO 33 páginas programáticas | ✅ Deployadas 2026-04-22 |
+| Multi-SMTP rotación código | ✅ Implementado 2026-04-22 — `sender.js` v3 con `getProvider()` + `getSmtpStats()` |
+| Brevo en rotación | ✅ 280/día |
+| Resend en rotación | ✅ 90/día — dominio `mail.mavieautomations.com` verificado, credenciales en `.env` |
+| Gmail en rotación | ❌ PENDIENTE — **PRIMER PASO próximo chat** (15 min, añade 190/día) |
+| SendGrid en rotación | ❌ PENDIENTE — después de Gmail |
+| Captación worker VPS | ❌ PENDIENTE — deploy tras completar email stack |
+| 18k leads importados | ❌ PENDIENTE — tras deploy VPS |
+
+---
+
+### Qué hizo la IA en este chat (2026-04-22)
+
+1. **`ScrapperEmpresasBOE - copia/src/email/sender.js`** → reescrito a v3 con rotación multi-SMTP completa:
+   - `buildProviders()` — carga solo proveedores con credenciales presentes en `.env`
+   - `getProvider()` — elige proveedor con cuota diaria restante (Brevo→Resend→Gmail→SendGrid)
+   - `_transporters` — cache por proveedor (no recrea cada send)
+   - `getSmtpStats()` — export nuevo para monitoreo de quota
+   - `sendEmail()` — usa `provider.fromEmail` como "from", `FROM_EMAIL` principal como reply-to
+   - Devuelve `{ provider: 'brevo'|'resend'|... }` en cada envío
+
+2. **`ScrapperEmpresasBOE - copia/src/server.js`** → nuevo endpoint `GET /stats/smtp` con quota usada/restante por proveedor
+
+3. **`ScrapperEmpresasBOE - copia/src/config.js`** → añadidas vars opcionales: `RESEND_SMTP_PASS`, `RESEND_FROM_EMAIL`, `SENDGRID_API_KEY`, `SENDGRID_FROM_EMAIL`, `GMAIL_USER`, `GMAIL_PASS`
+
+4. **`ScrapperEmpresasBOE - copia/.env.example`** → documentadas las nuevas vars con instrucciones
+
+5. **`ScrapperEmpresasBOE - copia/.env`** → añadidos `RESEND_SMTP_PASS` + `RESEND_FROM_EMAIL` (probado y funcional ✅)
+
+---
+
+### Prioridad 1 próximo chat — Gmail dedicado (15 min, Manual Josep)
+
+Añade 190 emails/día al stack. Pasos:
+
+1. Crear cuenta Google nueva solo para outreach (ej: `mavie.outreach@gmail.com`)
+2. Activar verificación en 2 pasos
+3. `myaccount.google.com` → Seguridad → **Contraseñas de aplicación** → Seleccionar app: Correo → Generar → copiar 16 chars
+4. Añadir al `ScrapperEmpresasBOE - copia/.env`:
+   ```
+   GMAIL_USER=mavie.outreach@gmail.com
+   GMAIL_PASS=xxxxxxxxxxxxxxxxxxxx
+   ```
+5. ⚠️ Warm-up obligatorio: semana 1: 20/día → s2: 50 → s3: 100 → s4: 190. Ajustar `MAX_PER_DAY` en `.env` según la semana.
+
+**Verificación:** `curl http://localhost:3002/stats/smtp` (tras deploy VPS) debe mostrar Gmail con `remaining > 0`.
+
+---
+
+### Prioridad 2 próximo chat — Deploy VPS (sección 12.3)
+
+El código está listo. Solo falta subirlo al VPS Contabo y arrancar PM2. Ver checklist completo en sección 12.3.
+
+Stack resultante tras Gmail + VPS:
+- Brevo 280 + Resend 90 + Gmail 190 = **560 emails/día inmediato**
+- +SendGrid 90 cuando se configure = **650 emails/día**
+
+---
+
 *Josep Cervera · Mavie Automations · mavieautomations.com*  
-*Actualizado: 2026-04-21*
+*Actualizado: 2026-04-22*

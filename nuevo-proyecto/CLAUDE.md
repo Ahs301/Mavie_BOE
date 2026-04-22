@@ -1,5 +1,7 @@
 # CLAUDE.md
 
+> **FUENTE DE VERDAD PRINCIPAL → leer `nuevo-proyecto/JOSEPH.md` primero.** Este archivo es referencia técnica complementaria.  Josep.md tiene el plan de negocio, estado del código, y qué hacer a continuación — todo en un solo sitio.
+
 > Contexto maestro del proyecto. Cualquier IA que trabaje en este repo debe leer este archivo antes de proponer cambios, arquitectura o features. Las decisiones técnicas se toman en función del plan de negocio descrito aquí, no al revés.
 
 ---
@@ -45,7 +47,7 @@ Soy **Josep**, 22 años, perfil técnico (full-stack + automatización + IA). Es
   - Multi-tenancy (tabla `tenants`, aislamiento de datos, keywords por cliente)
   - Sistema de auth (signup, login, recuperación)
   - Panel web donde el cliente gestiona sus keywords/fuentes/destinatarios sin tocarme a mí
-  - Stripe para suscripción recurrente (planes 49 / 149 / 399 €/mes)
+  - Stripe para suscripción recurrente (planes 79 / 179 / 399 €/mes)
   - Onboarding automático post-pago
   - Página de estado / logs para el cliente
 - **Qué NO falta (no tocar ahora):** más fuentes aparte del BOE, IA más sofisticada, app móvil, integraciones con Slack/Teams/CRM. Todo eso son upsells de mes 3+.
@@ -120,9 +122,9 @@ Sin leads no hay nada. El scraper es la palanca.
 ## 6. Modelo de negocio y pricing (para que la IA entienda qué construir)
 
 ### Radar BOE — 3 planes
-- **Básico 49 €/mes:** 1 usuario, 5 keywords, 1 destinatario de email, alertas diarias.
-- **Pro 149 €/mes:** 5 usuarios, 25 keywords, múltiples destinatarios, boletines autonómicos, alertas configurables.
-- **Business 399 €/mes:** multi-usuario, API, integración Slack/Teams, soporte prioritario, onboarding personalizado.
+- **Básico 79 €/mes:** 1 usuario, 10 keywords, BOE nacional, resumen diario, 1 destinatario email.
+- **Pro 179 €/mes:** 5 usuarios, 50 keywords, BOE+DOUE+autonómico, alertas instantáneas, múltiples destinatarios.
+- **Business 399 €/mes:** Ilimitado, API, multi-usuario, soporte prioritario, onboarding personalizado.
 
 ### Servicios productizados (Mavie)
 - **Sistema de prospección B2B:** setup 2.500 € + 400 €/mes de mantenimiento. Réplica del scraper+emailing adaptado al nicho del cliente.
@@ -230,7 +232,7 @@ MAVIE_BOE_WEB/
 | Scraper B2B captación | `ScrapperEmpresasBOE - copia/src/` | ✅ Funcional standalone (scraper/classify/email/tracking) | Fase 1 (leads) |
 | **Auth self-service cliente** | `web-app/app/acceso/page.tsx` + `lib/auth.ts:requireClienteAuth()` | ✅ **FUNCIONAL** — login en `/acceso`, middleware protege `/panel/*` | **Fase 2 (SaaS)** |
 | **Panel cliente `/panel`** | `web-app/app/(cliente)/panel/` + `actions/clienteActions.ts` | ✅ **FUNCIONAL** — panel + keywords + destinatarios. **Pendiente: crear usuario Supabase Auth para cliente** | **Fase 2 (SaaS)** |
-| BOE-Worker como cron | — | ❌ Solo ejecución manual (`node src/index.js`) | Producción autónoma |
+| BOE-Worker como cron | `web-app/app/api/boe/cron/route.ts` | ✅ **FUNCIONAL** — Vercel Cron 08:00 AM automático (Chat E ✅) | Producción autónoma |
 
 ### 11.2 Bloqueadores directos de ingreso (orden de ataque) — actualizado 2026-04-20
 
@@ -258,7 +260,8 @@ npm run build
 npm run lint
 
 # BOE-Worker (desde nuevo-proyecto/BOE-Worker/)
-node src/index.js  # ejecución manual (aún no cron)
+node src/index.js  # ejecución manual para debug/test
+# Producción: Vercel Cron dispara /api/boe/cron → worker automático 08:00 AM
 
 # Scraper viejo (desde "ScrapperEmpresasBOE - copia/")
 node src/cli.js    # CLI outbound B2B
@@ -436,19 +439,23 @@ El modelo anterior de la landing (`397€ setup + 40€/mes`) queda **eliminado*
 | Homepage | `web-app/app/page.tsx` | Landing Mavie completa: hero, proceso, productos, social proof |
 | DB schema | `database/schema.sql` + `supabase_migrations/07_stripe_columns.sql` | Multi-tenant via `client_id` FK en todas las tablas. RLS activado. Columnas Stripe añadidas |
 
-### 14.2 Lo que FALTA en código
+### 14.2 Lo que FALTA en código (actualizado 2026-04-21)
 
 | Pieza | Impacto | Complejidad estimada |
 |---|---|---|
-| Panel cliente self-service `/panel` | Alto — sin esto Josep gestiona todo a mano | 1 chat de trabajo |
-| Auth cliente (signup/login no-admin) | Alto — vinculado al panel | Incluido en lo anterior |
-| BOE-Worker como cron automático | Medio — ahora es manual | 1 chat corto |
+| Validar BOE-Worker con cliente real (Chat B) | 🔴 Crítico — sin test no sabemos si funciona en prod | 1 sesión debug |
+| Playbook outbound despachos abogados (Chat D) | 🔴 Alto — sin leads no hay clientes | Operación, no código |
+| Deploy captación worker en VPS | 🔴 Alto — 219 emails/día automáticos | FASE 1+2 JOSEPH.md |
+| SEO páginas programáticas | 🟡 Medio | FASE 3 JOSEPH.md |
+| ~~Panel cliente self-service `/panel`~~ | ~~Alto~~ | ✅ HECHO — Chat C |
+| ~~Auth cliente (signup/login no-admin)~~ | ~~Alto~~ | ✅ HECHO — Chat C |
+| ~~BOE-Worker como cron automático~~ | ~~Medio~~ | ✅ HECHO — Chat E |
 
-### 14.3 % de completitud real
+### 14.3 % de completitud real (actualizado 2026-04-21)
 
-- **Para vender el primer cliente nuevo (esta semana):** ~85% — falta solo configuración externa (Chat A)
-- **Para SaaS self-service completo:** ~58% — falta panel cliente + cron
-- **Para Fase 2 completada:** ~75% — falta panel cliente
+- **Para vender el primer cliente nuevo (hoy):** ~95% — solo falta Chat B (test) + leads outbound
+- **Para SaaS self-service completo:** ~90% — funcional, pendiente validar con cliente real
+- **Para Fase 2 completada:** ~90% — falta captación 24/7 en VPS
 
 ---
 
@@ -678,8 +685,5 @@ El modelo anterior de la landing (`397€ setup + 40€/mes`) queda **eliminado*
    - Generar copy secuencia 3 emails con prueba social del cliente actual
    - Configurar tracking en Brevo
 
-3. **Chat E — BOE-Worker como cron automático** (después de Chat B):
-   - Opción A: Vercel Cron → endpoint `GET /api/boe/cron` en web-app que dispara el worker
-   - Opción B: crontab en VPS → `0 8 * * * node /ruta/BOE-Worker/src/index.js`
-   - Estimación: 1 chat corto
+3. ~~**Chat E — BOE-Worker como cron automático**~~ → ✅ HECHO (2026-04-21). Vercel Cron en `web-app/app/api/boe/cron/route.ts`, 08:00 AM diario.
 
