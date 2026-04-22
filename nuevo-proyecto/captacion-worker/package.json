@@ -1,0 +1,59 @@
+{
+  "name": "boe-radar-outreach",
+  "version": "2.0.0",
+  "description": "BOE Radar Inteligente – Plataforma profesional de outreach B2B con emails HTML, tracking, IA y scraping ultra-agresivo.",
+  "type": "module",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "preview": "node src/cli.js preview",
+    "send": "node src/cli.js send",
+    "send-all": "node src/cli.js send-all",
+    "scrape-and-send": "node src/cli.js scrape-and-send",
+    "followup:preview": "node src/cli.js followup-preview",
+    "followup:send": "node src/cli.js followup-send",
+    "mark-replied": "node src/cli.js mark-replied",
+    "mark-bounced": "node src/cli.js mark-bounced",
+    "unreplied": "node src/cli.js unreplied",
+    "hot-leads": "node src/cli.js hot-leads",
+    "stats": "node src/cli.js stats",
+    "report": "node src/cli.js report",
+    "scrape": "node src/cli.js scrape",
+    "scrape-spain": "node src/cli.js scrape-spain",
+    "tracking": "node src/cli.js tracking-server",
+    "check-bounces": "node src/cli.js check-bounces",
+    "outreach:preview": "node src/cli.js preview",
+    "outreach:send": "node src/cli.js send",
+    "server": "node src/server.js"
+  },
+  "dependencies": {
+    "cli-progress": "^3.12.0",
+    "commander": "^12.1.0",
+    "csv-parse": "^5.5.6",
+    "dotenv": "^16.4.5",
+    "nodemailer": "^6.9.14",
+    "openai": "^4.52.7",
+    "puppeteer": "^24.37.5",
+    "uuid": "^10.0.0",
+    "winston": "^3.13.0",
+    "zod": "^3.23.8"
+  },
+  "optionalDependencies": {
+    "imapflow": "^1.0.162"
+  },
+  "keywords": [
+    "outreach",
+    "email",
+    "b2b",
+    "boe",
+    "subvenciones",
+    "licitaciones",
+    "radar",
+    "cli",
+    "scraper",
+    "marketing"
+  ],
+  "author": "Josep – BOE Radar Inteligente",
+  "license": "MIT"
+}
