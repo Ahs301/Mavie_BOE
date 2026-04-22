@@ -12,21 +12,21 @@
     --foreground: 220 15% 10%;
 
     /* Escala de neutrales - Light Mode */
-    --neutral-950: #f8fafc;
-    --neutral-900: #f1f5f9;
-    --neutral-800: #e2e8f0;
-    --neutral-700: #cbd5e1;
-    --neutral-600: #94a3b8;
-    --neutral-500: #64748b;
-    --neutral-400: #475569;
-    --neutral-300: #334155;
-    --neutral-200: #1e293b;
-    --neutral-100: #0f172a;
-    --neutral-50:  #020617;
+    --neutral-950: 210 40% 98%; /* #f8fafc */
+    --neutral-900: 210 40% 96%; /* #f1f5f9 */
+    --neutral-800: 214 32% 91%; /* #e2e8f0 */
+    --neutral-700: 213 27% 84%; /* #cbd5e1 */
+    --neutral-600: 215 20% 65%; /* #94a3b8 */
+    --neutral-500: 215 16% 47%; /* #64748b */
+    --neutral-400: 215 19% 35%; /* #475569 */
+    --neutral-300: 215 25% 27%; /* #334155 */
+    --neutral-200: 217 33% 17%; /* #1e293b */
+    --neutral-100: 222 47% 11%; /* #0f172a */
+    --neutral-50:  229 84% 5%; /* #020617 */
 
     /* Blanco/negro semánticos que se invierten */
-    --white: #0f172a;
-    --black: #f8fafc;
+    --white: 222 47% 11%; /* #0f172a */
+    --black: 210 40% 98%; /* #f8fafc */
 
     /* Colores de sistema UI */
     --border: 214 32% 88%;
@@ -60,20 +60,20 @@
     --foreground: 0 0% 96%;
 
     /* Escala de neutrales - Dark Mode */
-    --neutral-950: #0a0a0a;
-    --neutral-900: #171717;
-    --neutral-800: #262626;
-    --neutral-700: #404040;
-    --neutral-600: #525252;
-    --neutral-500: #737373;
-    --neutral-400: #a3a3a3;
-    --neutral-300: #d4d4d4;
-    --neutral-200: #e5e5e5;
-    --neutral-100: #f5f5f5;
-    --neutral-50:  #fafafa;
+    --neutral-950: 0 0% 4%; /* #0a0a0a */
+    --neutral-900: 0 0% 9%; /* #171717 */
+    --neutral-800: 0 0% 15%; /* #262626 */
+    --neutral-700: 0 0% 25%; /* #404040 */
+    --neutral-600: 0 0% 32%; /* #525252 */
+    --neutral-500: 0 0% 45%; /* #737373 */
+    --neutral-400: 0 0% 64%; /* #a3a3a3 */
+    --neutral-300: 0 0% 83%; /* #d4d4d4 */
+    --neutral-200: 0 0% 90%; /* #e5e5e5 */
+    --neutral-100: 0 0% 96%; /* #f5f5f5 */
+    --neutral-50:  0 0% 98%; /* #fafafa */
 
-    --white: #ffffff;
-    --black: #000000;
+    --white: 0 0% 100%; /* #ffffff */
+    --black: 0 0% 0%; /* #000000 */
 
     /* Colores de sistema UI */
     --border: 0 0% 15%;
