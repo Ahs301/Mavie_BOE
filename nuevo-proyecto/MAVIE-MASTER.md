@@ -388,7 +388,7 @@ Cuando la IA proponga features o copy, debe pensar primero en vertical 1 y 2, no
 | 1 | **Deploy captación worker en VPS** (FASE 1+2) | Manual Josep + código | ✅ HECHO (Código) / ⏳ PENDIENTE (Manual VPS) |
 | 2 | **Playbook outbound despachos abogados** (Chat D) | Operación + copy | 🔴 ALTO — sin leads no hay clientes |
 | 3 | ~~**SEO páginas programáticas** (FASE 3)~~ | ~~Código~~ | ✅ HECHO (2026-04-22) — 33 páginas, sitemap, JSON-LD, interlinking |
-| 4 | **GitHub repo público** (FASE 4) | Manual | 🟡 MEDIO — credibilidad + SEO |
+| 4 | ~~**GitHub repo público** (FASE 4)~~ | ~~Manual~~ | ❌ DESCARTADO (Proteger Propiedad Intelectual) |
 | 5 | **LinkedIn captación** (FASE 5) | Manual | 🟡 MEDIO — 10×CTR vs email |
 | 6 | **Sistema videos** (FASE 7, gateado ≥10 clientes) | Código | 🟢 BAJO — no antes de MRR |
 
@@ -665,16 +665,9 @@ Creado `web-app/app/radar-boe/page.tsx` — hub de verticales + ciudades. ✅
 
 ---
 
-## 14. FASE 4 — GITHUB COMO SEO Y CREDIBILIDAD (1-2h)
+## 14. FASE 4 — GITHUB COMO SEO (DESCARTADO)
 
-### Crear repo público: `github.com/Ahs301/radar-boe-demo`
-
-README SEO con keywords: `boe`, `spain`, `automatizacion`, `nodejs`, `nextjs`, `saas`
-
-Perfil GitHub (`github.com/Ahs301`):
-- Bio: "Full-stack · Automatización B2B · Fundador Mavie Automations"
-- Website: `https://mavieautomations.com`
-- Pin: radar-boe-demo como repo destacado
+> **Decisión (2026-04-22):** Esta fase queda **cancelada**. El código base de Mavie es propiedad intelectual (IP) y la ventaja competitiva del negocio. Mantendremos el repositorio en formato **PRIVADO** absoluto. No se expondrá el código a terceros.
 
 ---
 
