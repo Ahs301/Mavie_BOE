@@ -2,7 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2024-09-30.acacia' })
+function getStripe() {
+  const key = process.env.STRIPE_SECRET_KEY?.trim()
+  if (!key) throw new Error('[webhook] STRIPE_SECRET_KEY no configurada')
+  return new Stripe(key, { apiVersion: '2024-09-30.acacia' })
+}
 
 // Service role client — bypasses RLS, safe only in server-side webhook
 function createServiceClient() {
@@ -25,6 +29,8 @@ export async function POST(req: NextRequest) {
   if (!sig) {
     return NextResponse.json({ error: 'Sin firma Stripe' }, { status: 400 })
   }
+
+  const stripe = getStripe()
 
   let event: Stripe.Event
   try {
