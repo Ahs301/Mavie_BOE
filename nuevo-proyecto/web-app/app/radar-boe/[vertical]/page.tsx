@@ -6,6 +6,7 @@ import {
 } from "lucide-react"
 import type { Metadata } from "next"
 import { VERTICALES, getVerticalBySlug, getAllVerticalSlugs } from "../_data/verticales"
+import { CIUDADES } from "../_data/ciudades"
 import {
   serviceSchema, breadcrumbSchema, faqPageSchema, jsonLdScript, SITE_URL,
 } from "@/lib/seo"
@@ -103,6 +104,8 @@ export default function VerticalPage({ params }: PageProps) {
 
   // Other verticals for interlinking
   const otherVerticals = VERTICALES.filter((ov) => ov.slug !== v.slug).slice(0, 4)
+  // Top cities for interlinking
+  const topCiudades = CIUDADES.slice(0, 8)
 
   return (
     <div className="flex flex-col">
@@ -156,8 +159,21 @@ export default function VerticalPage({ params }: PageProps) {
         </div>
       </section>
 
+      {/* ── Tabla de Contenidos (SEO) ── */}
+      <div className="bg-neutral-950/80 border-b border-neutral-800 sticky top-16 z-40 hidden md:block backdrop-blur-md">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <nav className="flex items-center gap-8 text-sm font-medium text-neutral-400">
+            <a href="#problema" className="hover:text-white transition-colors">El Reto</a>
+            <a href="#proceso" className="hover:text-white transition-colors">Cómo Funciona</a>
+            <a href="#casos" className="hover:text-white transition-colors">Qué Detectamos</a>
+            <a href="#precios" className="hover:text-white transition-colors">Precios</a>
+            <a href="#faqs" className="hover:text-white transition-colors">Preguntas Frecuentes</a>
+          </nav>
+        </div>
+      </div>
+
       {/* ── Pain Points ── */}
-      <section className="py-20 px-6 border-b border-neutral-800">
+      <section id="problema" className="py-20 px-6 border-b border-neutral-800">
         <div className="max-w-7xl mx-auto">
           <div className="mb-12 max-w-2xl">
             <div className="flex items-center gap-3 mb-6">
@@ -165,7 +181,7 @@ export default function VerticalPage({ params }: PageProps) {
               <span className="text-xs font-semibold text-neutral-500 uppercase tracking-widest">El problema</span>
             </div>
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Los retos que enfrentan<br />
+              Los retos de monitorización que enfrentan<br />
               <span className="blue-gradient">{v.nombre.toLowerCase()}</span>
             </h2>
           </div>
@@ -184,7 +200,7 @@ export default function VerticalPage({ params }: PageProps) {
       </section>
 
       {/* ── Cómo funciona ── */}
-      <section className="py-20 px-6 border-b border-neutral-800">
+      <section id="proceso" className="py-20 px-6 border-b border-neutral-800">
         <div className="max-w-7xl mx-auto">
           <div className="mb-12 max-w-2xl">
             <div className="flex items-center gap-3 mb-6">
@@ -192,8 +208,8 @@ export default function VerticalPage({ params }: PageProps) {
               <span className="text-xs font-semibold text-neutral-500 uppercase tracking-widest">Proceso</span>
             </div>
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              En marcha en 72 horas.<br />
-              <span className="blue-gradient">Sin complejidad técnica.</span>
+              Cómo funciona Radar BOE para {v.nombre.toLowerCase()}<br />
+              <span className="blue-gradient">En marcha en 72 horas.</span>
             </h2>
           </div>
           <div className="grid md:grid-cols-3 gap-6">
@@ -219,7 +235,7 @@ export default function VerticalPage({ params }: PageProps) {
       </section>
 
       {/* ── Casos de uso ── */}
-      <section className="py-20 px-6 border-b border-neutral-800">
+      <section id="casos" className="py-20 px-6 border-b border-neutral-800">
         <div className="max-w-7xl mx-auto">
           <div className="mb-12 max-w-2xl">
             <div className="flex items-center gap-3 mb-6">
@@ -227,7 +243,7 @@ export default function VerticalPage({ params }: PageProps) {
               <span className="text-xs font-semibold text-neutral-500 uppercase tracking-widest">Casos de uso</span>
             </div>
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Qué detecta Radar BOE para<br />
+              Qué oportunidades detecta Radar BOE para<br />
               <span className="blue-gradient">{v.nombre.toLowerCase()}</span>
             </h2>
           </div>
@@ -247,7 +263,7 @@ export default function VerticalPage({ params }: PageProps) {
       <section id="precios" className="py-20 px-6 border-b border-neutral-800">
         <div className="max-w-7xl mx-auto">
           <div className="mb-12 text-center">
-            <h2 className="text-3xl font-bold text-white mb-4">Precios claros y directos</h2>
+            <h2 className="text-3xl font-bold text-white mb-4">Planes y precios del servicio de alertas BOE</h2>
             <p className="text-neutral-400 max-w-xl mx-auto">Suscripción mensual pura. Sin setup fee, sin permanencia, cancelas cuando quieras.</p>
           </div>
           <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
@@ -281,8 +297,8 @@ export default function VerticalPage({ params }: PageProps) {
       <section className="py-20 px-6 border-b border-neutral-800">
         <div className="max-w-3xl mx-auto">
           <div className="mb-12 text-center">
-            <h2 className="text-3xl font-bold text-white mb-4">Preguntas frecuentes</h2>
-            <p className="text-neutral-400">Sobre Radar BOE para {v.nombre.toLowerCase()}</p>
+            <h2 className="text-3xl font-bold text-white mb-4">Preguntas frecuentes sobre el rastreo del BOE para {v.nombre.toLowerCase()}</h2>
+            <p className="text-neutral-400">Resolvemos tus dudas operativas</p>
           </div>
           <div className="space-y-4">
             {v.faqs.map((faq, i) => (
@@ -314,8 +330,22 @@ export default function VerticalPage({ params }: PageProps) {
           </div>
           <div className="mt-6 text-center">
             <Link href="/radar-boe" className="text-sm text-blue-500 hover:text-blue-400 transition-colors">
-              Ver todos los sectores →
+              Ver todos los sectores para Radar BOE →
             </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Ciudades relacionadas ── */}
+      <section className="py-16 px-6 border-b border-neutral-800">
+        <div className="max-w-7xl mx-auto">
+          <h2 className="text-xl font-bold text-white mb-6">Radar BOE en las principales ciudades</h2>
+          <div className="flex flex-wrap gap-3">
+            {topCiudades.map((c) => (
+              <Link key={c.slug} href={`/radar-boe/ciudad/${c.slug}`} className="rounded-full border border-neutral-800 bg-neutral-900/40 px-4 py-2 text-sm text-neutral-400 hover:border-blue-900/40 hover:text-white transition-colors">
+                Radar BOE en {c.nombre}
+              </Link>
+            ))}
           </div>
         </div>
       </section>

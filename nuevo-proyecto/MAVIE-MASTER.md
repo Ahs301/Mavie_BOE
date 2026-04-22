@@ -43,7 +43,7 @@
 │  SEO (tráfico pasivo 24/7)                               │
 │  ├── 60+ páginas programáticas /radar-boe-[vertical]     │
 │  ├── GitHub repo público → Google indexa                 │
-│  └── Blog técnico → casos reales anonimizados            │
+│  └── Hub SEO Programático (/radar-boe) → Motor inbound "Blog"│
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -623,6 +623,7 @@ Creado `web-app/app/radar-boe/ciudad/[ciudad]/page.tsx` con 20 ciudades principa
 Creado `web-app/app/radar-boe/page.tsx` — hub de verticales + ciudades. ✅
 
 **Resultado:** 33 páginas con URLs únicas, meta tags SEO, pre-renderizadas en build time (SSG).
+*Nota (2026-04-22): Se ha optimizado la estructura del Hub Programático para que actúe oficialmente como el "Blog" principal de captación inbound. Se implementó una Tabla de Contenidos (ToC) pegajosa (sticky), mejora de las etiquetas H2/H3 (con inyección de keywords transaccionales) y un sistema avanzado de interlinking cruzado (Silos SEO) uniendo verticales y ciudades principales.*
 
 ### 13.2 Sitemap automático ✅
 

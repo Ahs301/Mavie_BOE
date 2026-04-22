@@ -164,8 +164,20 @@ export default function CiudadPage({ params }: PageProps) {
         </div>
       </section>
 
+      {/* ── Tabla de Contenidos (SEO) ── */}
+      <div className="bg-neutral-950/80 border-b border-neutral-800 sticky top-16 z-40 hidden md:block backdrop-blur-md">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <nav className="flex items-center gap-8 text-sm font-medium text-neutral-400">
+            <a href="#contexto" className="hover:text-white transition-colors">Contexto Local</a>
+            <a href="#proceso" className="hover:text-white transition-colors">Cómo Funciona</a>
+            <a href="#precios" className="hover:text-white transition-colors">Precios</a>
+            <a href="#faqs" className="hover:text-white transition-colors">Preguntas Frecuentes</a>
+          </nav>
+        </div>
+      </div>
+
       {/* ── Datos de la ciudad ── */}
-      <section className="py-20 px-6 border-b border-neutral-800">
+      <section id="contexto" className="py-20 px-6 border-b border-neutral-800">
         <div className="max-w-7xl mx-auto">
           <div className="mb-12 max-w-2xl">
             <div className="flex items-center gap-3 mb-6">
@@ -173,8 +185,8 @@ export default function CiudadPage({ params }: PageProps) {
               <span className="text-xs font-semibold text-neutral-500 uppercase tracking-widest">Contexto local</span>
             </div>
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              ¿Por qué Radar BOE en<br />
-              <span className="blue-gradient">{c.nombre}?</span>
+              Por qué es clave el Radar BOE en<br />
+              <span className="blue-gradient">{c.nombre}</span>
             </h2>
           </div>
 
@@ -199,7 +211,7 @@ export default function CiudadPage({ params }: PageProps) {
       </section>
 
       {/* ── Cómo funciona ── */}
-      <section className="py-20 px-6 border-b border-neutral-800">
+      <section id="proceso" className="py-20 px-6 border-b border-neutral-800">
         <div className="max-w-7xl mx-auto">
           <div className="mb-12 max-w-2xl">
             <div className="flex items-center gap-3 mb-6">
@@ -207,8 +219,8 @@ export default function CiudadPage({ params }: PageProps) {
               <span className="text-xs font-semibold text-neutral-500 uppercase tracking-widest">Proceso</span>
             </div>
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              En marcha en 72 horas.<br />
-              <span className="blue-gradient">Sin complejidad técnica.</span>
+              Cómo funciona el Radar BOE para empresas de {c.nombre}<br />
+              <span className="blue-gradient">En marcha en 72 horas.</span>
             </h2>
           </div>
           <div className="grid md:grid-cols-3 gap-6">
@@ -237,7 +249,7 @@ export default function CiudadPage({ params }: PageProps) {
       <section id="precios" className="py-20 px-6 border-b border-neutral-800">
         <div className="max-w-7xl mx-auto">
           <div className="mb-12 text-center">
-            <h2 className="text-3xl font-bold text-white mb-4">Precios claros y directos</h2>
+            <h2 className="text-3xl font-bold text-white mb-4">Planes y precios del rastreo BOE en {c.nombre}</h2>
             <p className="text-neutral-400 max-w-xl mx-auto">Suscripción mensual pura. Sin setup fee, sin permanencia, cancelas cuando quieras.</p>
           </div>
           <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
@@ -271,8 +283,8 @@ export default function CiudadPage({ params }: PageProps) {
       <section className="py-20 px-6 border-b border-neutral-800">
         <div className="max-w-3xl mx-auto">
           <div className="mb-12 text-center">
-            <h2 className="text-3xl font-bold text-white mb-4">Preguntas frecuentes</h2>
-            <p className="text-neutral-400">Sobre Radar BOE en {c.nombre}</p>
+            <h2 className="text-3xl font-bold text-white mb-4">Preguntas frecuentes sobre alertas BOE en {c.nombre}</h2>
+            <p className="text-neutral-400">Resolvemos tus dudas operativas locales</p>
           </div>
           <div className="space-y-4">
             {c.faqs.map((faq, i) => (
@@ -297,7 +309,7 @@ export default function CiudadPage({ params }: PageProps) {
           <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4">
             {topVerticales.map((v) => (
               <Link key={v.slug} href={`/radar-boe/${v.slug}`} className="rounded-xl border border-neutral-800 bg-neutral-900/40 p-4 hover:border-blue-900/40 hover:bg-blue-950/10 hover:-translate-y-0.5 transition-all group">
-                <div className="text-sm font-semibold text-white group-hover:text-blue-400 transition-colors">{v.nombre}</div>
+                <div className="text-sm font-semibold text-white group-hover:text-blue-400 transition-colors">Radar BOE para {v.nombre}</div>
               </Link>
             ))}
           </div>
@@ -311,7 +323,7 @@ export default function CiudadPage({ params }: PageProps) {
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {otherCiudades.map((oc) => (
               <Link key={oc.slug} href={`/radar-boe/ciudad/${oc.slug}`} className="rounded-xl border border-neutral-800 bg-neutral-900/40 p-4 hover:border-blue-900/40 hover:bg-blue-950/10 hover:-translate-y-0.5 transition-all group">
-                <div className="text-sm font-semibold text-white group-hover:text-blue-400 transition-colors">{oc.nombre}</div>
+                <div className="text-sm font-semibold text-white group-hover:text-blue-400 transition-colors">Radar BOE en {oc.nombre}</div>
                 <div className="text-xs text-neutral-500 mt-1">{oc.comunidad}</div>
               </Link>
             ))}
