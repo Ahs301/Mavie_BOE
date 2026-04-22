@@ -385,7 +385,7 @@ Cuando la IA proponga features o copy, debe pensar primero en vertical 1 y 2, no
 
 | # | Tarea | Tipo | Impacto |
 |---|-------|------|---------|
-| 1 | **Deploy captación worker en VPS** (FASE 1+2) | Manual Josep + código | 🔴 ALTO — 219 emails/día automáticos |
+| 1 | **Deploy captación worker en VPS** (FASE 1+2) | Manual Josep + código | ✅ HECHO (Código) / ⏳ PENDIENTE (Manual VPS) |
 | 2 | **Playbook outbound despachos abogados** (Chat D) | Operación + copy | 🔴 ALTO — sin leads no hay clientes |
 | 3 | ~~**SEO páginas programáticas** (FASE 3)~~ | ~~Código~~ | ✅ HECHO (2026-04-22) — 33 páginas, sitemap, JSON-LD, interlinking |
 | 4 | **GitHub repo público** (FASE 4) | Manual | 🟡 MEDIO — credibilidad + SEO |
@@ -554,6 +554,15 @@ ufw status
 **En Vercel (último paso):**
 - Settings → Environment Variables → `CAPTACION_WORKER_URL=http://TU_IP_VPS:3002`
 - Deployments → Redeploy
+
+> 🎯 **NOTA ANTIGRAVITY (2026-04-22):** 
+> He completado la parte de **código** de esta fase. El scraper original se ha migrado limpiamente a `nuevo-proyecto/captacion-worker/` y el archivo `src/email/sender.js` ya incluye la lógica de **rotación Multi-SMTP** (Brevo, Resend, SendGrid y Gmail).
+> 
+> **LO QUE TE TOCA HACER A TI (Josep):**
+> Para que todo funcione, debes entrar a tu VPS y ejecutar los comandos indicados en la sección `12.3 Deploy VPS completo`. Específicamente:
+> 1. Hacer pull o subir la carpeta `nuevo-proyecto/captacion-worker/` a `/opt/captacion` en tu VPS.
+> 2. Configurar el `.env` en el VPS con las claves de los 4 proveedores de correo.
+> 3. Ejecutar `npm install` y arrancar el worker con PM2 (`pm2 start src/server.js --name captacion-worker`).
 
 ### 12.4 Listmonk (newsletter ilimitada, 0€ — no bloqueante)
 
@@ -757,6 +766,7 @@ Panel /dashboard/videos
 | D | Playbook outbound despachos abogados | ⏳ PENDIENTE |
 | E | BOE-Worker como cron automático | ✅ HECHO (2026-04-21) |
 | F | Fix Stripe 500 + confirmación funcional | ✅ HECHO (2026-04-22) — checkout funciona, redirige a Stripe |
+| G | Migración Worker Captación + Multi-SMTP | ✅ HECHO (2026-04-22) — Worker movido y sender configurado |
 
 ### Detalle Chat A — ✅ HECHO
 Josep completó todos los pasos manuales: secrets rotados, variables en Vercel, migraciones SQL 07 y 08 aplicadas, webhook Stripe registrado, Billing Portal activado, Redeploy ejecutado.
@@ -777,8 +787,11 @@ BOE-Worker ejecutado con cliente real. Email recibido con 54 oportunidades del B
 - `supabase_migrations/08_rls_cliente.sql` → RLS cliente
 - Build: 39 páginas, 0 errores ✅
 
-### Detalle Chat D — ⏳ PENDIENTE
+### Detalle Chat D — ⏳ PENDIENTE (EN PROCESO)
 Playbook outbound vertical 1: despachos de abogados. Ejecutar scraper, generar copy 3 emails, configurar tracking Brevo.
+
+### Detalle Chat G — ✅ HECHO
+Antigravity portó el código de `ScrapperEmpresasBOE - copia` a `nuevo-proyecto/captacion-worker`. Se limpiaron archivos basura (gitignore) y se implementó la lógica real de rotación Multi-SMTP en `src/email/sender.js`. Queda pendiente que Josep haga el deploy manual en el VPS (instalar Node, PM2 y añadir el `.env`).
 
 ### Detalle Chat E — ✅ HECHO
 Vercel Cron en `web-app/app/api/boe/cron/route.ts`, ejecuta 08:00 AM diario con `CRON_SECRET`.
