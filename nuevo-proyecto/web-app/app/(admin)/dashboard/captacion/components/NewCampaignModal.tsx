@@ -2,27 +2,36 @@
 
 import { useState, useTransition } from "react"
 import { createOutreachCampaignAction } from "@/app/actions/outreachActions"
-import { Plus, Loader2, X, Target, AlertCircle } from "lucide-react"
+import { Plus, Loader2, X, Target, AlertCircle, CheckCircle } from "lucide-react"
 
 export function NewCampaignModal() {
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
+  const [result, setResult] = useState<{success?: boolean; error?: string; message?: string} | null>(null)
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError("")
     setSuccess("")
+    setResult(null)
     const formData = new FormData(e.currentTarget)
 
     startTransition(async () => {
-      const res = await createOutreachCampaignAction(formData)
-      if (res.success) {
-        setSuccess(res.message || "Campaña creada")
-        setTimeout(() => { setOpen(false); setSuccess("") }, 2000)
-      } else {
-        setError(res.error || "Ocurrió un error")
+      try {
+        const res = await createOutreachCampaignAction(formData)
+        console.log("[UI] Result:", res)
+        setResult(res)
+        if (res.success) {
+          setSuccess(res.message || "Campaña creada")
+          setTimeout(() => { setOpen(false); setSuccess(""); setResult(null) }, 3000)
+        } else {
+          setError(res.error || "Error desconocido")
+        }
+      } catch (err: any) {
+        console.error("[UI] Exception:", err)
+        setError(err?.message || "Error desconocido")
       }
     })
   }
@@ -58,7 +67,14 @@ export function NewCampaignModal() {
             {error && <div className="mb-4 text-xs font-medium text-red-400 bg-red-500/10 border border-red-500/20 px-3 py-2 rounded-lg flex items-center gap-2">
                 <AlertCircle className="w-4 h-4" />{error}</div>}
 
-              {success && <div className="mb-4 text-xs font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-2 rounded-lg">{success}</div>}
+              {success && <div className="mb-4 text-xs font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-2 rounded-lg flex items-center gap-2">
+                <CheckCircle className="w-4 h-4" />{success}</div>}
+
+              {result && !result.success && !error && (
+                <div className="mb-4 text-xs font-medium text-red-400 bg-red-500/10 border border-red-500/20 px-3 py-2 rounded-lg flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4" />{result.error || "Error sin mensaje"}
+                </div>
+              )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
