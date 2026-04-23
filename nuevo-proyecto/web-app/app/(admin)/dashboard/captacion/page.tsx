@@ -1,10 +1,10 @@
 import { requireAuth } from "@/lib/auth"
 import { createClient } from "@/lib/supabase/server"
 import type { Metadata } from "next"
-import { TrendingUp, Mail, MousePointerClick, RefreshCcw, Database, Play, Eye } from "lucide-react"
+import { TrendingUp, Mail, MousePointerClick, RefreshCcw, Database } from "lucide-react"
 import { NewCampaignModal } from "./components/NewCampaignModal"
 import { WorkerStats } from "./components/WorkerStats"
-import Link from "next/link"
+import { CampaignTable } from "./components/CampaignTable"
 
 export const dynamic = 'force-dynamic'
 
@@ -92,84 +92,8 @@ export default async function CaptacionDashboard() {
           </span>
         </div>
 
-        <div className="overflow-x-auto min-h-[300px]">
-          <table className="w-full text-sm text-left">
-            <thead className="text-xs text-neutral-500 bg-neutral-800/20 border-b border-neutral-800 uppercase">
-              <tr>
-                <th className="px-6 py-4 font-medium">Nombre & Target</th>
-                <th className="px-6 py-4 font-medium">Estado</th>
-                <th className="px-6 py-4 font-medium">Progreso</th>
-                <th className="px-6 py-4 font-medium">Performance</th>
-                <th className="px-6 py-4 font-medium text-right">Acción</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-neutral-800/50">
-              {(!campaigns || campaigns.length === 0) ? (
-                <tr>
-                  <td colSpan={5} className="px-6 py-16 text-center">
-                    <TrendingUp className="w-10 h-10 text-neutral-700 mx-auto mb-4" />
-                    <p className="text-neutral-400 font-medium mb-1">No hay campañas configuradas.</p>
-                    <p className="text-neutral-600 text-xs">Crea tu primera campaña para alimentar el motor de scraping de tu VPS.</p>
-                  </td>
-                </tr>
-              ) : (
-                campaigns.map(camp => (
-                  <tr key={camp.id} className="hover:bg-neutral-800/20 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="font-semibold text-foreground mb-0.5">{camp.name}</div>
-                      <div className="text-xs text-neutral-500 flex items-center gap-1.5">
-                        <Database className="w-3 h-3" /> {camp.target_audience}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-md border ${
-                        camp.status === 'draft' ? "bg-neutral-800/50 text-neutral-400 border-neutral-700" :
-                        camp.status === 'scraping' ? "bg-purple-500/10 text-purple-400 border-purple-500/20" :
-                        camp.status === 'sending' ? "bg-blue-500/10 text-blue-400 border-blue-500/20" :
-                        camp.status === 'completed' ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" :
-                        "bg-neutral-800/50 text-neutral-400 border-neutral-700"
-                      }`}>
-                        {camp.status === 'scraping' || camp.status === 'sending' ? (
-                          <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${camp.status==='sending' ? 'bg-blue-400' : 'bg-purple-400'}`} />
-                        ) : null}
-                        {camp.status.toUpperCase()}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex flex-col gap-1">
-                        <div className="flex justify-between text-xs text-neutral-400">
-                          <span>{camp.emails_sent} leads extraídos</span>
-                          <span>{camp.total_leads_found}</span>
-                        </div>
-                        <div className="h-1.5 w-full bg-neutral-800 rounded-full overflow-hidden">
-                          <div 
-                            className="h-full bg-blue-500 rounded-full" 
-                            style={{ width: camp.total_leads_found > 0 ? `${(camp.emails_sent / camp.total_leads_found) * 100}%` : '0%' }}
-                          />
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3 text-xs">
-                        <div className="flex items-center gap-1 text-emerald-400">
-                          <Mail className="w-3 h-3" /> {camp.emails_opened}
-                        </div>
-                        <div className="flex items-center gap-1 text-purple-400">
-                          <MousePointerClick className="w-3 h-3" /> {camp.emails_clicked}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      {/* Fake interaction for now to show capabilities */}
-                      <button className="inline-flex items-center justify-center p-1.5 text-neutral-500 hover:text-white hover:bg-neutral-800 rounded transition-colors" title="Ver Log de ejecución VPS">
-                        <Eye className="w-4 h-4" />
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+        <div className="min-h-[300px]">
+          <CampaignTable campaigns={campaigns ?? []} />
         </div>
       </div>
     </div>

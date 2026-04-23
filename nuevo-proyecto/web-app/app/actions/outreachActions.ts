@@ -41,6 +41,7 @@ export async function createOutreachCampaignAction(formData: FormData) {
   if (!workerUrl || !cronSecret) {
     console.error("[Worker] Variables no configuradas en Vercel")
     await supabase.from("outreach_campaigns").update({ status: "error" }).eq("id", campaign.id)
+    revalidatePath("/dashboard/captacion")
     return { success: false, error: "ERROR: Variables CAPTACION_WORKER_URL y/o CAPTACION_CRON_SECRET no configuradas en Vercel." }
   }
 
@@ -68,19 +69,34 @@ export async function createOutreachCampaignAction(formData: FormData) {
         .update({ status: "scraping" })
         .eq("id", campaign.id)
       console.log(`[Worker] Campaña "${name}" iniciada - scraping en progreso`)
+      revalidatePath("/dashboard/captacion")
       return { success: true, message: `Campaña "${name}" iniciada en VPS (${workerUrl})` }
     } else {
       const errorText = await res.text()
       console.error("[Worker] Error:", errorText)
       await supabase.from("outreach_campaigns").update({ status: "error" }).eq("id", campaign.id)
+      revalidatePath("/dashboard/captacion")
       return { success: false, error: `VPS respondió: ${res.status} - ${errorText}` }
     }
   } catch (err) {
     const errorMsg = err instanceof Error ? err.message : "Error de conexión"
     console.error("[Worker] Error conectando:", errorMsg)
     await supabase.from("outreach_campaigns").update({ status: "error" }).eq("id", campaign.id)
+    revalidatePath("/dashboard/captacion")
     return { success: false, error: `ERROR CONEXIÓN: No se pudo conectar al VPS (${workerUrl}). cause: ${errorMsg}. Verifica que el worker está corriendo en el VPS.` }
   }
+}
+
+export async function deleteOutreachCampaignAction(campaignId: string) {
+  await requireAuth()
+  const supabase = createClient()
+  const { error } = await supabase
+    .from("outreach_campaigns")
+    .delete()
+    .eq("id", campaignId)
+  if (error) return { success: false, error: "Error al eliminar la campaña." }
+  revalidatePath("/dashboard/captacion")
+  return { success: true }
 }
 
 export async function updateCampaignStatusAction(campaignId: string, status: string) {
