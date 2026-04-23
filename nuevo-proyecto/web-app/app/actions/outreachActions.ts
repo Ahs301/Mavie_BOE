@@ -32,10 +32,12 @@ export async function createOutreachCampaignAction(formData: FormData) {
   const workerUrl = process.env.CAPTACION_WORKER_URL
   const cronSecret = process.env.CAPTACION_CRON_SECRET
 
+  console.log(`[DEBUG] workerUrl: "${workerUrl}", cronSecret: "${cronSecret ? 'SET' : 'NOT SET'}"`)
+
   if (!workerUrl || !cronSecret) {
     console.error("[Worker] Variables no configuradas en Vercel")
     await supabase.from("outreach_campaigns").update({ status: "error" }).eq("id", campaign.id)
-    return { success: false, error: "VPS no configurado. Añade CAPTACION_WORKER_URL y CAPTACION_CRON_SECRET en Vercel." }
+    return { success: false, error: "ERROR: Variables CAPTACION_WORKER_URL y/o CAPTACION_CRON_SECRET no configuradas en Vercel." }
   }
 
   // Extraer nicho y ubicación del target_audience
@@ -71,9 +73,9 @@ export async function createOutreachCampaignAction(formData: FormData) {
     }
   } catch (err) {
     const errorMsg = err instanceof Error ? err.message : "Error de conexión"
-    console.error("[Worker] Error:", errorMsg)
+    console.error("[Worker] Error conectando:", errorMsg)
     await supabase.from("outreach_campaigns").update({ status: "error" }).eq("id", campaign.id)
-    return { success: false, error: `No se pudo conectar al VPS: ${errorMsg}. ¿La IP ${workerUrl} es correcta?` }
+    return { success: false, error: `ERROR CONEXIÓN: No se pudo conectar al VPS (${workerUrl}). cause: ${errorMsg}. Verifica que el worker está corriendo en el VPS.` }
   }
 }
 
