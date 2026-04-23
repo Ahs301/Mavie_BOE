@@ -6,9 +6,11 @@ import { requireAuth } from "@/lib/auth"
 
 export async function createOutreachCampaignAction(formData: FormData) {
   await requireAuth()
+  console.log("[ACTION] createOutreachCampaignAction called")
 
   const name = formData.get("name")?.toString()
   const target_audience = formData.get("target_audience")?.toString()
+  console.log("[ACTION] name:", name, "target:", target_audience)
 
   if (!name || !target_audience) {
     return { success: false, error: "Nombre y audiencia son obligatorios." }
