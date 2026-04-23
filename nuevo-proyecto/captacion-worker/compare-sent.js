@@ -1,13 +1,13 @@
 import fs from 'fs';
 import { parse } from 'csv-parse/sync';
-import { DatabaseSync } from 'node:sqlite';
+import Database from 'better-sqlite3';
 
 // Leer CSV
 const csvContent = fs.readFileSync('./All_Spain_Leads.csv', 'utf-8');
 const csvLeads = parse(csvContent, { columns: true });
 
 // Leer BD
-const db = new DatabaseSync('./data/outreach.sqlite');
+const db = new Database('./data/outreach.sqlite');
 const dbEmails = db.prepare("SELECT email FROM leads").all().map(r => r.email);
 
 console.log('\n📋 COMPARATIVA:');

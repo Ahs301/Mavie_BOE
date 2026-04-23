@@ -128,7 +128,7 @@ export default function Home() {
               Sistema activo · Escaneando el BOE ahora
             </div>
 
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-tight mb-6 text-gradient animate-fade-in-up">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-tight mb-6 text-gradient animate-fade-in-up">
               Tu empresa,<br />
               trabajando en<br />
               automático.
@@ -169,7 +169,7 @@ export default function Home() {
       {/* ── STATS BAR ── */}
       <div className="border-y border-neutral-200 dark:border-neutral-800 bg-white/80 dark:bg-neutral-950/60 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-6 py-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-neutral-200 dark:divide-neutral-800">
+          <div className="grid grid-cols-2 gap-y-8 md:gap-y-0 md:grid-cols-4 md:divide-x divide-neutral-200 dark:divide-neutral-800">
             {stats.map(s => (
               <div key={s.label} className="text-center px-6 first:pl-0 last:pr-0">
                 <div className="text-3xl md:text-4xl font-bold text-foreground mb-1 tabular-nums" style={{ fontFamily: 'var(--font-syne)' }}>{s.value}</div>
@@ -273,20 +273,21 @@ export default function Home() {
             <div className="rounded-2xl border border-neutral-800 bg-neutral-950 overflow-hidden shadow-[0_0_60px_rgba(59,130,246,0.10)] relative w-full">
               {/* Title bar */}
               <div className="flex items-center gap-2 px-4 py-3 bg-neutral-900 border-b border-neutral-800">
-                <div className="flex gap-1.5">
+                <div className="flex gap-1.5 shrink-0">
                   <div className="w-2.5 h-2.5 rounded-full bg-red-500/70" />
                   <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/70" />
                   <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/70" />
                 </div>
-                <span className="text-xs text-neutral-500 ml-2 font-mono">mavie — radar-boe · monitor</span>
-                <div className="ml-auto flex items-center gap-1.5 text-xs text-emerald-400 font-mono">
+                <span className="text-xs text-neutral-500 ml-2 font-mono truncate hidden sm:block">mavie — radar-boe · monitor</span>
+                <span className="text-xs text-neutral-500 ml-2 font-mono truncate sm:hidden">radar-boe</span>
+                <div className="ml-auto flex items-center gap-1.5 text-xs text-emerald-400 font-mono shrink-0">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                   activo
                 </div>
               </div>
 
               {/* Log entries */}
-              <div className="p-5 space-y-2 font-mono text-xs">
+              <div className="p-4 sm:p-5 space-y-2 font-mono text-xs overflow-x-auto">
                 <div className="flex gap-3 items-start">
                   <span className="text-neutral-600 shrink-0 pt-px">08:02:11</span>
                   <span className="text-blue-400 shrink-0 pt-px font-semibold">SCAN</span>
@@ -325,16 +326,16 @@ export default function Home() {
               </div>
 
               {/* Summary footer */}
-              <div className="mx-5 mb-5 mt-1 rounded-xl border border-neutral-800 bg-neutral-900 px-5 py-4 flex items-center justify-between gap-4">
-                <div>
+              <div className="mx-4 sm:mx-5 mb-5 mt-1 rounded-xl border border-neutral-800 bg-neutral-900 px-4 sm:px-5 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="text-center sm:text-left">
                   <div className="text-xs text-neutral-500 font-mono mb-1">resultados hoy</div>
                   <div className="text-2xl font-bold text-foreground">4 <span className="text-emerald-400 text-sm font-normal">coincidencias</span></div>
                 </div>
-                <div className="text-right">
+                <div className="text-center sm:text-right">
                   <div className="text-xs text-neutral-500 font-mono mb-1">próximo escaneo</div>
                   <div className="text-sm text-neutral-300 font-mono">en 43 min</div>
                 </div>
-                <div className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 transition-colors text-white text-xs font-semibold cursor-default">
+                <div className="w-full sm:w-auto px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 transition-colors text-white text-xs font-semibold cursor-default text-center">
                   Ver resumen →
                 </div>
               </div>

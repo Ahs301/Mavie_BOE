@@ -1,6 +1,6 @@
 # MAVIE MASTER — Fuente de verdad única
 
-> **Última actualización:** 2026-04-22 (Stripe checkout confirmado funcional)  
+> **Última actualización:** 2026-04-22 (23:03h) — Recordatorio VPS añadido para próximo chat  
 > **Dueño:** Josep Cervera  
 > **Principio:** dinero real antes que perfección técnica, pero que el producto sea bueno y agrade.  
 > **Regla:** 0€ invertido, solo tiempo + código.  
@@ -760,6 +760,7 @@ Panel /dashboard/videos
 | E | BOE-Worker como cron automático | ✅ HECHO (2026-04-21) |
 | F | Fix Stripe 500 + confirmación funcional | ✅ HECHO (2026-04-22) — checkout funciona, redirige a Stripe |
 | G | Migración Worker Captación + Multi-SMTP | ✅ HECHO (2026-04-22) — Worker movido y sender configurado |
+| H | Revisión estado + recordatorio VPS + planificación próximo chat | ✅ HECHO (2026-04-22 23:03h) — MAVIE-MASTER actualizado con recordatorio VPS |
 
 ### Detalle Chat A — ✅ HECHO
 Josep completó todos los pasos manuales: secrets rotados, variables en Vercel, migraciones SQL 07 y 08 aplicadas, webhook Stripe registrado, Billing Portal activado, Redeploy ejecutado.
@@ -1009,6 +1010,17 @@ Tu único trabajo diario: revisar stats, aprobar videos, cerrar reuniones.
 ---
 
 ## 25. PRÓXIMO CHAT — ORDEN DE ATAQUE
+
+> ⚠️ **RECORDATORIO CRÍTICO PARA EL PRÓXIMO CHAT (2026-04-23):**
+> Josep no pudo hacer el **deploy del captacion-worker en el VPS** hoy (2026-04-22). Lo dejó para mañana.
+> **LA PRIMERA TAREA DEL PRÓXIMO CHAT es guiar a Josep paso a paso para subir el worker al VPS.**
+> Referencia completa en sección 12.3 de este archivo. Pasos mínimos:
+> 1. `scp -r captacion-worker root@IP_VPS:/opt/captacion`
+> 2. Node 22, Chrome deps, `npm install`
+> 3. `.env` con credenciales SMTP, `node src/cli.js import` para los 3 CSVs
+> 4. `pm2 start src/server.js --name captacion-worker` + `pm2 save && pm2 startup`
+> 5. `CAPTACION_WORKER_URL=http://IP:3002` en Vercel + redeploy
+> **No empezar con código hasta que Josep confirme que el VPS está listo.**
 
 > Instrucción para la IA del próximo chat: leer MAVIE-MASTER.md completo, luego ejecutar estas tareas en orden. No saltar a fases posteriores.
 
