@@ -1,5 +1,5 @@
 // src/db/index.js – inicialización y operaciones de base de datos (v2)
-import { DatabaseSync } from 'node:sqlite';
+import Database from 'better-sqlite3';
 import path from 'path';
 import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
@@ -16,7 +16,7 @@ export function getDB(dbPath = './data/outreach.sqlite') {
     fs.mkdirSync(dir, { recursive: true });
     logger.info(`Directorio de base de datos creado: ${dir}`);
   }
-  _db = new DatabaseSync(absPath);
+  _db = new Database(absPath);
   _db.exec('PRAGMA journal_mode = WAL');
   _db.exec('PRAGMA foreign_keys = ON');
   runMigrations(_db);

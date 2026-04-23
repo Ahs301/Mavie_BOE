@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server"
 import type { Metadata } from "next"
 import { TrendingUp, Mail, MousePointerClick, RefreshCcw, Database, Play, Eye } from "lucide-react"
 import { NewCampaignModal } from "./components/NewCampaignModal"
+import { WorkerStats } from "./components/WorkerStats"
 import Link from "next/link"
 
 export const dynamic = 'force-dynamic'
@@ -41,6 +42,7 @@ export default async function CaptacionDashboard() {
           <div className="flex items-center gap-2 text-xs text-blue-400 bg-blue-950/30 border border-blue-900/40 px-3 py-2 rounded-lg font-medium">
             <Database className="w-4 h-4" /> CRM DB Activa
           </div>
+          <WorkerStats />
           <NewCampaignModal />
         </div>
       </div>

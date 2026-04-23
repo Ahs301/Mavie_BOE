@@ -81,6 +81,26 @@ const server = createServer((req, res) => {
     return;
   }
 
+  // POST /trigger/custom-campaign — scraping y envío para un nicho específico
+  if (req.method === 'POST' && req.url === '/trigger/custom-campaign') {
+    let body = '';
+    req.on('data', chunk => { body += chunk.toString(); });
+    req.on('end', () => {
+      try {
+        const payload = JSON.parse(body);
+        if (!payload.niche || !payload.location) {
+          return send(400, { error: 'Faltan parámetros: niche y location' });
+        }
+        send(202, { ok: true, message: `Campaña iniciada: ${payload.niche} en ${payload.location}` });
+        const limitStr = payload.limit ? payload.limit.toString() : '50';
+        spawnCLI(['scrape-and-send', '-n', payload.niche, '-l', payload.location, '--limit', limitStr]);
+      } catch (err) {
+        send(400, { error: 'Invalid JSON body' });
+      }
+    });
+    return;
+  }
+
   // GET /stats — métricas del pipeline para Mavie admin
   if (req.method === 'GET' && req.url === '/stats') {
     try {

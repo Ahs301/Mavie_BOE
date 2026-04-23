@@ -1,0 +1,66 @@
+# ============================================
+# MAVIE AUTOMATIONS — .gitignore
+# PROTEGE TUS SECRETOS
+# ============================================
+
+# --------------------------------------------
+# VARIABLES DE ENTORNO (NUNCA SUBIR)
+# --------------------------------------------
+.env
+.env.local
+.env.*.local
+*.env
+
+# --------------------------------------------
+# KEYS Y SECRETS (NUNCA SUBIR)
+# --------------------------------------------
+*.pem
+*.key
+*.p12
+*.jks
+credentials.json
+
+# --------------------------------------------
+# node_modules (se reinstalla con npm install)
+# --------------------------------------------
+node_modules/
+*/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# --------------------------------------------
+# Bases de datos SQLite (datos sensibles)
+# --------------------------------------------
+*.db
+*.sqlite
+*.sqlite3
+data/
+logs/
+
+# --------------------------------------------
+# Builds y caches
+# --------------------------------------------
+.next/
+dist/
+build/
+*.tsbuildinfo
+.vercel/
+
+# --------------------------------------------
+# OS y editores
+# --------------------------------------------
+.DS_Store
+Thumbs.db
+.idea/
+*.swp
+*.swo
+*~
+
+# --------------------------------------------
+# PDFs y archivos privados (noSubir)
+# --------------------------------------------
+*.pdf
+recursos/
+referencia-boe/
+"ScrapperEmpresasBOE - copia"/
