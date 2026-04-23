@@ -19,14 +19,16 @@ export async function createOutreachCampaignAction(formData: FormData) {
   // 1. Guardar campaña en Supabase
   const { data: campaign, error } = await supabase
     .from("outreach_campaigns")
-    .insert([{ name, target_audience, status: "pending" }])
+    .insert([{ name, target_audience, status: "init" }])
     .select()
     .single()
 
   if (error) {
-    console.error("[Create Campaign Error]:", error.message)
-    return { success: false, error: "Error al crear la campaña en la base de datos." }
+    console.error("[DB] Error:", error.message)
+    return { success: false, error: `Error DB: ${error.message}` }
   }
+
+  console.log(`[DB] Campaña creado: ${campaign.id} - ${name}`)
 
   // 2. Disparar al VPS de forma segura
   const workerUrl = process.env.CAPTACION_WORKER_URL
