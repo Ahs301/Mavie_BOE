@@ -9,7 +9,9 @@
  *  5. Extrae email de cada web con el scraper agresivo.
  * ─────────────────────────────────────────────────────────────────
  */
-import puppeteer from 'puppeteer';
+import puppeteerExtra from 'puppeteer-extra';
+import StealthPlugin from 'puppeteer-extra-plugin-stealth';
+puppeteerExtra.use(StealthPlugin());
 import cliProgress from 'cli-progress';
 import logger from '../utils/logger.js';
 import { fetchEmailFromWebsite } from '../utils/scraper.js';
@@ -145,13 +147,16 @@ export async function scrapeGoogleMapsMultiQuery(keyword, location, limit = 200,
     const variants = useVariants ? getSearchVariants(keyword) : [keyword];
     logger.info(`🔍 Buscando "${keyword}" en ${location} con ${variants.length} variante(s): ${variants.join(', ')}`);
 
-    const browser = await puppeteer.launch({
-        headless: 'new',
+    const browser = await puppeteerExtra.launch({
+        headless: true,
+        executablePath: process.env.CHROME_PATH || undefined,
         args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
             '--disable-blink-features=AutomationControlled',
             '--window-size=1366,768',
+            '--lang=es-ES',
         ]
     });
 
@@ -166,7 +171,14 @@ export async function scrapeGoogleMapsMultiQuery(keyword, location, limit = 200,
     logger.info('📋 Fase 1: Recopilando URLs de fichas...');
     const searchPage = await browser.newPage();
     await searchPage.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36');
+    await searchPage.setExtraHTTPHeaders({ 'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8' });
     await searchPage.setViewport({ width: 1366, height: 768 });
+
+    // Pre-aceptar cookies de Google para evitar la página de consent
+    await searchPage.setCookie(
+        { name: 'SOCS', value: 'CAESHAgBEhJnd3NfMjAyNTExMTItMF9SQzEaAmVzIAEaBgiAo8O5Bg', domain: '.google.com', path: '/' },
+        { name: 'NID', value: '511=bypass', domain: '.google.com', path: '/' },
+    );
 
     // Aceptar cookies una sola vez
     let cookiesAccepted = false;
@@ -179,16 +191,60 @@ export async function scrapeGoogleMapsMultiQuery(keyword, location, limit = 200,
 
             await searchPage.goto(url, { waitUntil: 'networkidle2', timeout: 60000 });
 
-            if (!cookiesAccepted) {
+            // Manejar página de consent en cualquier idioma
+            if (searchPage.url().includes('consent.google.com')) {
                 try {
-                    const cookieBtn = await searchPage.$('button[aria-label="Aceptar todo"]') ||
-                        await searchPage.$('button[aria-label="Accept all"]');
-                    if (cookieBtn) {
-                        await cookieBtn.click();
-                        await sleep(1500);
+                    // Esperar a que los botones carguen
+                    await searchPage.waitForSelector('button', { timeout: 5000 }).catch(() => {});
+
+                    // Click por texto — funciona en DE/ES/EN/FR/IT
+                    const clicked = await searchPage.evaluate(() => {
+                        const acceptKeywords = ['akzept', 'accept', 'aceptar', 'accepter', 'accetta', 'todo', 'all', 'alle'];
+                        const buttons = Array.from(document.querySelectorAll('button'));
+                        const btn = buttons.find(b => {
+                            const t = (b.textContent || '').toLowerCase();
+                            return acceptKeywords.some(k => t.includes(k));
+                        });
+                        if (btn) { btn.click(); return true; }
+                        // Fallback: último botón del último form (Google siempre pone "Aceptar" al final)
+                        const forms = document.querySelectorAll('form');
+                        const lastForm = forms[forms.length - 1];
+                        if (lastForm) {
+                            const btns = lastForm.querySelectorAll('button');
+                            const last = btns[btns.length - 1];
+                            if (last) { last.click(); return true; }
+                        }
+                        return false;
+                    });
+
+                    if (clicked) {
+                        await searchPage.waitForNavigation({ waitUntil: 'networkidle2', timeout: 10000 }).catch(() => {});
                         cookiesAccepted = true;
+                        logger.info(`  ↳ Consent aceptado → ${searchPage.url()}`);
+                    } else {
+                        logger.warn(`  ↳ No se encontró botón de consent`);
                     }
                 } catch (_) { }
+            } else if (!cookiesAccepted) {
+                try {
+                    const btn = await searchPage.$('button[aria-label="Aceptar todo"]') ||
+                                await searchPage.$('button[aria-label="Accept all"]');
+                    if (btn) { await btn.click(); await sleep(1500); cookiesAccepted = true; }
+                } catch (_) { }
+            }
+
+            // Debug: loguear URL y título reales tras navegación
+            const finalUrl = searchPage.url();
+            const pageTitle = await searchPage.title();
+            logger.info(`  ↳ [DEBUG] URL: ${finalUrl}`);
+            logger.info(`  ↳ [DEBUG] Título: ${pageTitle}`);
+
+            // Screenshot para diagnóstico (solo primera variante)
+            if (!cookiesAccepted) {
+                try {
+                    await searchPage.screenshot({ path: `/tmp/maps_debug_${Date.now()}.png`, fullPage: false });
+                    logger.info(`  ↳ [DEBUG] Screenshot guardado en /tmp/`);
+                } catch (_) {}
             }
 
             // Esperar feed
@@ -197,7 +253,10 @@ export async function scrapeGoogleMapsMultiQuery(keyword, location, limit = 200,
                 await searchPage.waitForSelector(feedSelector, { timeout: 12000 });
                 await autoScrollFeed(searchPage, feedSelector);
             } catch (_) {
+                // Loguear HTML del body para diagnóstico
+                const bodySnippet = await searchPage.evaluate(() => document.body?.innerText?.slice(0, 300) ?? '').catch(() => '');
                 logger.warn(`  ↳ No se encontró el feed para: ${variant}`);
+                logger.warn(`  ↳ [DEBUG] Body snippet: ${bodySnippet.replace(/\n/g, ' ')}`);
                 continue;
             }
 

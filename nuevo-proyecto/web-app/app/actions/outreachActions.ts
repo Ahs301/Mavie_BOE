@@ -59,7 +59,7 @@ export async function createOutreachCampaignAction(formData: FormData) {
         "Authorization": `Bearer ${cronSecret}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ niche, location, limit: 50 }),
+      body: JSON.stringify({ niche, location, limit: 50, campaign_id: campaign.id }),
       signal: AbortSignal.timeout(60_000),
     })
 

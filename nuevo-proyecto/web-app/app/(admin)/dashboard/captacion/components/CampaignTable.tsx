@@ -1,7 +1,8 @@
 "use client"
 
-import { useState, useTransition } from "react"
-import { Mail, MousePointerClick, Eye, Trash2, X, Database, AlertCircle, Loader2 } from "lucide-react"
+import { useState, useTransition, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { Mail, MousePointerClick, Eye, Trash2, X, Database, AlertCircle, Loader2, RefreshCw } from "lucide-react"
 import { deleteOutreachCampaignAction } from "@/app/actions/outreachActions"
 
 type Campaign = {
@@ -96,6 +97,15 @@ export function CampaignTable({ campaigns }: { campaigns: Campaign[] }) {
   const [selected, setSelected] = useState<Campaign | null>(null)
   const [deleting, setDeleting] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+  const router = useRouter()
+
+  const hasActive = campaigns.some(c => c.status === "scraping" || c.status === "sending" || c.status === "init")
+
+  useEffect(() => {
+    if (!hasActive) return
+    const interval = setInterval(() => router.refresh(), 5000)
+    return () => clearInterval(interval)
+  }, [hasActive, router])
 
   const handleDelete = (camp: Campaign) => {
     if (!confirm(`¿Eliminar campaña "${camp.name}"? Esta acción no se puede deshacer.`)) return
@@ -119,6 +129,13 @@ export function CampaignTable({ campaigns }: { campaigns: Campaign[] }) {
   return (
     <>
       {selected && <DetailModal campaign={selected} onClose={() => setSelected(null)} />}
+
+      {hasActive && (
+        <div className="px-6 py-2 border-b border-neutral-800 flex items-center gap-2 text-xs text-purple-400">
+          <RefreshCw className="w-3 h-3 animate-spin" />
+          Actualizando en tiempo real...
+        </div>
+      )}
 
       <div className="overflow-x-auto">
         <table className="w-full text-sm text-left">
