@@ -1,5 +1,6 @@
 {
   "crons": [
+
     {
       "path": "/api/boe/cron",
       "schedule": "0 8 * * *"
