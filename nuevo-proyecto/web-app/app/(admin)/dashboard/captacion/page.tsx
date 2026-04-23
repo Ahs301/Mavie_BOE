@@ -7,6 +7,7 @@ import { WorkerStats } from "./components/WorkerStats"
 import { CampaignTable } from "./components/CampaignTable"
 
 export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 export const metadata: Metadata = {
   title: "Outreach Engine — Mavie Admin",
