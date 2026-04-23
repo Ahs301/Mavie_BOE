@@ -5,3 +5,6 @@ runWorker().catch(err => {
   console.error('[Worker] Error fatal:', err.message);
   process.exit(1);
 });
+
+
+
