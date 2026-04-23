@@ -2,22 +2,25 @@
 
 import { useState, useTransition } from "react"
 import { createOutreachCampaignAction } from "@/app/actions/outreachActions"
-import { Plus, Loader2, X, Target } from "lucide-react"
+import { Plus, Loader2, X, Target, AlertCircle } from "lucide-react"
 
 export function NewCampaignModal() {
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState("")
+  const [success, setSuccess] = useState("")
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError("")
+    setSuccess("")
     const formData = new FormData(e.currentTarget)
 
     startTransition(async () => {
       const res = await createOutreachCampaignAction(formData)
       if (res.success) {
-        setOpen(false)
+        setSuccess(res.message || "Campaña creada")
+        setTimeout(() => { setOpen(false); setSuccess("") }, 2000)
       } else {
         setError(res.error || "Ocurrió un error")
       }
@@ -52,7 +55,10 @@ export function NewCampaignModal() {
               </button>
             </div>
 
-            {error && <div className="mb-4 text-xs font-medium text-red-400 bg-red-500/10 border border-red-500/20 px-3 py-2 rounded-lg">{error}</div>}
+            {error && <div className="mb-4 text-xs font-medium text-red-400 bg-red-500/10 border border-red-500/20 px-3 py-2 rounded-lg flex items-center gap-2">
+                <AlertCircle className="w-4 h-4" />{error}</div>}
+
+              {success && <div className="mb-4 text-xs font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-2 rounded-lg">{success}</div>}
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>

@@ -32,40 +32,49 @@ export async function createOutreachCampaignAction(formData: FormData) {
   const workerUrl = process.env.CAPTACION_WORKER_URL
   const cronSecret = process.env.CAPTACION_CRON_SECRET
 
-  if (workerUrl && cronSecret) {
-    // Extraer nicho y ubicación del target_audience
-    // Formato esperado: "Despachos abogados Madrid" -> nicho="despachos abogados", location="madrid"
-    const parts = target_audience.split(" ").slice(0, 2).join(" ")
-    const niche = parts || name
-    const location = target_audience.split(" ").pop()?.toLowerCase() || "españa"
-
-    try {
-      const res = await fetch(`${workerUrl}/trigger/custom-campaign`, {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${cronSecret}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ niche, location, limit: 50 }),
-        signal: AbortSignal.timeout(60_000),
-      })
-
-      if (res.ok) {
-        // Actualizar estado a scraping
-        await supabase
-          .from("outreach_campaigns")
-          .update({ status: "scraping" })
-          .eq("id", campaign.id)
-      } else {
-        console.error("[Worker] Error:", await res.text())
-      }
-    } catch (err) {
-      console.error("[Worker] Error conectando al VPS:", err)
-    }
+  if (!workerUrl || !cronSecret) {
+    console.error("[Worker] Variables no configuradas en Vercel")
+    await supabase.from("outreach_campaigns").update({ status: "error" }).eq("id", campaign.id)
+    return { success: false, error: "VPS no configurado. Añade CAPTACION_WORKER_URL y CAPTACION_CRON_SECRET en Vercel." }
   }
 
-  revalidatePath("/dashboard/captacion")
-  return { success: true }
+  // Extraer nicho y ubicación del target_audience
+  const parts = target_audience.split(" ").slice(0, 2).join(" ")
+  const niche = parts || name
+  const location = target_audience.split(" ").pop()?.toLowerCase() || "españa"
+
+  try {
+    console.log(`[Worker] Disparando a ${workerUrl}/trigger/custom-campaign`)
+
+    const res = await fetch(`${workerUrl}/trigger/custom-campaign`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${cronSecret}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ niche, location, limit: 50 }),
+      signal: AbortSignal.timeout(60_000),
+    })
+
+    if (res.ok) {
+      await supabase
+        .from("outreach_campaigns")
+        .update({ status: "scraping" })
+        .eq("id", campaign.id)
+      console.log(`[Worker] Campaña "${name}" iniciada - scraping en progreso`)
+      return { success: true, message: `Campaña "${name}" iniciada en VPS (${workerUrl})` }
+    } else {
+      const errorText = await res.text()
+      console.error("[Worker] Error:", errorText)
+      await supabase.from("outreach_campaigns").update({ status: "error" }).eq("id", campaign.id)
+      return { success: false, error: `VPS respondió: ${res.status} - ${errorText}` }
+    }
+  } catch (err) {
+    const errorMsg = err instanceof Error ? err.message : "Error de conexión"
+    console.error("[Worker] Error:", errorMsg)
+    await supabase.from("outreach_campaigns").update({ status: "error" }).eq("id", campaign.id)
+    return { success: false, error: `No se pudo conectar al VPS: ${errorMsg}. ¿La IP ${workerUrl} es correcta?` }
+  }
 }
 
 export async function updateCampaignStatusAction(campaignId: string, status: string) {
