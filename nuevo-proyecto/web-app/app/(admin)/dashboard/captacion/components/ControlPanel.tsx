@@ -1,5 +1,5 @@
 "use client"
-
+// v2 — layout fix + horizontal process cards
 import { useState, useEffect, useRef } from "react"
 import {
   Play, Square, Zap, Settings, Terminal,
