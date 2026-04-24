@@ -89,6 +89,10 @@ Requires `.env` in `BOE-Worker/` with `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_
 
 ---
 
+
+
+
+
 ## Database Schema
 
 Key tables (all in Supabase with RLS enabled, authenticated role has full access):
