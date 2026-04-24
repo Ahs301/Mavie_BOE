@@ -6,6 +6,7 @@ import { NewCampaignModal } from "./components/NewCampaignModal"
 import { WorkerStats } from "./components/WorkerStats"
 import { CampaignTable } from "./components/CampaignTable"
 import { LiveMetrics } from "./components/LiveMetrics"
+import { ControlPanel } from "./components/ControlPanel"
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -78,8 +79,11 @@ export default async function CaptacionDashboard() {
           </div>
         </div>
 
-        {/* Right — Live analytics panel */}
-        <LiveMetrics initial={initial} />
+        {/* Right — Live analytics + control panel */}
+        <div className="flex flex-col gap-6">
+          <LiveMetrics initial={initial} />
+          <ControlPanel />
+        </div>
 
       </div>
     </div>
