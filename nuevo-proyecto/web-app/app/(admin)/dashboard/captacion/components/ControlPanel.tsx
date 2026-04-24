@@ -40,27 +40,25 @@ function ProcessCard({
   onStart: () => void; onStop: () => void; loading: boolean
 }) {
   return (
-    <div className={`rounded-xl border p-4 flex flex-col gap-3 ${
+    <div className={`rounded-lg border px-3 py-2.5 flex items-center justify-between gap-3 ${
       running ? `border-${color}-900/50 bg-${color}-500/5` : "border-neutral-800 bg-card"
     }`}>
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className={`w-2 h-2 rounded-full ${running ? `bg-${color}-400 animate-pulse` : "bg-neutral-600"}`} />
-          <span className="text-sm font-semibold text-foreground">{label}</span>
-        </div>
-        <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${
+      <div className="flex items-center gap-2 min-w-0">
+        <span className={`w-2 h-2 shrink-0 rounded-full ${running ? `bg-${color}-400 animate-pulse` : "bg-neutral-600"}`} />
+        <span className="text-xs font-semibold text-foreground truncate">{label}</span>
+        <span className={`hidden sm:inline-block text-[9px] font-medium px-1.5 py-0.5 rounded-full border shrink-0 ${
           running
             ? `text-${color}-400 bg-${color}-500/10 border-${color}-900/40`
             : "text-neutral-600 bg-neutral-900 border-neutral-800"
         }`}>
-          {running ? "CORRIENDO" : "PARADO"}
+          {running ? "ON" : "OFF"}
         </span>
       </div>
-      <div className="flex gap-2">
+      <div className="flex gap-1.5 shrink-0">
         <button
           disabled={running || loading}
           onClick={onStart}
-          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed text-white transition-colors"
+          className="flex items-center gap-1 px-2.5 py-1.5 rounded-md text-[11px] font-medium bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed text-white transition-colors"
         >
           {loading && !running ? <Loader2 className="w-3 h-3 animate-spin" /> : <Play className="w-3 h-3" />}
           Iniciar
@@ -68,7 +66,7 @@ function ProcessCard({
         <button
           disabled={!running || loading}
           onClick={onStop}
-          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-red-600/80 hover:bg-red-500 disabled:opacity-40 disabled:cursor-not-allowed text-white transition-colors"
+          className="flex items-center gap-1 px-2.5 py-1.5 rounded-md text-[11px] font-medium bg-red-600/80 hover:bg-red-500 disabled:opacity-40 disabled:cursor-not-allowed text-white transition-colors"
         >
           <Square className="w-3 h-3" />
           Parar
@@ -205,7 +203,7 @@ export function ControlPanel() {
         )}
 
         {/* Process cards */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="flex flex-col gap-2">
           <ProcessCard
             label="Scraping"
             running={status?.scraping ?? false}
