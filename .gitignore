@@ -57,3 +57,6 @@ referencia-web-mavie/
 tmpclaude-*/
 implementation_plan.md
 3.md
+
+.vercel
+.env*.local
