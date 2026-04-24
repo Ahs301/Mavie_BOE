@@ -15,7 +15,7 @@ const CLI_PATH = path.join(__dirname, 'cli.js');
 const ENV_PATH = path.resolve(__dirname, '..', '.env');
 
 const PORT = parseInt(process.env.PORT || '3002', 10);
-const CRON_SECRET = process.env.CRON_SECRET;
+const CRON_SECRET = process.env.CAPTACION_CRON_SECRET || process.env.CRON_SECRET;
 
 // ─── Supabase ─────────────────────────────────────────────────────────────────
 let supabase = null;
