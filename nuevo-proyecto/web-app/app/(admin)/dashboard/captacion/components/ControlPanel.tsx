@@ -135,11 +135,11 @@ export function ControlPanel() {
       }
     }
     poll()
-    const id = setInterval(poll, 4_000)
+    const id = setInterval(poll, 15_000)
     return () => clearInterval(id)
   }, [])
 
-  // Poll logs every 3s
+  // Poll logs every 10s
   useEffect(() => {
     const poll = async () => {
       try {
@@ -151,7 +151,7 @@ export function ControlPanel() {
       } catch {}
     }
     poll()
-    const id = setInterval(poll, 3_000)
+    const id = setInterval(poll, 10_000)
     return () => clearInterval(id)
   }, [sinceTs])
 
