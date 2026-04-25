@@ -1,9 +1,10 @@
 "use client"
-// v2 — layout fix + horizontal process cards
+// v3 — quick-exit detection + VPS health status
 import { useState, useEffect, useRef } from "react"
 import {
   Play, Square, Zap, Settings, Terminal,
   RefreshCw, AlertCircle, CheckCircle2, Loader2,
+  WifiOff, Wifi, TriangleAlert,
 } from "lucide-react"
 
 type ProcessStatus = { scraping: boolean; sending: boolean; stats: Record<string, number> | null }
@@ -79,6 +80,7 @@ function ProcessCard({
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export function ControlPanel() {
   const [status, setStatus]       = useState<ProcessStatus | null>(null)
+  const [vpsOnline, setVpsOnline] = useState<boolean | null>(null) // null = checking
   const [logs, setLogs]           = useState<LogEntry[]>([])
   const [sinceTs, setSinceTs]     = useState(0)
   const [config, setConfig]       = useState<Config>({})
@@ -86,26 +88,54 @@ export function ControlPanel() {
   const [configOpen, setConfigOpen] = useState(false)
   const [loading, setLoading]     = useState(false)
   const [toast, setToast]         = useState<{ msg: string; ok: boolean } | null>(null)
+  const [quickExit, setQuickExit] = useState<string | null>(null) // proceso iniciado pero paró rápido
   const [customOpen, setCustomOpen] = useState(false)
   const [niche, setNiche]         = useState("")
   const [location, setLocation]   = useState("")
   const logsRef = useRef<HTMLDivElement>(null)
+  const lastStartedRef = useRef<{ key: string; ts: number } | null>(null)
 
   const showToast = (msg: string, ok = true) => {
     setToast({ msg, ok })
     setTimeout(() => setToast(null), 3000)
   }
 
-  // Poll status every 5s
+  // Poll status every 5s + detect quick-exit
   useEffect(() => {
     const poll = async () => {
       try {
         const d = await fetch(API("status")).then(r => r.json())
+        if (d.error) {
+          setVpsOnline(false)
+          setStatus(null)
+          return
+        }
+        setVpsOnline(true)
+        // Detect quick-exit: if we just started a process but now it's OFF
+        if (lastStartedRef.current) {
+          const { key, ts } = lastStartedRef.current
+          const elapsed = Date.now() - ts
+          const wasRunning = key === "scrape" ? d.scraping : d.sending
+          if (!wasRunning && elapsed < 10_000) {
+            // Process started but already stopped in < 10s
+            setQuickExit(key === "scrape"
+              ? "⚠️ El scraping se detuvo inmediatamente. Revisa los logs abajo."
+              : "⚠️ El envío se detuvo inmediatamente. Probable causa: leads no importados o credenciales SMTP incorrectas en el VPS."
+            )
+            lastStartedRef.current = null
+          } else if (wasRunning) {
+            setQuickExit(null)
+            lastStartedRef.current = null
+          }
+        }
         setStatus(d)
-      } catch {}
+      } catch {
+        setVpsOnline(false)
+        setStatus(null)
+      }
     }
     poll()
-    const id = setInterval(poll, 5_000)
+    const id = setInterval(poll, 4_000)
     return () => clearInterval(id)
   }, [])
 
@@ -140,15 +170,27 @@ export function ControlPanel() {
 
   const action = async (act: string, payload?: unknown) => {
     setLoading(true)
+    setQuickExit(null)
     try {
       const d = await vpsPost(act, payload)
-      if (d.error) showToast(d.error, false)
-      else showToast(act === "stop" ? "Procesos detenidos" : "Iniciado correctamente")
+      if (d.error) {
+        showToast(d.error, false)
+      } else if (act === "stop") {
+        showToast("Procesos detenidos")
+        lastStartedRef.current = null
+        setQuickExit(null)
+      } else {
+        // Track what was started + when, to detect quick-exit
+        const key = act === "scrape" ? "scrape" : "send"
+        lastStartedRef.current = { key, ts: Date.now() }
+        showToast("Iniciado correctamente — esperando estado...")
+      }
       // Refresh status
       const s = await fetch(API("status")).then(r => r.json())
       setStatus(s)
     } catch {
-      showToast("Error contactando VPS", false)
+      showToast("Error contactando VPS — ¿está el worker corriendo?", false)
+      setVpsOnline(false)
     } finally {
       setLoading(false)
     }
@@ -179,7 +221,18 @@ export function ControlPanel() {
           <Zap className="w-3.5 h-3.5 text-yellow-400" /> Control del Motor
         </span>
         <div className="flex items-center gap-2">
-          {status === null && <Loader2 className="w-3.5 h-3.5 animate-spin text-neutral-600" />}
+          {/* VPS status pill */}
+          {vpsOnline === null && <Loader2 className="w-3.5 h-3.5 animate-spin text-neutral-600" />}
+          {vpsOnline === true && (
+            <span className="flex items-center gap-1 text-[10px] text-emerald-400 bg-emerald-500/10 border border-emerald-900/40 px-1.5 py-0.5 rounded-full">
+              <Wifi className="w-2.5 h-2.5" /> VPS OK
+            </span>
+          )}
+          {vpsOnline === false && (
+            <span className="flex items-center gap-1 text-[10px] text-red-400 bg-red-500/10 border border-red-900/40 px-1.5 py-0.5 rounded-full">
+              <WifiOff className="w-2.5 h-2.5" /> VPS offline
+            </span>
+          )}
           <button
             onClick={() => setConfigOpen(o => !o)}
             className="p-1 rounded hover:bg-neutral-800 text-neutral-500 hover:text-neutral-300 transition-colors"
@@ -190,6 +243,29 @@ export function ControlPanel() {
       </div>
 
       <div className="p-4 flex flex-col gap-4">
+
+        {/* VPS offline banner */}
+        {vpsOnline === false && (
+          <div className="flex flex-col gap-1 px-3 py-2.5 rounded-lg text-xs bg-red-500/10 text-red-400 border border-red-900/40">
+            <span className="font-semibold flex items-center gap-1.5"><WifiOff className="w-3.5 h-3.5" /> VPS no accesible</span>
+            <span className="text-red-400/70">Verifica que PM2 esté corriendo: <code className="bg-red-950/40 px-1 rounded">pm2 status</code></span>
+            <span className="text-red-400/70">Y que el puerto esté abierto: <code className="bg-red-950/40 px-1 rounded">ufw allow 3002/tcp</code></span>
+          </div>
+        )}
+
+        {/* Quick-exit warning */}
+        {quickExit && (
+          <div className="flex flex-col gap-1.5 px-3 py-2.5 rounded-lg text-xs bg-amber-500/10 text-amber-400 border border-amber-900/40">
+            <span className="font-semibold flex items-center gap-1.5"><TriangleAlert className="w-3.5 h-3.5" /> Proceso terminó inmediatamente</span>
+            <span className="text-amber-400/80">{quickExit}</span>
+            <div className="mt-1 flex flex-col gap-0.5 text-amber-400/60">
+              <span>• Pasos a seguir en el VPS:</span>
+              <code className="bg-amber-950/30 px-2 py-1 rounded text-[10px] block">cd /opt/captacion</code>
+              <code className="bg-amber-950/30 px-2 py-1 rounded text-[10px] block">node src/cli.js import --file All_Spain_Leads.csv</code>
+              <code className="bg-amber-950/30 px-2 py-1 rounded text-[10px] block">node src/cli.js stats  # debe mostrar ~18678</code>
+            </div>
+          </div>
+        )}
 
         {/* Toast */}
         {toast && (

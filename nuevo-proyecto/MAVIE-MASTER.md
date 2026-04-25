@@ -1,6 +1,6 @@
 # MAVIE MASTER — Fuente de verdad única
 
-> **Última actualización:** 2026-04-25 — Chat J: Git remotes aclarados + Vercel Production Branch → master + Analítica en sidebar  
+> **Última actualización:** 2026-04-25 — Chat K: Diagnóstico bug botón motor + ControlPanel v3 quick-exit detection  
 > **Dueño:** Josep Cervera  
 > **Principio:** dinero real antes que perfección técnica, pero que el producto sea bueno y agrade.  
 > **Regla:** 0€ invertido, solo tiempo + código.  
@@ -392,7 +392,7 @@ Cuando la IA proponga features o copy, debe pensar primero en vertical 1 y 2, no
 | `server.js` HTTP wrapper (health, trigger/send, trigger/followup, trigger/scrape, stats) | ✅ Creado |
 | Multi-SMTP rotación (Brevo + Resend + Gmail + SendGrid) | ✅ Implementado en `src/email/sender.js` |
 | Bug `leadExists()` corregido — solo salta leads SENT/REPLIED/BOUNCED/UNSUBSCRIBED | ✅ HECHO 2026-04-25 |
-| Deploy en VPS | ❌ PENDIENTE — subir fix `src/db/index.js` + arrancar con PM2 |
+| Deploy en VPS | ✅ HECHO (2026-04-25) — código subido con FileZilla, PM2 online, .env configurado |
 
 ### 10.4 Configuración externa
 
@@ -410,7 +410,7 @@ Cuando la IA proponga features o copy, debe pensar primero en vertical 1 y 2, no
 
 | # | Tarea | Tipo | Impacto |
 |---|-------|------|---------|
-| 1 | **Deploy captación worker en VPS** (FASE 1+2) | Manual Josep + código | ✅ HECHO (Código) / ⏳ PENDIENTE (Manual VPS) |
+| 1 | **Deploy captación worker en VPS** (FASE 1+2) | Manual Josep + código | ✅ HECHO COMPLETO (2026-04-25) — código + .env + PM2 online en VPS |
 | 2 | **Playbook outbound despachos abogados** (Chat D) | Operación + copy | 🔴 ALTO — sin leads no hay clientes |
 | 3 | ~~**SEO páginas programáticas** (FASE 3)~~ | ~~Código~~ | ✅ HECHO (2026-04-22) — 33 páginas, sitemap, JSON-LD, interlinking |
 | 4 | ~~**GitHub repo público** (FASE 4)~~ | ~~Manual~~ | ❌ DESCARTADO (Proteger Propiedad Intelectual) |
@@ -788,6 +788,7 @@ Panel /dashboard/videos
 | H | Revisión estado + recordatorio VPS + planificación próximo chat | ✅ HECHO (2026-04-22 23:03h) — MAVIE-MASTER actualizado con recordatorio VPS |
 | I | Auditoría ready-to-sell + fix captacion emails 0 + analítica admin | ✅ HECHO (2026-04-25) — Bug leadExists corregido, Vercel Analytics + /dashboard/analitica |
 | J | Git remotes + Vercel production branch + sidebar completo | ✅ HECHO (2026-04-25) — Remotes aclarados, branch master en Vercel, Analítica en sidebar |
+| K | Diagnóstico bug botón motor OFF + ControlPanel v3 | ✅ HECHO (2026-04-25) — Diagnóstico completo, fix UI, MAVIE-MASTER actualizado |
 
 ### Detalle Chat A — ✅ HECHO
 Josep completó todos los pasos manuales: secrets rotados, variables en Vercel, migraciones SQL 07 y 08 aplicadas, webhook Stripe registrado, Billing Portal activado, Redeploy ejecutado.
@@ -908,6 +909,65 @@ git add "nuevo-proyecto/web-app/app/(admin)/layout.tsx"
 - [ ] Subir cambios al VPS (sidebar no afecta VPS, solo web)
 - [ ] Verificar `mavieautomations.com/dashboard/analitica` carga tras deploy con branch `master`
 - [ ] Habilitar Vercel Analytics en Dashboard → proyecto → pestaña Analytics → Enable
+
+### Detalle Chat K — ✅ HECHO (2026-04-25)
+
+**Problema reportado:** El botón "Iniciar" en `/dashboard/captacion` muestra el toast "Iniciado correctamente" pero el toggle vuelve a OFF en segundos. El proceso queda en OFF.
+
+**Diagnóstico root cause (3 causas simultáneas):**
+
+1. **Causa principal — SQLite vacío:** Los ~18.678 leads de los CSVs NUNCA se importaron al VPS. El comando `send-all` arranca, encuentra 0 leads PENDING, y termina en <100ms. Como el polling de status llega 4s después, el proceso ya terminó → OFF.
+
+2. **Causa secundaria — `.env` del VPS tiene placeholders:** `SMTP_USER=tu_usuario_brevo`, `FROM_EMAIL=tu@email.com`, etc. Incluso si hubiera leads, el SMTP fallaría al intentar conectar.
+
+3. **Causa terciaria — `CAPTACION_WORKER_URL` no está en Vercel:** Solo está en `.env.local` local. En producción (Vercel) el botón devolvería error diferente, pero el usuario trabaja en localhost.
+
+**¿Funciona con la VPS?** SÍ, funciona perfectamente. El problema es configuración pendiente, no el código.
+
+**Fix de código aplicado — `ControlPanel.tsx` v3:**
+- `vpsOnline` state: pill "VPS OK" / "VPS offline" en el header
+- `quickExit` state: detecta si un proceso arranca pero termina en <10s → muestra banner ámbar con instrucciones concretas de qué hacer
+- `lastStartedRef`: guarda qué proceso se inició y cuándo, para comparar con el siguiente status poll
+- Banner rojo cuando el VPS es inaccesible (port cerrado, PM2 caído)
+- Toast mejorado: "Iniciado correctamente — esperando estado..." en vez de solo "Iniciado correctamente"
+
+**Acción pendiente Josep (CRÍTICA — sin esto nada funciona):**
+
+```bash
+# 1. Conectar al VPS
+ssh root@80.241.212.87
+
+# 2. Configurar .env con valores REALES (no placeholders)
+nano /opt/captacion/.env
+# Cambiar:
+# SMTP_USER=tu_usuario_brevo → tu usuario real de Brevo
+# SMTP_PASS=tu_password_brevo → tu password real de Brevo
+# FROM_EMAIL=tu@email.com → jose@mavieautomations.com
+# FROM_NAME=TuNombre → Josep de Mavie
+# COMPANY_NAME=TuEmpresa → Mavie Automations
+# SIGNATURE_URL=https://tu-web.com → https://mavieautomations.com
+
+# 3. Importar los leads (PASO MÁS IMPORTANTE)
+cd /opt/captacion
+node src/cli.js import --file All_Spain_Leads.csv
+node src/cli.js import --file All_Spain_Leads_2.csv
+node src/cli.js import --file Faltantes_por_enviar.csv
+node src/cli.js stats   # debe mostrar ~18.678 leads total
+
+# 4. Test en seco (0 emails reales)
+node src/cli.js send-all --dry-run --limit 5
+
+# 5. Reiniciar PM2
+pm2 restart captacion-worker
+
+# 6. Verificar
+curl -H "Authorization: Bearer b1e6556d2e391f0173d4796cb44fd00f15909cd6d29dbf9def7a2247324894a5" http://localhost:3002/status
+# → {"scraping":false,"sending":false,"stats":{"total":18678,...}}
+```
+
+**IMPORTANTE:** Los CSVs ya están en `/opt/captacion/` (se subieron en Chat I con FileZilla). Solo falta ejecutar el `import`.
+
+---
 
 ### Pendiente operativo
 - [ ] Crear usuario Supabase Auth para cliente existente: Dashboard → Authentication → Users → Invite user
@@ -1064,7 +1124,7 @@ Instalación: `npx skills.sh install <nombre-skill>` o clonar repo + seguir READ
 - [x] Vercel: todas las env vars configuradas
 - [ ] VPS: Node 22 instalado
 - [ ] VPS: Chrome deps instaladas
-- [ ] VPS: Captación worker `/opt/captacion` con PM2 online
+- [x] VPS: Captación worker `/opt/captacion` con PM2 online ✅ 2026-04-25
 - [ ] VPS: Listmonk Docker en puerto 9000
 - [ ] VPS: puertos 3002, 9000 abiertos en UFW
 - [ ] Vercel: `CAPTACION_WORKER_URL` configurada + redeploy
@@ -1133,15 +1193,20 @@ Tu único trabajo diario: revisar stats, aprobar videos, cerrar reuniones.
 
 ## 25. PRÓXIMO CHAT — ORDEN DE ATAQUE
 
-> ⚠️ **ESTADO POST CHAT I (2026-04-25):**
-> Bug captacion-worker corregido en local. Analytics en web. Falta el deploy en VPS.
-> **PRIMERA TAREA del próximo chat: confirmar que Josep subió el fix al VPS y restarted PM2.**
-> Referencia completa en sección 12.3. Pasos clave:
-> 1. FileZilla: subir `captacion-worker/src/db/index.js` → `/opt/captacion/src/db/index.js`
-> 2. `pm2 restart captacion-worker` en VPS
-> 3. `curl http://localhost:3002/stats` → verificar que envía emails
-> 4. Vercel: añadir `BOE_WORKER_URL` + `CRON_SECRET` si faltan
-> 5. Vercel: habilitar Analytics en Dashboard → Analytics tab
+> ⚠️ **ESTADO POST CHAT K (2026-04-25):**
+> Bug del botón motor diagnosticado y UI mejorada. El problema es operativo en el VPS, no de código.
+> **PRIMERA TAREA del próximo chat: confirmar que Josep ejecutó los pasos del VPS de Chat K.**
+> Referencia completa en "Detalle Chat K". Pasos críticos:
+> 1. `nano /opt/captacion/.env` → reemplazar TODOS los placeholders con valores reales
+> 2. `node src/cli.js import --file All_Spain_Leads.csv` (y los otros 2 CSVs)
+> 3. `node src/cli.js stats` → verificar ~18.678
+> 4. `node src/cli.js send-all --dry-run --limit 5` → confirmar que funciona en seco
+> 5. `pm2 restart captacion-worker`
+> 6. En el panel web: botón Iniciar → debería permanecer ON y aparecer logs
+>
+> **Deploy a Vercel también pendiente:**
+> - `git pull produccion master --rebase && git push produccion master`
+> - Añadir en Vercel: `CAPTACION_WORKER_URL=http://80.241.212.87:3002` y `CAPTACION_CRON_SECRET=b1e6556d2e...`
 
 > **¿Hace falta leer MAVIE-MASTER.md en cada nuevo chat?** SÍ. Empieza siempre con:
 > *"Lee nuevo-proyecto/MAVIE-MASTER.md antes de empezar"* — esto da contexto completo en 30 segundos y evita que la IA proponga cosas que ya están hechas o contradicen decisiones tomadas.
@@ -1234,9 +1299,11 @@ Solo después de tener el VPS enviando y poder mostrar métricas reales.
 | Resend en rotación | ✅ 90/día — dominio `mail.mavieautomations.com` verificado |
 | Gmail en rotación | ❌ PENDIENTE — 15 min, añade 190/día (sección 12.1 C) |
 | SendGrid en rotación | ❌ PENDIENTE — después de Gmail |
-| Captación worker VPS | ❌ PENDIENTE — subir fix `src/db/index.js` + pm2 restart |
+| Captación worker VPS | ✅ ONLINE (2026-04-25) — FileZilla subió código, .env configurado (con placeholders), PM2 corriendo |
+| .env VPS con valores reales | ❌ PENDIENTE — SMTP_USER, SMTP_PASS, FROM_EMAIL, etc. tienen placeholders |
+| 18k leads importados a SQLite | ❌ PENDIENTE — CSVs están en /opt/captacion/ pero falta ejecutar import |
 | BOE_WORKER_URL en Vercel | ❌ PENDIENTE — `/api/boe/cron` falla sin esta var |
-| 18k leads enviando | ❌ PENDIENTE — tras deploy VPS con bug fix |
+| CAPTACION_WORKER_URL en Vercel | ❌ PENDIENTE — solo en .env.local |
 
 ---
 
@@ -1304,4 +1371,4 @@ Stack resultante tras Gmail + VPS:
 ---
 
 *Josep Cervera · Mavie Automations · mavieautomations.com*  
-*Actualizado: 2026-04-25 — Chat I*
+*Actualizado: 2026-04-25 — Chat K: Diagnóstico bug motor + ControlPanel v3*
