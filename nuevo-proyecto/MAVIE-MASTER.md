@@ -1,6 +1,6 @@
 # MAVIE MASTER — Fuente de verdad única
 
-> **Última actualización:** 2026-04-25 — Chat I: Analytics + bug leadExists fix + paso a paso VPS/Vercel  
+> **Última actualización:** 2026-04-25 — Chat J: Git remotes aclarados + Vercel Production Branch → master + Analítica en sidebar  
 > **Dueño:** Josep Cervera  
 > **Principio:** dinero real antes que perfección técnica, pero que el producto sea bueno y agrade.  
 > **Regla:** 0€ invertido, solo tiempo + código.  
@@ -136,6 +136,29 @@ npm run lint       # ESLint via next lint
 node src/index.js  # ejecución manual para debug/test
 # Producción: Vercel Cron dispara /api/boe/cron → worker automático 08:00 AM
 ```
+
+### Comandos git deploy a producción (PowerShell — GUARDAR)
+
+```powershell
+# DEPLOY NORMAL — siempre en este orden desde C:\Users\Maste\Desktop\Proyectos2026\MAVIE_BOE_WEB
+git pull produccion master --rebase
+git push produccion master
+
+# Si hay "rejected" — forzar con seguridad
+git push produccion master --force-with-lease
+
+# Ver remotes
+git remote -v
+
+# Añadir archivos con paréntesis en la ruta (PowerShell requiere comillas dobles)
+git add "nuevo-proyecto/web-app/app/(admin)/layout.tsx"
+git add "nuevo-proyecto/web-app/app/(cliente)/layout.tsx"
+
+# Commit estándar
+git commit -m "feat: descripcion del cambio"
+```
+
+**REGLA:** `origin` → `Mavie_BOE` (NO lo usa Vercel). `produccion` → `MavieWebAutomatizacion2.0` (SÍ lo usa Vercel). Siempre pushear a `produccion`.
 
 ---
 
@@ -764,6 +787,7 @@ Panel /dashboard/videos
 | G | Migración Worker Captación + Multi-SMTP | ✅ HECHO (2026-04-22) — Worker movido y sender configurado |
 | H | Revisión estado + recordatorio VPS + planificación próximo chat | ✅ HECHO (2026-04-22 23:03h) — MAVIE-MASTER actualizado con recordatorio VPS |
 | I | Auditoría ready-to-sell + fix captacion emails 0 + analítica admin | ✅ HECHO (2026-04-25) — Bug leadExists corregido, Vercel Analytics + /dashboard/analitica |
+| J | Git remotes + Vercel production branch + sidebar completo | ✅ HECHO (2026-04-25) — Remotes aclarados, branch master en Vercel, Analítica en sidebar |
 
 ### Detalle Chat A — ✅ HECHO
 Josep completó todos los pasos manuales: secrets rotados, variables en Vercel, migraciones SQL 07 y 08 aplicadas, webhook Stripe registrado, Billing Portal activado, Redeploy ejecutado.
@@ -840,6 +864,50 @@ db.prepare(
 
 4. **Supabase — Crear usuario Auth para cliente existente:**
    - Dashboard → Authentication → Users → Invite user (email del cliente)
+
+### Detalle Chat J — ✅ HECHO (2026-04-25)
+
+**Problema descubierto:** El repo tiene DOS remotes. Vercel usaba `main` como Production Branch pero el código estaba en `master`. Todo push a `origin` no llegaba a producción.
+
+**Mapa de remotes (CRÍTICO — no confundir):**
+```
+origin     → https://github.com/Ahs301/Mavie_BOE.git              ← NO lo usa Vercel
+produccion → https://github.com/Ahs301/MavieWebAutomatizacion2.0.git ← ESTE es el que ve Vercel
+```
+
+**Fix aplicado en Vercel:**
+- Settings → Environments → Production → Branch Tracking → cambiado de `main` a `master`
+- Dominio `mavieautomations.com` confirmado en Production environment
+- Ahora cada push a `produccion master` → despliega en `mavieautomations.com`
+
+**Comandos git definitivos para Josep (GUARDAR ESTOS):**
+```powershell
+# Push normal — SIEMPRE en este orden
+git pull produccion master --rebase
+git push produccion master
+
+# Si falla con "rejected" — forzar con seguridad
+git push produccion master --force-with-lease
+
+# Añadir archivos con rutas con paréntesis (PowerShell)
+git add "nuevo-proyecto/web-app/app/(admin)/layout.tsx"
+
+# NUNCA usar barras escapadas en PowerShell — usar comillas dobles siempre
+```
+
+**Problema PowerShell con rutas `(admin)`:**
+- `git add nuevo-proyecto/web-app/app/\(admin\)/layout.tsx` → ERROR en PowerShell
+- Solución: `git add "nuevo-proyecto/web-app/app/(admin)/layout.tsx"` (comillas dobles)
+
+**Sidebar admin actualizado:**
+- Añadido `{ href: "/dashboard/analitica", label: "Analítica", icon: BarChart3 }` en `app/(admin)/layout.tsx`
+- Import añadido: `BarChart3` desde `lucide-react`
+- Sidebar completo ahora: Vista General → Clientes CRM → Leads/Web → Hub Email → Radar BOE → Captación B2B → **Analítica** → Logs e Incidencias → Configuración (footer)
+
+**Pendiente operativo tras Chat J:**
+- [ ] Subir cambios al VPS (sidebar no afecta VPS, solo web)
+- [ ] Verificar `mavieautomations.com/dashboard/analitica` carga tras deploy con branch `master`
+- [ ] Habilitar Vercel Analytics en Dashboard → proyecto → pestaña Analytics → Enable
 
 ### Pendiente operativo
 - [ ] Crear usuario Supabase Auth para cliente existente: Dashboard → Authentication → Users → Invite user
