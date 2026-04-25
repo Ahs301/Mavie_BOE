@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { useState } from "react"
-import { LayoutDashboard, Users, AlertCircle, Settings, LogOut, Target, UserPlus, Mail, Radar, Menu, X } from "lucide-react"
+import { LayoutDashboard, Users, AlertCircle, Settings, LogOut, Target, UserPlus, Mail, Radar, Menu, X, BarChart3 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { MavieLogo } from "@/components/MavieLogo"
 
@@ -18,6 +18,7 @@ const navItems = [
   { href: "/dashboard/emails", label: "Hub de Email", icon: Mail },
   { href: "/dashboard/boe", label: "Radar BOE", icon: Radar },
   { href: "/dashboard/captacion", label: "Captación B2B", icon: Target },
+  { href: "/dashboard/analitica", label: "Analítica", icon: BarChart3 },
   { href: "/dashboard/incidencias", label: "Logs e Incidencias", icon: AlertCircle },
 ]
 
