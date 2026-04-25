@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter, Syne } from 'next/font/google'
+import { Analytics } from '@vercel/analytics/next'
 import { ThemeProvider } from './providers'
 import './globals.css'
 import { Navbar } from '@/components/Navbar'
@@ -118,6 +119,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Footer />
           <CookieBanner />
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   )

@@ -28,7 +28,9 @@ export function getDB(dbPath = './data/outreach.sqlite') {
 
 export function leadExists(db, { email, domain }) {
   if (email && email.trim() !== '') {
-    const row = db.prepare('SELECT id FROM leads WHERE email = ?').get(email);
+    const row = db.prepare(
+      "SELECT id FROM leads WHERE email = ? AND status IN ('SENT','REPLIED','BOUNCED','UNSUBSCRIBED')"
+    ).get(email);
     if (row) return { id: row.id, reason: 'email' };
   }
   return null;

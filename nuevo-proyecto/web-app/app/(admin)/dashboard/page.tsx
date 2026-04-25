@@ -1,6 +1,6 @@
 import { requireAuth } from "@/lib/auth"
 import { createClient } from "@/lib/supabase/server"
-import { Activity, Users, AlertCircle, MailCheck, TrendingUp, CheckCircle, ChevronRight } from "lucide-react"
+import { Activity, Users, AlertCircle, MailCheck, TrendingUp, CheckCircle, ChevronRight, BarChart2 } from "lucide-react"
 import type { Metadata } from "next"
 
 export const dynamic = 'force-dynamic'
@@ -228,6 +228,14 @@ export default async function DashboardPage() {
                   Control Radar BOE
                 </span>
                 <ChevronRight className="w-4 h-4 text-neutral-600 group-hover:text-emerald-400 group-hover:translate-x-0.5 transition-all" />
+              </a>
+
+              <a href="/dashboard/analitica" className="flex items-center justify-between p-3.5 rounded-xl bg-neutral-900/40 hover:bg-neutral-900 border border-neutral-800/60 hover:border-blue-900/40 transition-all group cursor-pointer">
+                <span className="text-sm font-medium text-foreground flex items-center gap-3">
+                  <span className="p-1.5 bg-blue-500/10 text-blue-400 rounded-md border border-blue-900/30 group-hover:bg-blue-500/20 transition-colors"><BarChart2 className="w-4 h-4"/></span>
+                  Mavie Ecosystem — Analítica
+                </span>
+                <ChevronRight className="w-4 h-4 text-neutral-600 group-hover:text-blue-400 group-hover:translate-x-0.5 transition-all" />
               </a>
             </div>
           </div>

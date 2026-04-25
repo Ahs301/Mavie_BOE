@@ -1,6 +1,6 @@
 # MAVIE MASTER — Fuente de verdad única
 
-> **Última actualización:** 2026-04-22 (23:03h) — Recordatorio VPS añadido para próximo chat  
+> **Última actualización:** 2026-04-25 — Chat I: Analytics + bug leadExists fix + paso a paso VPS/Vercel  
 > **Dueño:** Josep Cervera  
 > **Principio:** dinero real antes que perfección técnica, pero que el producto sea bueno y agrade.  
 > **Regla:** 0€ invertido, solo tiempo + código.  
@@ -361,13 +361,15 @@ Cuando la IA proponga features o copy, debe pensar primero en vertical 1 y 2, no
 | Probado con cliente real (54 oportunidades, email recibido) | ✅ FUNCIONAL |
 | Cron automático Vercel 08:00 AM | ✅ FUNCIONAL |
 
-### 10.3 Captación Worker (`ScrapperEmpresasBOE - copia/`)
+### 10.3 Captación Worker (`nuevo-proyecto/captacion-worker/`)
 
 | Módulo | Estado |
 |--------|--------|
-| Scraper Google Maps + clasificación GPT + emailing | ✅ Funcional standalone |
+| Scraper Google Maps + clasificación GPT + emailing | ✅ Funcional (portado desde ScrapperEmpresasBOE) |
 | `server.js` HTTP wrapper (health, trigger/send, trigger/followup, trigger/scrape, stats) | ✅ Creado |
-| Deploy en VPS | ❌ PENDIENTE |
+| Multi-SMTP rotación (Brevo + Resend + Gmail + SendGrid) | ✅ Implementado en `src/email/sender.js` |
+| Bug `leadExists()` corregido — solo salta leads SENT/REPLIED/BOUNCED/UNSUBSCRIBED | ✅ HECHO 2026-04-25 |
+| Deploy en VPS | ❌ PENDIENTE — subir fix `src/db/index.js` + arrancar con PM2 |
 
 ### 10.4 Configuración externa
 
@@ -761,6 +763,7 @@ Panel /dashboard/videos
 | F | Fix Stripe 500 + confirmación funcional | ✅ HECHO (2026-04-22) — checkout funciona, redirige a Stripe |
 | G | Migración Worker Captación + Multi-SMTP | ✅ HECHO (2026-04-22) — Worker movido y sender configurado |
 | H | Revisión estado + recordatorio VPS + planificación próximo chat | ✅ HECHO (2026-04-22 23:03h) — MAVIE-MASTER actualizado con recordatorio VPS |
+| I | Auditoría ready-to-sell + fix captacion emails 0 + analítica admin | ✅ HECHO (2026-04-25) — Bug leadExists corregido, Vercel Analytics + /dashboard/analitica |
 
 ### Detalle Chat A — ✅ HECHO
 Josep completó todos los pasos manuales: secrets rotados, variables en Vercel, migraciones SQL 07 y 08 aplicadas, webhook Stripe registrado, Billing Portal activado, Redeploy ejecutado.
@@ -789,6 +792,54 @@ Antigravity portó el código de `ScrapperEmpresasBOE - copia` a `nuevo-proyecto
 
 ### Detalle Chat E — ✅ HECHO
 Vercel Cron en `web-app/app/api/boe/cron/route.ts`, ejecuta 08:00 AM diario con `CRON_SECRET`.
+
+### Detalle Chat I — ✅ HECHO (2026-04-25)
+
+**Bug crítico corregido:** `captacion-worker/src/db/index.js` → `leadExists()` tenía query sin filtro de status. Bloqueaba TODOS los leads que alguna vez se insertaron en SQLite (incluso PENDING/FAILED). Causa: DB llena con ~18.678 leads de campañas anteriores de marzo 2026. Fix: añadir `AND status IN ('SENT','REPLIED','BOUNCED','UNSUBSCRIBED')`. Ahora solo saltan leads con estado terminal; los PENDING y FAILED se reintentarán.
+
+```js
+// ANTES (roto — bloqueaba todo):
+db.prepare('SELECT id FROM leads WHERE email = ?').get(email)
+
+// DESPUÉS (correcto — solo salta terminales):
+db.prepare(
+  "SELECT id FROM leads WHERE email = ? AND status IN ('SENT','REPLIED','BOUNCED','UNSUBSCRIBED')"
+).get(email)
+```
+
+**Vercel Analytics añadido:**
+- `@vercel/analytics` instalado en `web-app/package.json`
+- `import { Analytics } from '@vercel/analytics/next'` + `<Analytics />` en `app/layout.tsx`
+- Servido desde `/_vercel/insights/script.js` — mismo dominio, sin CDN externo, sin cookies, GDPR-compliant
+
+**Página `/dashboard/analitica` creada:**
+- KPIs: MRR (basico×79 + pro×179 + business×399), clientes activos, pipeline leads, BOE runs (éxito/total últimos 30d)
+- Distribución por plan (barras % Básico/Pro/Business)
+- Últimos 5 signups con colores por status
+- Link a Vercel Analytics dashboard
+- Protegida con `requireAuth()` — solo admin
+- Datos en parallel `Promise.all` desde Supabase
+
+**Dashboard principal actualizado:** Link a `/dashboard/analitica` añadido en módulos de negocio.
+
+**Build:** 40 páginas, 0 errores ✅
+
+**Pendiente operativo Josep (tras esta sesión):**
+
+1. **VPS — Subir fix por FileZilla:**
+   - Archivo local: `nuevo-proyecto/captacion-worker/src/db/index.js`
+   - Destino VPS: `/opt/captacion/src/db/index.js`
+   - Tras subir: `pm2 restart captacion-worker`
+
+2. **Vercel — Habilitar Analytics:**
+   - Vercel Dashboard → proyecto `web-app` → pestaña `Analytics` → click `Enable`
+
+3. **Vercel — Añadir vars faltantes para BOE cron:**
+   - `BOE_WORKER_URL=http://IP_VPS:3001` (el `/api/boe/cron` las lee pero no están en Vercel)
+   - `CRON_SECRET=mismo_valor_que_en_VPS`
+
+4. **Supabase — Crear usuario Auth para cliente existente:**
+   - Dashboard → Authentication → Users → Invite user (email del cliente)
 
 ### Pendiente operativo
 - [ ] Crear usuario Supabase Auth para cliente existente: Dashboard → Authentication → Users → Invite user
@@ -965,7 +1016,10 @@ Instalación: `npx skills.sh install <nombre-skill>` o clonar repo + seguir READ
 - [x] Panel cliente `/panel` + keywords + destinatarios
 - [x] Auth self-service `/acceso`
 - [x] Landing `/soluciones/boe` precios y CTAs
-- [x] Admin dashboard CRM 9 páginas
+- [x] Admin dashboard CRM 10 páginas (incluye /dashboard/analitica)
+- [x] Analítica admin `/dashboard/analitica` — MRR, clientes, pipeline, BOE runs, distribución plan, últimos signups ✅ 2026-04-25
+- [x] Vercel Analytics instalado (`@vercel/analytics/next`) y activado en `app/layout.tsx` ✅ 2026-04-25
+- [ ] Vercel Analytics → Habilitar en Vercel Dashboard → proyecto → pestaña Analytics → click Enable (manual Josep)
 - [x] Onboarding público con honeypot + captcha
 - [x] Seguridad P0 (rate-limit, CSP, headers, auth fail-closed)
 - [ ] Crear usuario Supabase Auth para cliente existente
@@ -1011,16 +1065,18 @@ Tu único trabajo diario: revisar stats, aprobar videos, cerrar reuniones.
 
 ## 25. PRÓXIMO CHAT — ORDEN DE ATAQUE
 
-> ⚠️ **RECORDATORIO CRÍTICO PARA EL PRÓXIMO CHAT (2026-04-23):**
-> Josep no pudo hacer el **deploy del captacion-worker en el VPS** hoy (2026-04-22). Lo dejó para mañana.
-> **LA PRIMERA TAREA DEL PRÓXIMO CHAT es guiar a Josep paso a paso para subir el worker al VPS.**
-> Referencia completa en sección 12.3 de este archivo. Pasos mínimos:
-> 1. `scp -r captacion-worker root@IP_VPS:/opt/captacion`
-> 2. Node 22, Chrome deps, `npm install`
-> 3. `.env` con credenciales SMTP, `node src/cli.js import` para los 3 CSVs
-> 4. `pm2 start src/server.js --name captacion-worker` + `pm2 save && pm2 startup`
-> 5. `CAPTACION_WORKER_URL=http://IP:3002` en Vercel + redeploy
-> **No empezar con código hasta que Josep confirme que el VPS está listo.**
+> ⚠️ **ESTADO POST CHAT I (2026-04-25):**
+> Bug captacion-worker corregido en local. Analytics en web. Falta el deploy en VPS.
+> **PRIMERA TAREA del próximo chat: confirmar que Josep subió el fix al VPS y restarted PM2.**
+> Referencia completa en sección 12.3. Pasos clave:
+> 1. FileZilla: subir `captacion-worker/src/db/index.js` → `/opt/captacion/src/db/index.js`
+> 2. `pm2 restart captacion-worker` en VPS
+> 3. `curl http://localhost:3002/stats` → verificar que envía emails
+> 4. Vercel: añadir `BOE_WORKER_URL` + `CRON_SECRET` si faltan
+> 5. Vercel: habilitar Analytics en Dashboard → Analytics tab
+
+> **¿Hace falta leer MAVIE-MASTER.md en cada nuevo chat?** SÍ. Empieza siempre con:
+> *"Lee nuevo-proyecto/MAVIE-MASTER.md antes de empezar"* — esto da contexto completo en 30 segundos y evita que la IA proponga cosas que ya están hechas o contradicen decisiones tomadas.
 
 > Instrucción para la IA del próximo chat: leer MAVIE-MASTER.md completo, luego ejecutar estas tareas en orden. No saltar a fases posteriores.
 
@@ -1102,17 +1158,21 @@ Solo después de tener el VPS enviando y poder mostrar métricas reales.
 | Cron automático 08:00 AM | ✅ Activo |
 | Panel cliente `/panel` | ✅ Funcional (falta crear usuario Auth para cliente) |
 | SEO 33 páginas programáticas | ✅ Deployadas 2026-04-22 |
-| Multi-SMTP rotación código | ✅ Implementado 2026-04-22 — `sender.js` v3 con `getProvider()` + `getSmtpStats()` |
+| Multi-SMTP rotación código | ✅ Implementado — `sender.js` v3 con `getProvider()` + `getSmtpStats()` |
+| Bug leadExists() captacion-worker | ✅ CORREGIDO 2026-04-25 — solo salta SENT/REPLIED/BOUNCED/UNSUBSCRIBED |
+| Vercel Analytics | ✅ Instalado en layout.tsx — pendiente habilitar en Vercel Dashboard |
+| /dashboard/analitica | ✅ CREADO 2026-04-25 — MRR, clientes, pipeline, BOE runs, plan bars |
 | Brevo en rotación | ✅ 280/día |
-| Resend en rotación | ✅ 90/día — dominio `mail.mavieautomations.com` verificado, credenciales en `.env` |
-| Gmail en rotación | ❌ PENDIENTE — **PRIMER PASO próximo chat** (15 min, añade 190/día) |
+| Resend en rotación | ✅ 90/día — dominio `mail.mavieautomations.com` verificado |
+| Gmail en rotación | ❌ PENDIENTE — 15 min, añade 190/día (sección 12.1 C) |
 | SendGrid en rotación | ❌ PENDIENTE — después de Gmail |
-| Captación worker VPS | ❌ PENDIENTE — deploy tras completar email stack |
-| 18k leads importados | ❌ PENDIENTE — tras deploy VPS |
+| Captación worker VPS | ❌ PENDIENTE — subir fix `src/db/index.js` + pm2 restart |
+| BOE_WORKER_URL en Vercel | ❌ PENDIENTE — `/api/boe/cron` falla sin esta var |
+| 18k leads enviando | ❌ PENDIENTE — tras deploy VPS con bug fix |
 
 ---
 
-### Qué hizo la IA en este chat (2026-04-22)
+### Qué hizo la IA en Chat H (2026-04-22)
 
 1. **`ScrapperEmpresasBOE - copia/src/email/sender.js`** → reescrito a v3 con rotación multi-SMTP completa:
    - `buildProviders()` — carga solo proveedores con credenciales presentes en `.env`
@@ -1129,6 +1189,21 @@ Solo después de tener el VPS enviando y poder mostrar métricas reales.
 4. **`ScrapperEmpresasBOE - copia/.env.example`** → documentadas las nuevas vars con instrucciones
 
 5. **`ScrapperEmpresasBOE - copia/.env`** → añadidos `RESEND_SMTP_PASS` + `RESEND_FROM_EMAIL` (probado y funcional ✅)
+
+### Qué hizo la IA en Chat I (2026-04-25)
+
+1. **Bug fix `captacion-worker/src/db/index.js`** → `leadExists()` ahora filtra por `status IN ('SENT','REPLIED','BOUNCED','UNSUBSCRIBED')`. Antes bloqueaba TODOS los leads insertados (incluso PENDING/FAILED). Los ~18.678 leads del CSV ahora se reintentarán.
+
+2. **`web-app/app/layout.tsx`** → añadido `import { Analytics } from '@vercel/analytics/next'` + `<Analytics />`. Package `@vercel/analytics@^1.6.1` en `package.json`.
+
+3. **`web-app/app/(admin)/dashboard/analitica/page.tsx`** → nueva página de analítica:
+   - KPIs: MRR calculado, clientes activos, pipeline, BOE success rate
+   - Plan distribution bars (Básico/Pro/Business) con % y €/mes
+   - Últimos 5 signups con color por status
+   - Link a Vercel Analytics dashboard
+   - Build 40 páginas, 0 errores ✅
+
+4. **`web-app/app/(admin)/dashboard/page.tsx`** → añadido link a `/dashboard/analitica` en módulos de negocio.
 
 ---
 
@@ -1161,4 +1236,4 @@ Stack resultante tras Gmail + VPS:
 ---
 
 *Josep Cervera · Mavie Automations · mavieautomations.com*  
-*Actualizado: 2026-04-22*
+*Actualizado: 2026-04-25 — Chat I*
