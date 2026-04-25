@@ -11,6 +11,9 @@
 
 ### CONFLICTOS REALES (ya corregidos en este doc)
 
+
+
+
 **1. PASO 1.2 — Multi-SMTP va en el worker VPS, NO en el scraper viejo**
 - El archivo original decía editar `ScrapperEmpresasBOE - copia/src/services/email.js`
 - INCORRECTO: CLAUDE.md prohíbe extender el scraper copia in-place
