@@ -301,7 +301,7 @@ export function BrevoActivity() {
             {displayBounces > 0 && (
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] bg-red-500/5 border border-red-900/30 text-red-400/70">
                 <AlertCircle className="w-3 h-3 shrink-0" />
-                {displayBounces} bounces — considera limpiar esos emails del CSV
+                {displayBounces} bounces (rebotes) — Brevo los ha bloqueado automáticamente por seguridad para proteger tu dominio.
               </div>
             )}
 
