@@ -201,7 +201,7 @@ export function BrevoActivity() {
   const openRate  = displayDelivered > 0 ? openPct.toFixed(1) + "%" : "--"
   const clickRate = displayDelivered > 0 ? clickPct.toFixed(1) + "%" : "--"
 
-  const visibleFeed = showAll ? flatEvents : flatEvents.slice(0, 25)
+  const visibleFeed = showAll ? flatEvents : flatEvents.slice(0, 5)
 
   return (
     <div className="rounded-xl border border-neutral-800 bg-card overflow-hidden">
@@ -392,14 +392,14 @@ export function BrevoActivity() {
                     </div>
                   ))}
                 </div>
-                {flatEvents.length > 25 && (
+                {flatEvents.length > 5 && (
                   <button
                     onClick={() => setShowAll(p => !p)}
                     className="flex items-center justify-center gap-1.5 px-4 py-2 text-[10px] text-neutral-500 hover:text-neutral-300 border-t border-neutral-800 transition-colors"
                   >
                     {showAll
                       ? <><ChevronUp className="w-3 h-3" /> Mostrar menos</>
-                      : <><ChevronDown className="w-3 h-3" /> Ver {flatEvents.length - 25} más</>
+                      : <><ChevronDown className="w-3 h-3" /> Ver {flatEvents.length - 5} más</>
                     }
                   </button>
                 )}
