@@ -43,7 +43,7 @@ export default async function CaptacionDashboard() {
   const campaignsDesc = [...list].reverse()
 
   return (
-    <div className="p-6 xl:p-8 max-w-[1400px] space-y-6">
+    <div className="p-3 sm:p-6 xl:p-8 max-w-[1400px] space-y-4 sm:space-y-6">
 
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">

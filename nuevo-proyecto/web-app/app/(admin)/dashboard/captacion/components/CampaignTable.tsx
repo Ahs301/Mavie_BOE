@@ -137,7 +137,69 @@ export function CampaignTable({ campaigns }: { campaigns: Campaign[] }) {
         </div>
       )}
 
-      <div className="overflow-x-auto">
+      {/* Mobile view (cards) */}
+      <div className="md:hidden divide-y divide-neutral-800/50">
+        {campaigns.map(camp => (
+          <div key={camp.id} className="p-4 flex flex-col gap-3 hover:bg-neutral-800/10 transition-colors">
+            {/* Header: Name & Status */}
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <div className="font-semibold text-foreground text-sm truncate">{camp.name}</div>
+                <div className="text-xs text-neutral-500 flex items-center gap-1.5 mt-0.5 truncate">
+                  <Database className="w-3 h-3 shrink-0" /> {camp.target_audience}
+                </div>
+              </div>
+              <div className="shrink-0">
+                <StatusBadge status={camp.status} />
+              </div>
+            </div>
+
+            {/* Progress Bar */}
+            <div className="flex flex-col gap-1">
+              <div className="flex justify-between text-xs text-neutral-400">
+                <span>{camp.emails_sent} enviados</span>
+                <span>{camp.total_leads_found} leads</span>
+              </div>
+              <div className="h-1.5 w-full bg-neutral-800 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-blue-500 rounded-full"
+                  style={{ width: camp.total_leads_found > 0 ? `${(camp.emails_sent / camp.total_leads_found) * 100}%` : "0%" }}
+                />
+              </div>
+            </div>
+
+            {/* Performance & Actions */}
+            <div className="flex items-center justify-between pt-1">
+              <div className="flex items-center gap-4 text-xs">
+                <div className="flex items-center gap-1.5 text-emerald-400 font-medium">
+                  <Mail className="w-3.5 h-3.5" /> {camp.emails_opened}
+                </div>
+                <div className="flex items-center gap-1.5 text-purple-400 font-medium">
+                  <MousePointerClick className="w-3.5 h-3.5" /> {camp.emails_clicked}
+                </div>
+              </div>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setSelected(camp)}
+                  className="p-2 text-neutral-500 hover:text-white hover:bg-neutral-800 rounded-lg transition-colors"
+                >
+                  <Eye className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => handleDelete(camp)}
+                  disabled={deleting === camp.id || isPending}
+                  className="p-2 text-neutral-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors disabled:opacity-50"
+                >
+                  {deleting === camp.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop view (table) */}
+      <div className="hidden md:block overflow-x-auto">
         <table className="w-full text-sm text-left">
           <thead className="text-xs text-neutral-500 bg-neutral-800/20 border-b border-neutral-800 uppercase">
             <tr>
