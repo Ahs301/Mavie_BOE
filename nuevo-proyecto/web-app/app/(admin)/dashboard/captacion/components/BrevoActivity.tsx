@@ -130,7 +130,7 @@ function FunnelBar({ pct, color }: { pct: number; color: string }) {
 // ─── Main Component ───────────────────────────────────────────────────────────
 export function BrevoActivity() {
   const [tab, setTab]               = useState<TabKey>("actividad")
-  const [emails, setEmails]         = useState<BrevoEmail[]>([])
+  const [flatEvents, setFlatEvents] = useState<FlatEvent[]>([])
   const [agg, setAgg]               = useState<BrevoAggregated | null>(null)
   const [loading, setLoading]       = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -151,12 +151,11 @@ export function BrevoActivity() {
 
       if (evRes.ok) {
         const d = await evRes.json()
-        // Brevo returns { transactionalEmails: [...] }
-        const raw: BrevoEmail[] = d.transactionalEmails ?? d.emails ?? []
-        setEmails(raw)
+        const raw: FlatEvent[] = d.events ?? []
+        setFlatEvents(raw)
       } else {
         const err = await evRes.json().catch(() => ({}))
-        setError(err?.error || "No se pudo conectar con Brevo. Verifica BREVO_API_KEY en Vercel.")
+        setError(err?.error || err?.message || "No se pudo conectar con Brevo.")
       }
 
       if (aggRes.ok) {
@@ -180,24 +179,10 @@ export function BrevoActivity() {
     return () => clearInterval(id)
   }, [load])
 
-  // ── Flatten emails → events for the activity feed ─────────────────────────
-  const flatEvents: FlatEvent[] = []
-  for (const em of emails) {
-    if (em.events?.length) {
-      for (const ev of em.events) {
-        flatEvents.push({ email: em.email, subject: em.subject, event: ev.name, date: ev.time })
-      }
-    } else {
-      // No events array — treat the email itself as a "sent" event
-      flatEvents.push({ email: em.email, subject: em.subject, event: "requests", date: em.date })
-    }
-  }
-  flatEvents.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-
-  // ── Replies: emails whose subject starts with "Re:" ───────────────────────
-  const replies = emails.filter(e =>
-    (e.subject ?? "").toLowerCase().startsWith("re:") ||
-    e.events?.some(ev => ev.name.toLowerCase() === "reply")
+  // ── Replies: events whose event=reply or subject starts with "Re:" ────────
+  const replies = flatEvents.filter(e =>
+    e.event?.toLowerCase() === "reply" ||
+    (e.subject ?? "").toLowerCase().startsWith("re:")
   )
 
   // ── Compute local counts from flat events (fallback if agg null) ──────────
@@ -285,7 +270,7 @@ export function BrevoActivity() {
               <StatKpi
                 label="Entregados"
                 value={displayDelivered.toLocaleString("es-ES")}
-                sub={`de ${(agg?.requests ?? emails.length).toLocaleString("es-ES")} enviados`}
+                sub={`de ${(agg?.requests ?? flatEvents.length).toLocaleString("es-ES")} enviados`}
                 icon={<CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />}
                 accent="emerald"
               />

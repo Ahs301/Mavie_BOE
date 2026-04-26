@@ -8,7 +8,9 @@ function vpsHeaders() {
 }
 
 function vpsUrl(path: string) {
-  return `${process.env.CAPTACION_WORKER_URL}${path}`
+  const base = process.env.CAPTACION_WORKER_URL || ""
+  const normalizedBase = base.replace(/\/$/, '')
+  return `${normalizedBase}${path}`
 }
 
 // GET /api/captacion/control?action=status|logs|config&since=<ms>

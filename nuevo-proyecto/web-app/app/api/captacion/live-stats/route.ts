@@ -27,7 +27,8 @@ export async function GET() {
   const workerSecret = process.env.CAPTACION_CRON_SECRET
   if (workerUrl && workerSecret) {
     try {
-      const r = await fetch(`${workerUrl}/stats`, {
+      const normalizedUrl = workerUrl.replace(/\/$/, '')
+      const r = await fetch(`${normalizedUrl}/stats`, {
         headers: { Authorization: `Bearer ${workerSecret}` },
         signal: AbortSignal.timeout(4_000),
       })

@@ -22,7 +22,7 @@ export async function GET(request: Request) {
   if (email) params.set("email", email)
 
   try {
-    const res = await fetch(`${BREVO_BASE}/smtp/emails?${params}`, {
+    const res = await fetch(`${BREVO_BASE}/smtp/statistics/events?${params}`, {
       headers: { "api-key": apiKey, "Accept": "application/json" },
       next: { revalidate: 60 },
     })
