@@ -130,7 +130,7 @@ async function sendAction(options) {
         if (!isValidEmail(lead.email)) { skipped++; continue; }
 
         const exists = leadExists(db, lead);
-        if (exists) {
+        if (exists?.skip) {
             logger.info(`Duplicado (${exists.reason}): ${lead.email}`);
             skipped++;
             continue;
@@ -154,7 +154,8 @@ async function sendAction(options) {
         fullLead.templateKey = templateKey;
         fullLead.abVariant = abVariant;
 
-        const leadId = insertLead(db, fullLead);
+        // Reusar ID si el lead ya fue insertado durante scraping incremental
+        const leadId = (exists && !exists.skip) ? exists.id : insertLead(db, fullLead);
 
         if (isDryRun) {
             logger.info(`(DRY-RUN) PENDING: ${fullLead.email}`);
@@ -538,8 +539,25 @@ program
 
         try {
             logger.info('📡 FASE 1: Scrapeando leads...');
+            const config = getConfig();
+            const db = getDB(config.DB_PATH);
+            let incrementalCount = 0;
+
+            // Callback incremental: inserta cada lead en SQLite en cuanto se encuentra
+            // Así el contador de Supabase se actualiza en tiempo real (sync cada 30s)
+            const onLeadFound = async (lead) => {
+                try {
+                    const ex = leadExists(db, lead);
+                    if (!ex) {
+                        insertLead(db, { ...lead, status: 'PENDING' });
+                        incrementalCount++;
+                        if (incrementalCount % 5 === 0) logger.info(`[scrape] ${incrementalCount} leads guardados en DB...`);
+                    }
+                } catch (_) {}
+            };
+
             const { leads: scrapedLeads, reviewLeads } = await scrapeGoogleMapsMultiQuery(
-                options.niche, options.location, limit, useVariants
+                options.niche, options.location, limit, useVariants, onLeadFound
             );
             logger.info(`✅ ${scrapedLeads.length} con email | ${reviewLeads.length} sin email`);
 
@@ -557,6 +575,7 @@ program
             if (reviewLeads.length > 0) writeReviewLeadsToCSV(reviewLeads, `Revisar_${safeNiche}_${safeLocation}_${timestamp}.csv`);
 
             await closeBrowser();
+            logger.info(`[scrape] Scraping completo: ${incrementalCount} leads insertados en DB`);
 
             logger.info(`\n📧 FASE 2: Enviando a ${scrapedLeads.length} leads...`);
             await sendAction({ file: mainFile, dryRun: isDryRun });

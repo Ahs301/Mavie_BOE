@@ -133,17 +133,29 @@ async function extractPlaceDetails(page, url) {
 
 // ─── Función principal ────────────────────────────────────────────
 
+// User-agent pool para rotar entre sesiones
+const USER_AGENTS = [
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (Windows NT 11.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
+];
+function randomUA() { return USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)]; }
+function randomDelay(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+
 /**
  * Scrapea Google Maps usando múltiples variantes de búsqueda para
  * obtener el mayor número de leads posible.
  *
- * @param {string} keyword   - Nicho de búsqueda (ej. "peluquería")
- * @param {string} location  - Localización (ej. "Valencia")
- * @param {number} limit     - Límite máximo de leads con email
+ * @param {string} keyword      - Nicho de búsqueda (ej. "peluquería")
+ * @param {string} location     - Localización (ej. "Valencia")
+ * @param {number} limit        - Límite máximo de leads con email
  * @param {boolean} useVariants - Si true, usa variantes del diccionario de nichos
+ * @param {Function} [onLeadFound] - Callback opcional: se llama con cada lead encontrado
  * @returns {Promise<{ leads: Object[], reviewLeads: Object[] }>}
  */
-export async function scrapeGoogleMapsMultiQuery(keyword, location, limit = 200, useVariants = true) {
+export async function scrapeGoogleMapsMultiQuery(keyword, location, limit = 200, useVariants = true, onLeadFound = null) {
     const variants = useVariants ? getSearchVariants(keyword) : [keyword];
     logger.info(`🔍 Buscando "${keyword}" en ${location} con ${variants.length} variante(s): ${variants.join(', ')}`);
 
@@ -155,7 +167,7 @@ export async function scrapeGoogleMapsMultiQuery(keyword, location, limit = 200,
             '--disable-setuid-sandbox',
             '--disable-dev-shm-usage',
             '--disable-blink-features=AutomationControlled',
-            '--window-size=1366,768',
+            `--window-size=${1024 + randomDelay(0, 400)},${700 + randomDelay(0, 200)}`,
             '--lang=es-ES',
         ]
     });
@@ -170,9 +182,9 @@ export async function scrapeGoogleMapsMultiQuery(keyword, location, limit = 200,
     // ─── FASE 1: Recopilar URLs de fichas para cada variante ─────
     logger.info('📋 Fase 1: Recopilando URLs de fichas...');
     const searchPage = await browser.newPage();
-    await searchPage.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36');
+    await searchPage.setUserAgent(randomUA());
     await searchPage.setExtraHTTPHeaders({ 'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8' });
-    await searchPage.setViewport({ width: 1366, height: 768 });
+    await searchPage.setViewport({ width: 1024 + randomDelay(0, 400), height: 700 + randomDelay(0, 200) });
 
     // Pre-aceptar cookies de Google para evitar la página de consent
     await searchPage.setCookie(
@@ -271,8 +283,8 @@ export async function scrapeGoogleMapsMultiQuery(keyword, location, limit = 200,
                 }
             }
 
-            // Pausa entre variantes para no ser baneado
-            await sleep(Math.floor(Math.random() * 2000) + 1500);
+            // Pausa entre variantes — más larga para evitar detección
+            await sleep(randomDelay(3000, 7000));
         } catch (err) {
             logger.warn(`Error buscando variante "${variant}": ${err.message}`);
         }
@@ -283,9 +295,13 @@ export async function scrapeGoogleMapsMultiQuery(keyword, location, limit = 200,
 
     // ─── FASE 2: Entrar en cada ficha y extraer datos ────────────
     logger.info('🏪 Fase 2: Extrayendo datos de fichas individuales...');
-    const detailPage = await browser.newPage();
-    await detailPage.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36');
-    await detailPage.setViewport({ width: 1366, height: 768 });
+
+    // Reiniciar el navegador cada BATCH_SIZE URLs para limpiar huella digital
+    const BATCH_SIZE = 80;
+    let detailBrowser = browser;
+    let detailPage = await detailBrowser.newPage();
+    await detailPage.setUserAgent(randomUA());
+    await detailPage.setViewport({ width: 1024 + randomDelay(0, 400), height: 700 + randomDelay(0, 200) });
 
     const rawLeads = [];
     const barDetails = new cliProgress.SingleBar({
@@ -294,8 +310,24 @@ export async function scrapeGoogleMapsMultiQuery(keyword, location, limit = 200,
     }, cliProgress.Presets.shades_grey);
     barDetails.start(allPlaceUrls.length, 0);
 
-    for (const placeUrl of allPlaceUrls) {
-        const details = await extractPlaceDetails(detailPage, placeUrl);
+    for (let idx = 0; idx < allPlaceUrls.length; idx++) {
+        // Reiniciar navegador cada BATCH_SIZE páginas para evitar detección
+        if (idx > 0 && idx % BATCH_SIZE === 0) {
+            await detailPage.close().catch(() => {});
+            if (detailBrowser !== browser) await detailBrowser.close().catch(() => {});
+            logger.info(`  ↳ [Anti-ban] Reiniciando navegador tras ${idx} fichas...`);
+            await sleep(randomDelay(5000, 12000));
+            detailBrowser = await puppeteerExtra.launch({
+                headless: true,
+                executablePath: process.env.CHROME_PATH || undefined,
+                args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-blink-features=AutomationControlled', '--lang=es-ES'],
+            });
+            detailPage = await detailBrowser.newPage();
+            await detailPage.setUserAgent(randomUA());
+            await detailPage.setViewport({ width: 1024 + randomDelay(0, 400), height: 700 + randomDelay(0, 200) });
+        }
+
+        const details = await extractPlaceDetails(detailPage, allPlaceUrls[idx]);
         barDetails.increment();
 
         if (!details || !details.name) continue;
@@ -308,17 +340,18 @@ export async function scrapeGoogleMapsMultiQuery(keyword, location, limit = 200,
         rawLeads.push({
             ...details,
             sourceQuery: `${keyword} en ${location}`,
-            mapsUrl: placeUrl,
+            mapsUrl: allPlaceUrls[idx],
             email: '',
             emailStatus: '',
         });
 
-        // Pequeña pausa para no saturar Maps
-        await sleep(300);
+        // Pausa variable para no saturar Maps — más realista que 300ms fijo
+        await sleep(randomDelay(500, 1500));
     }
 
     barDetails.stop();
-    await detailPage.close();
+    await detailPage.close().catch(() => {});
+    if (detailBrowser !== browser) await detailBrowser.close().catch(() => {});
     logger.info(`✅ ${rawLeads.length} empresas únicas extraídas. Buscando emails...`);
 
     // ─── FASE 3: Extraer emails de las webs ─────────────────────
@@ -344,6 +377,10 @@ export async function scrapeGoogleMapsMultiQuery(keyword, location, limit = 200,
                 lead.pageFound = result.pageFound || '/';
                 emailCount++;
                 leadsWithEmail.push(lead);
+                // Callback incremental: persiste el lead en cuanto se encuentra
+                if (onLeadFound) {
+                    try { await onLeadFound(lead); } catch (_) {}
+                }
             } else {
                 lead.emailStatus = result?.status || 'WEB_SIN_EMAIL';
                 const reason = classifyNoEmailReason(lead, lead.emailStatus);

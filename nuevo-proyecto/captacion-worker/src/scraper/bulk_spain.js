@@ -85,8 +85,8 @@ export async function scrapeAllSpain(limitPerSearch = 40) {
             // Save state so we can resume if user Ctrl+C
             fs.writeFileSync(STATE_FILE, JSON.stringify({ nicheIndex: i, provinceIndex: j + 1 }), 'utf-8');
 
-            // Add a random delay to prevent Google from detecting the bot quickly
-            const delayInSeconds = Math.floor(Math.random() * (12 - 5 + 1)) + 5; // 5 to 12 seconds
+            // Pausa aleatoria larga entre provincias para evitar detección por Google
+            const delayInSeconds = Math.floor(Math.random() * (25 - 12 + 1)) + 12; // 12-25 segundos
             logger.info(`Pasando a la siguiente provincia en ${delayInSeconds} segundos...`);
             await sleep(delayInSeconds * 1000);
         }
