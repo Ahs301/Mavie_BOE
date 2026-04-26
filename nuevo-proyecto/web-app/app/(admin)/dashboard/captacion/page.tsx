@@ -7,6 +7,7 @@ import { WorkerStats } from "./components/WorkerStats"
 import { CampaignTable } from "./components/CampaignTable"
 import { LiveMetrics } from "./components/LiveMetrics"
 import { ControlPanel } from "./components/ControlPanel"
+import { BrevoActivity } from "./components/BrevoActivity"
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -63,8 +64,8 @@ export default async function CaptacionDashboard() {
         </div>
       </div>
 
-      {/* 2-column layout */}
-      <div className="grid grid-cols-1 xl:grid-cols-[1fr_360px] gap-6">
+      {/* 3-column layout: campaigns | metrics+control | brevo */}
+      <div className="grid grid-cols-1 xl:grid-cols-[1fr_340px_340px] gap-6">
 
         {/* Left — Campaign queue */}
         <div className="bg-card border border-neutral-800 rounded-xl overflow-hidden shadow-sm">
@@ -79,10 +80,15 @@ export default async function CaptacionDashboard() {
           </div>
         </div>
 
-        {/* Right — Live analytics + control panel */}
+        {/* Center — Live analytics + control panel */}
         <div className="flex flex-col gap-6">
           <LiveMetrics initial={initial} />
           <ControlPanel />
+        </div>
+
+        {/* Right — Brevo real-time activity */}
+        <div className="flex flex-col gap-6">
+          <BrevoActivity />
         </div>
 
       </div>

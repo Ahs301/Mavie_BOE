@@ -13,11 +13,12 @@ export async function GET(request: Request) {
   }
 
   const { searchParams } = new URL(request.url)
-  const limit = searchParams.get("limit") || "50"
+  const limit  = searchParams.get("limit")  || "100"
   const offset = searchParams.get("offset") || "0"
-  const email = searchParams.get("email") || ""
+  const sort   = searchParams.get("sort")   || "desc"
+  const email  = searchParams.get("email")  || ""
 
-  const params = new URLSearchParams({ limit, offset })
+  const params = new URLSearchParams({ limit, offset, sort })
   if (email) params.set("email", email)
 
   try {
