@@ -36,8 +36,9 @@ export async function GET(req: NextRequest) {
     })
     const data = await r.json()
     return NextResponse.json(data)
-  } catch {
-    return NextResponse.json({ error: "VPS inaccesible" }, { status: 503 })
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    return NextResponse.json({ error: `VPS inaccesible: ${msg}` }, { status: 503 })
   }
 }
 
@@ -77,7 +78,8 @@ export async function POST(req: NextRequest) {
     })
     const data = await r.json()
     return NextResponse.json(data)
-  } catch {
-    return NextResponse.json({ error: "VPS inaccesible" }, { status: 503 })
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    return NextResponse.json({ error: `VPS inaccesible: ${msg}` }, { status: 503 })
   }
 }

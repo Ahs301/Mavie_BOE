@@ -81,6 +81,7 @@ function ProcessCard({
 export function ControlPanel() {
   const [status, setStatus]       = useState<ProcessStatus | null>(null)
   const [vpsOnline, setVpsOnline] = useState<boolean | null>(null) // null = checking
+  const [vpsError, setVpsError]   = useState<string | null>(null)
   const [logs, setLogs]           = useState<LogEntry[]>([])
   const [sinceTs, setSinceTs]     = useState(0)
   const [config, setConfig]       = useState<Config>({})
@@ -106,10 +107,12 @@ export function ControlPanel() {
       try {
         const d = await fetch(API("status")).then(r => r.json())
         if (d.error) {
+          setVpsError(d.error)
           setVpsOnline(false)
           setStatus(null)
           return
         }
+        setVpsError(null)
         setVpsOnline(true)
         // Detect quick-exit: if we just started a process but now it's OFF
         if (lastStartedRef.current) {
@@ -248,8 +251,8 @@ export function ControlPanel() {
         {vpsOnline === false && (
           <div className="flex flex-col gap-1 px-3 py-2.5 rounded-lg text-xs bg-red-500/10 text-red-400 border border-red-900/40">
             <span className="font-semibold flex items-center gap-1.5"><WifiOff className="w-3.5 h-3.5" /> VPS no accesible</span>
-            <span className="text-red-400/70">Verifica que PM2 esté corriendo: <code className="bg-red-950/40 px-1 rounded">pm2 status</code></span>
-            <span className="text-red-400/70">Y que el puerto esté abierto: <code className="bg-red-950/40 px-1 rounded">ufw allow 3002/tcp</code></span>
+            <span className="text-red-400/80">{vpsError || "Error desconocido al contactar el VPS."}</span>
+            <span className="text-red-400/50 text-[10px] mt-1">Verifica que CAPTACION_WORKER_URL en Vercel sea correcto (debe incluir http://).</span>
           </div>
         )}
 
