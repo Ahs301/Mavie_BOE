@@ -80,10 +80,10 @@ export function LiveMetrics({ initial }: { initial: Stats }) {
 
   const openRate  = sentDisplay > 0
     ? ((openedDisplay / sentDisplay) * 100).toFixed(1) + "%"
-    : "--"
+    : "0.0%"
   const replyRate = vpsLive && vpsLive.sent > 0
     ? ((vpsLive.replied / vpsLive.sent) * 100).toFixed(1) + "%"
-    : "--"
+    : "0.0%"
 
   const lastUpdate = new Date(stats.updatedAt).toLocaleTimeString("es-ES", {
     hour: "2-digit", minute: "2-digit", second: "2-digit",

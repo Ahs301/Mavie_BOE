@@ -28,7 +28,9 @@ export function CaptacionChart({ campaigns }: { campaigns: Campaign[] }) {
 
   const yTicks = [0, Math.round(maxVal / 2), maxVal]
 
-  if (n === 0) {
+  const allZero = campaigns.every(c => !c.total_leads_found && !c.emails_sent)
+
+  if (n === 0 || allZero) {
     return (
       <div className="flex flex-col items-center justify-center h-44 gap-3 text-neutral-700">
         <svg className="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>

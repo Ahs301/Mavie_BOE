@@ -22,7 +22,7 @@ export default async function CaptacionDashboard() {
 
   const { data: campaigns } = await supabase
     .from("outreach_campaigns")
-    .select("id, name, status, total_leads_found, emails_sent, emails_opened, emails_clicked, created_at")
+    .select("id, name, status, total_leads_found, emails_sent, emails_opened, emails_clicked, created_at, updated_at")
     .order("created_at", { ascending: true })
 
   const list = campaigns ?? []

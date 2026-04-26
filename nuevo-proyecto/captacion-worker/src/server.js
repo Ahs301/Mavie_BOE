@@ -149,7 +149,7 @@ function spawnProc(key, args, campaignId = null) {
   child.stderr.on('data', d => addLog(`${key}:err`, d.toString()));
 
   let syncInterval = null;
-  if (campaignId && key === 'send') {
+  if (campaignId) {
     syncInterval = setInterval(() => syncProgressToSupabase(campaignId, statsBefore), 30_000);
   }
 
@@ -157,7 +157,7 @@ function spawnProc(key, args, campaignId = null) {
     if (syncInterval) clearInterval(syncInterval);
     procs[key] = null;
     addLog(key, `--- Proceso terminado (código ${code}) ---`);
-    if (campaignId && key === 'send') await syncCampaignToSupabase(campaignId, code, statsBefore);
+    if (campaignId) await syncCampaignToSupabase(campaignId, code, statsBefore);
   });
 
   return { ok: true };
