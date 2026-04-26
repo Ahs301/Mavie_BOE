@@ -28,10 +28,17 @@ export function getDB(dbPath = './data/outreach.sqlite') {
 
 export function leadExists(db, { email, domain }) {
   if (email && email.trim() !== '') {
-    const row = db.prepare(
+    // Ya procesado — no reenviar
+    const processed = db.prepare(
       "SELECT id FROM leads WHERE email = ? AND status IN ('SENT','REPLIED','BOUNCED','UNSUBSCRIBED')"
     ).get(email);
-    if (row) return { id: row.id, reason: 'email' };
+    if (processed) return { id: processed.id, reason: 'email', skip: true };
+
+    // Ya en cola como PENDING (insertado por scraping incremental) — reusar ID
+    const pending = db.prepare(
+      "SELECT id FROM leads WHERE email = ? AND status = 'PENDING'"
+    ).get(email);
+    if (pending) return { id: pending.id, reason: 'pending', skip: false };
   }
   return null;
 }
