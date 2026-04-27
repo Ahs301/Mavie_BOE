@@ -229,46 +229,7 @@ export function BrevoActivity() {
               </div>
             )}
 
-            {/* Funnel */}
-            {displayDelivered > 0 && (
-              <div className="flex flex-col gap-2 p-3 rounded-lg border border-neutral-800 bg-neutral-900/40">
-                <span className="text-[10px] text-neutral-500 flex items-center gap-1 font-medium">
-                  <TrendingUp className="w-3 h-3" /> Embudo de conversión
-                </span>
-                <div className="flex flex-col gap-1.5">
-                  <div className="flex items-center justify-between text-[10px]">
-                    <span className="text-neutral-500">Entregados</span>
-                    <span className="text-emerald-400 font-semibold tabular-nums">{displayDelivered.toLocaleString("es-ES")}</span>
-                  </div>
-                  <FunnelBar pct={100} color="bg-emerald-600/60" />
 
-                  <div className="flex items-center justify-between text-[10px] mt-0.5">
-                    <span className="text-neutral-500">Abiertos</span>
-                    <span className="text-blue-400 font-semibold tabular-nums">{openRate}</span>
-                  </div>
-                  <FunnelBar pct={openPct} color="bg-blue-500" />
-
-                  <div className="flex items-center justify-between text-[10px] mt-0.5">
-                    <span className="text-neutral-500">Clicados</span>
-                    <span className="text-purple-400 font-semibold tabular-nums">{clickRate}</span>
-                  </div>
-                  <FunnelBar pct={clickPct} color="bg-purple-500" />
-
-                  {replies.length > 0 && (
-                    <>
-                      <div className="flex items-center justify-between text-[10px] mt-0.5">
-                        <span className="text-neutral-500">Respuestas</span>
-                        <span className="text-yellow-400 font-semibold">{replies.length} ✦</span>
-                      </div>
-                      <FunnelBar
-                        pct={displayDelivered > 0 ? (replies.length / displayDelivered) * 100 : 0}
-                        color="bg-yellow-500"
-                      />
-                    </>
-                  )}
-                </div>
-              </div>
-            )}
           </>
         )}
 

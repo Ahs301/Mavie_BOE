@@ -65,6 +65,9 @@ export default async function CaptacionDashboard() {
         </div>
       </div>
 
+      {/* Live KPIs (Full Width) */}
+      <LiveMetrics initial={initial} />
+
       {/* 3-column layout: campaigns | metrics+control | brevo */}
       <div className="grid grid-cols-1 xl:grid-cols-[1fr_340px_340px] gap-6">
 
@@ -81,10 +84,8 @@ export default async function CaptacionDashboard() {
           </div>
         </div>
 
-        {/* Center — Live analytics + control panel */}
+        {/* Center — Analytics + control panel */}
         <div className="flex flex-col gap-6">
-          <LiveMetrics initial={initial} />
-
           {/* Funnel + per-campaign analytics */}
           <div className="rounded-xl border border-neutral-800 bg-card overflow-hidden">
             <div className="px-4 py-3 border-b border-neutral-800 flex items-center gap-2">
