@@ -1,0 +1,181 @@
+# SEO Programático — 32+ Páginas + Sitemap + JSON-LD
+
+## Objetivo
+
+Crear **32+ páginas SEO programáticas** indexables por Google que capturen tráfico long-tail para Radar BOE. Cada página es una landing optimizada para una vertical de negocio o una ciudad española, con copy único, JSON-LD structured data, y CTAs a Stripe/contacto.
+
+**Impacto esperado:** Tráfico orgánico 24/7 en 2-4 semanas post-indexación. Cada página ataca una keyword de intención comercial (ej: "radar BOE despachos abogados", "alertas BOE Madrid").
+
+---
+
+## Propuestas de Cambio
+
+### 1. Data Layer — Datos de verticales y ciudades
+
+#### [NEW] `app/radar-boe/_data/verticales.ts`
+
+Fichero con array tipado de las 12 verticales. Cada objeto incluye:
+- `slug`, `nombre`, `descripcion` (meta description única)
+- `heroTitle`, `heroSubtitle` — copy principal
+- `painPoints` — 3 problemas del sector que Radar BOE resuelve
+- `useCases` — 3 casos de uso concretos del sector
+- `keywords` — array de keywords SEO del sector
+- `faqs` — 4-5 FAQs únicas por vertical (para FAQPage JSON-LD)
+- `cta` — texto CTA personalizado
+
+Las 12 verticales (exactas del MAVIE-MASTER.md):
+1. `despachos-abogados`
+2. `consultoras-subvenciones`
+3. `empresas-licitacion`
+4. `gestorias-asesorias`
+5. `asociaciones-profesionales`
+6. `constructoras`
+7. `sector-farmaceutico`
+8. `sector-inmobiliario`
+9. `exportadoras`
+10. `startups-tecnologia`
+11. `clinicas-hospitales`
+12. `colegios-profesionales`
+
+#### [NEW] `app/radar-boe/_data/ciudades.ts`
+
+Array tipado de 20 ciudades. Cada objeto incluye:
+- `slug`, `nombre`, `comunidad`
+- `descripcion` (meta description con la ciudad)
+- `poblacionEmpresas` — dato real de tejido empresarial
+- `sectorPredominante` — vertical principal de la ciudad
+- `faqs` — 3-4 FAQs geolocalizadas
+
+Las 20 ciudades:
+Madrid, Barcelona, Valencia, Sevilla, Zaragoza, Málaga, Murcia, Palma, Las Palmas, Bilbao, Alicante, Córdoba, Valladolid, Vigo, Gijón, Hospitalet, A Coruña, Vitoria, Granada, Elche
+
+---
+
+### 2. Páginas Programáticas — Verticales
+
+#### [NEW] `app/radar-boe/[vertical]/page.tsx`
+
+Página dinámica con `generateStaticParams()` para pre-render en build time. Estructura:
+
+1. **Hero** — Título con nombre de vertical + badge "Sistema activo" + CTA a `/contacto` y `#precios`
+2. **Pain Points** — 3 cards con problemas del sector que Radar BOE resuelve
+3. **Cómo funciona** — 3-step process (reutiliza patrón de home)
+4. **Casos de uso** — 3 ejemplos concretos del sector
+5. **Precios** — Sección pricing con 3 planes (79/179/399€) con links Stripe
+6. **FAQs** — Accordion con 4-5 preguntas del sector
+7. **CTA final** — Contacto + demo gratuita
+
+**SEO por página:**
+- `metadata` con title/description únicos por vertical
+- `alternates.canonical` para evitar duplicados
+- JSON-LD: `Service` + `BreadcrumbList` + `FAQPage`
+- Open Graph con title/description únicos
+- Interlinks a la landing principal `/soluciones/boe` y a otras verticales
+
+---
+
+### 3. Páginas Programáticas — Ciudades
+
+#### [NEW] `app/radar-boe/ciudad/[ciudad]/page.tsx`
+
+Similar estructura pero con enfoque geográfico:
+
+1. **Hero** — "Radar BOE en [Ciudad]" + datos empresariales locales
+2. **Por qué en [Ciudad]** — Contexto empresarial local
+3. **Cómo funciona** — Mismos 3 pasos
+4. **Precios** — Mismos 3 planes
+5. **FAQs** — Preguntas geolocalizadas
+6. **CTA final** — Demo gratuita
+
+**SEO por página:**
+- Title: "Radar BOE [Ciudad] — Alertas automáticas del BOE | Mavie"
+- Description: única por ciudad
+- JSON-LD: `Service` con `areaServed` local + `FAQPage`
+- Interlinks a verticales y landing principal
+
+---
+
+### 4. Página índice de verticales
+
+#### [NEW] `app/radar-boe/page.tsx`
+
+Página hub que lista todas las verticales y ciudades como grid de links. Sirve como "nodo SEO" que distribuye link juice a todas las páginas hijas.
+
+---
+
+### 5. SEO helpers adicionales
+
+#### [MODIFY] `lib/seo.ts`
+
+Añadir función `faqPageSchema()` para generar JSON-LD de tipo FAQPage.
+
+---
+
+### 6. Sitemap actualizado
+
+#### [MODIFY] `app/sitemap.ts`
+
+Añadir las 12 URLs de verticales + 20 URLs de ciudades + URL del hub. Total: 33 URLs nuevas.
+
+---
+
+### 7. Robots actualizado
+
+#### [MODIFY] `app/robots.ts`
+
+Añadir `/panel` y `/acceso` a la lista de disallow (están protegidos pero faltaban en robots).
+
+---
+
+### 8. Interlinking — Footer y Navbar
+
+#### [MODIFY] `components/Footer.tsx`
+
+Añadir sección "Verticales" en el footer con links a las 5-6 verticales principales. Esto mejora la distribución de link juice y la crawlability.
+
+---
+
+## Decisiones de diseño
+
+| Decisión | Justificación |
+|----------|---------------|
+| `generateStaticParams()` en vez de SSR | Pre-render = máximo rendimiento + Vercel edge cache. Google premia velocidad. |
+| Copy único por página (no template genérico) | Google penaliza thin content / duplicados. Cada página tiene copy original. |
+| FAQPage JSON-LD | Rich snippets en Google → mayor CTR |
+| 3 tipos de JSON-LD por página | `Service` + `BreadcrumbList` + `FAQPage` = cobertura completa |
+| Interlinks entre verticales y ciudades | Crea una red interna de SEO que distribuye autoridad |
+| Precios en cada página | Cada página es una landing completa → puede convertir directamente |
+
+---
+
+## Open Questions
+
+> [!IMPORTANT]
+> **¿Quieres que las páginas de ciudades tengan la sección de precios completa (3 planes con botones Stripe), o solo un CTA a `/soluciones/boe#precios`?** Las verticales sí tendrán precios completos ya que son más high-intent.
+
+> [!NOTE]
+> El plan NO incluye Google Search Console (requiere que verifiques propiedad del dominio manualmente). Pero una vez deployed, solo tienes que ir a search.google.com/search-console → Añadir propiedad → Verificar → Enviar sitemap `https://mavieautomations.com/sitemap.xml`.
+
+---
+
+## Verificación
+
+### Build
+```bash
+npm run build
+# Debe compilar las 39 páginas existentes + 33 nuevas = ~72 páginas, 0 errores
+```
+
+### URLs verificables en dev
+```
+http://localhost:3000/radar-boe                          → Hub verticales
+http://localhost:3000/radar-boe/despachos-abogados       → Vertical top
+http://localhost:3000/radar-boe/consultoras-subvenciones  → Vertical 2
+http://localhost:3000/radar-boe/ciudad/madrid             → Ciudad top
+http://localhost:3000/radar-boe/ciudad/valencia           → Ciudad local
+http://localhost:3000/sitemap.xml                          → Debe incluir 33 URLs nuevas
+```
+
+### SEO validation
+- View source → verificar `<title>`, `<meta name="description">`, JSON-LD blocks
+- Google Rich Results Test → pegar URL → validar FAQPage + Service + BreadcrumbList

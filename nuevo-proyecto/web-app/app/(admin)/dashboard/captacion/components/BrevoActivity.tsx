@@ -7,59 +7,47 @@ import {
   ExternalLink, ChevronDown, ChevronUp,
 } from "lucide-react"
 
-// ─── Types from Brevo API ─────────────────────────────────────────────────────
-type BrevoEvent = {
-  name: string   // "requests" | "delivered" | "opened" | "clicks" | "softBounces" | "hardBounces" | "unsubscribes"
-  time: string
-}
+type BrevoEvent = { name: string; time: string }
 
 type BrevoEmail = {
-  email: string
-  subject: string
-  date: string
-  messageId?: string
-  uuid?: string
-  from?: string
-  tags?: string[]
-  events?: BrevoEvent[]
+  email: string; subject: string; date: string
+  messageId?: string; uuid?: string; from?: string
+  tags?: string[]; events?: BrevoEvent[]
 }
 
-type FlatEvent = {
-  email: string
-  subject: string
-  event: string
-  date: string
-}
+type FlatEvent = { email: string; subject: string; event: string; date: string }
 
 type BrevoAggregated = {
-  delivered?: number
-  opens?: number
-  clicks?: number
-  bounces?: number
-  softBounces?: number
-  hardBounces?: number
-  unsubscribes?: number
-  spamReports?: number
-  requests?: number
-  uniqueClicks?: number
-  uniqueViews?: number
+  delivered?: number; opens?: number; clicks?: number
+  bounces?: number; softBounces?: number; hardBounces?: number
+  unsubscribes?: number; spamReports?: number; requests?: number
+  uniqueClicks?: number; uniqueViews?: number
+}
+
+type InboxMessage = {
+  uid: number
+  from: string
+  fromAddress: string
+  subject: string
+  date: string
+  text: string
+  html: string
 }
 
 type TabKey = "actividad" | "respuestas"
 
-// ─── Event metadata ───────────────────────────────────────────────────────────
 const EVENT_META: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
-  delivered:   { label: "Entregado",   color: "text-emerald-400 bg-emerald-500/10 border-emerald-900/40", icon: <CheckCircle2 className="w-3 h-3" /> },
-  opened:      { label: "Abierto",     color: "text-blue-400 bg-blue-500/10 border-blue-900/40",          icon: <Eye className="w-3 h-3" /> },
-  clicks:      { label: "Clicado",     color: "text-purple-400 bg-purple-500/10 border-purple-900/40",    icon: <MousePointerClick className="w-3 h-3" /> },
-  click:       { label: "Clicado",     color: "text-purple-400 bg-purple-500/10 border-purple-900/40",    icon: <MousePointerClick className="w-3 h-3" /> },
-  requests:    { label: "Enviado",     color: "text-neutral-400 bg-neutral-800 border-neutral-700",       icon: <Send className="w-3 h-3" /> },
-  sent:        { label: "Enviado",     color: "text-neutral-400 bg-neutral-800 border-neutral-700",       icon: <Send className="w-3 h-3" /> },
-  hardbounces: { label: "Hard bounce", color: "text-red-400 bg-red-500/10 border-red-900/40",             icon: <AlertCircle className="w-3 h-3" /> },
-  softbounces: { label: "Soft bounce", color: "text-orange-400 bg-orange-500/10 border-orange-900/40",   icon: <AlertCircle className="w-3 h-3" /> },
-  bounced:     { label: "Rebotado",    color: "text-red-400 bg-red-500/10 border-red-900/40",             icon: <AlertCircle className="w-3 h-3" /> },
-  unsubscribes:{ label: "Baja",        color: "text-neutral-500 bg-neutral-900 border-neutral-800",       icon: <AlertCircle className="w-3 h-3" /> },
-  reply:       { label: "Respuesta",   color: "text-yellow-400 bg-yellow-500/10 border-yellow-900/40",    icon: <MessageSquareReply className="w-3 h-3" /> },
+  delivered:   { label: "Entregado",    color: "text-emerald-400 bg-emerald-500/10 border-emerald-900/40", icon: <CheckCircle2 className="w-3 h-3" /> },
+  opened:      { label: "Abierto",      color: "text-blue-400 bg-blue-500/10 border-blue-900/40",          icon: <Eye className="w-3 h-3" /> },
+  clicks:      { label: "Clicado",      color: "text-purple-400 bg-purple-500/10 border-purple-900/40",    icon: <MousePointerClick className="w-3 h-3" /> },
+  click:       { label: "Clicado",      color: "text-purple-400 bg-purple-500/10 border-purple-900/40",    icon: <MousePointerClick className="w-3 h-3" /> },
+  requests:    { label: "Enviado",      color: "text-neutral-400 bg-neutral-800 border-neutral-700",       icon: <Send className="w-3 h-3" /> },
+  sent:        { label: "Enviado",      color: "text-neutral-400 bg-neutral-800 border-neutral-700",       icon: <Send className="w-3 h-3" /> },
+  hardbounces: { label: "Hard bounce",  color: "text-red-400 bg-red-500/10 border-red-900/40",             icon: <AlertCircle className="w-3 h-3" /> },
+  softbounces: { label: "Soft bounce",  color: "text-orange-400 bg-orange-500/10 border-orange-900/40",   icon: <AlertCircle className="w-3 h-3" /> },
+  bounced:     { label: "Rebotado",     color: "text-red-400 bg-red-500/10 border-red-900/40",             icon: <AlertCircle className="w-3 h-3" /> },
+  unsubscribes:{ label: "Baja",         color: "text-neutral-500 bg-neutral-900 border-neutral-800",       icon: <AlertCircle className="w-3 h-3" /> },
+  reply:       { label: "Respuesta",    color: "text-yellow-400 bg-yellow-500/10 border-yellow-900/40",    icon: <MessageSquareReply className="w-3 h-3" /> },
 }
 
 function EventBadge({ event }: { event: string }) {
@@ -86,36 +74,6 @@ function fmtDate(dateStr: string) {
   } catch { return dateStr }
 }
 
-// ─── KPI Card ─────────────────────────────────────────────────────────────────
-function StatKpi({
-  label, value, sub, icon, accent,
-}: {
-  label: string
-  value: number | string
-  sub?: string
-  icon: React.ReactNode
-  accent: "emerald" | "blue" | "purple" | "orange" | "neutral"
-}) {
-  const colors: Record<string, string> = {
-    emerald: "border-emerald-900/40",
-    blue:    "border-blue-900/40",
-    purple:  "border-purple-900/40",
-    orange:  "border-orange-900/40",
-    neutral: "border-neutral-800",
-  }
-  return (
-    <div className={`rounded-xl border ${colors[accent]} bg-card p-3`}>
-      <div className="flex items-center justify-between mb-1.5">
-        <span className="text-[9px] uppercase tracking-wide text-neutral-500">{label}</span>
-        {icon}
-      </div>
-      <div className="text-xl font-bold text-foreground tabular-nums">{value}</div>
-      {sub && <div className="text-[10px] text-neutral-600 mt-0.5">{sub}</div>}
-    </div>
-  )
-}
-
-// ─── Funnel bar ───────────────────────────────────────────────────────────────
 function FunnelBar({ pct, color }: { pct: number; color: string }) {
   return (
     <div className="relative h-1.5 bg-neutral-800 rounded-full overflow-hidden w-full">
@@ -127,45 +85,50 @@ function FunnelBar({ pct, color }: { pct: number; color: string }) {
   )
 }
 
-// ─── Main Component ───────────────────────────────────────────────────────────
 export function BrevoActivity() {
   const [tab, setTab]               = useState<TabKey>("actividad")
   const [flatEvents, setFlatEvents] = useState<FlatEvent[]>([])
+  const [inboxMessages, setInboxMessages] = useState<InboxMessage[]>([])
   const [agg, setAgg]               = useState<BrevoAggregated | null>(null)
   const [loading, setLoading]       = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError]           = useState<string | null>(null)
+  const [inboxError, setInboxError] = useState<string | null>(null)
   const [updatedAt, setUpdatedAt]   = useState<Date | null>(null)
   const [showAll, setShowAll]       = useState(false)
+  const [expandedEmail, setExpandedEmail] = useState<number | null>(null)
 
   const load = useCallback(async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true)
     else setLoading(true)
     setError(null)
-
     try {
-      const [evRes, aggRes] = await Promise.all([
-        fetch("/api/brevo/emails?limit=100&sort=desc"),
-        fetch("/api/brevo/stats"),
+      const [evRes, aggRes, inboxRes] = await Promise.all([
+        fetch("/api/brevo/emails?limit=100&sort=desc").catch(() => null),
+        fetch("/api/brevo/stats").catch(() => null),
+        fetch("/api/inbox").catch(() => null),
       ])
-
-      if (evRes.ok) {
+      if (evRes && evRes.ok) {
         const d = await evRes.json()
-        const raw: FlatEvent[] = d.events ?? []
-        setFlatEvents(raw)
-      } else {
+        setFlatEvents(d.events ?? [])
+      } else if (evRes) {
         const err = await evRes.json().catch(() => ({}))
         setError(err?.error || err?.message || "No se pudo conectar con Brevo.")
       }
-
-      if (aggRes.ok) {
-        const d = await aggRes.json()
-        setAgg(d)
+      if (aggRes && aggRes.ok) setAgg(await aggRes.json())
+      
+      if (inboxRes && inboxRes.ok) {
+        const d = await inboxRes.json()
+        setInboxMessages(d.messages ?? [])
+        setInboxError(null)
+      } else if (inboxRes) {
+        const d = await inboxRes.json().catch(() => ({}))
+        setInboxError(d.error || "Error al leer la bandeja de entrada")
       }
 
       setUpdatedAt(new Date())
     } catch {
-      setError("Error de red al conectar con Brevo.")
+      setError("Error de red al conectar con los servicios.")
     } finally {
       setLoading(false)
       setRefreshing(false)
@@ -173,19 +136,13 @@ export function BrevoActivity() {
   }, [])
 
   useEffect(() => { load() }, [load])
-  // Auto-refresh each 2 minutes
   useEffect(() => {
     const id = setInterval(() => load(true), 120_000)
     return () => clearInterval(id)
   }, [load])
 
-  // ── Replies: events whose event=reply or subject starts with "Re:" ────────
-  const replies = flatEvents.filter(e =>
-    e.event?.toLowerCase() === "reply" ||
-    (e.subject ?? "").toLowerCase().startsWith("re:")
-  )
+  const replies = inboxMessages // Usamos los correos reales en lugar de los eventos planos
 
-  // ── Compute local counts from flat events (fallback if agg null) ──────────
   const localDelivered = flatEvents.filter(e => e.event === "delivered").length
   const localOpens     = flatEvents.filter(e => e.event === "opened").length
   const localClicks    = flatEvents.filter(e => ["clicks","click"].includes(e.event)).length
@@ -197,7 +154,6 @@ export function BrevoActivity() {
 
   const openPct  = displayDelivered > 0 ? (displayOpens / displayDelivered) * 100 : 0
   const clickPct = displayDelivered > 0 ? (displayClicks / displayDelivered) * 100 : 0
-
   const openRate  = displayDelivered > 0 ? openPct.toFixed(1) + "%" : "--"
   const clickRate = displayDelivered > 0 ? clickPct.toFixed(1) + "%" : "--"
 
@@ -259,76 +215,57 @@ export function BrevoActivity() {
           </div>
         )}
 
-        {/* KPIs */}
         {loading && !agg ? (
           <div className="flex items-center justify-center py-8">
             <Loader2 className="w-5 h-5 animate-spin text-neutral-600" />
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-2 gap-2">
-              <StatKpi
-                label="Entregados"
-                value={displayDelivered.toLocaleString("es-ES")}
-                sub={`de ${(agg?.requests ?? flatEvents.length).toLocaleString("es-ES")} enviados`}
-                icon={<CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />}
-                accent="emerald"
-              />
-              <StatKpi
-                label="Abiertos"
-                value={displayOpens.toLocaleString("es-ES")}
-                sub={`Open rate ${openRate}`}
-                icon={<Eye className="w-3.5 h-3.5 text-blue-400" />}
-                accent="blue"
-              />
-              <StatKpi
-                label="Clics"
-                value={displayClicks.toLocaleString("es-ES")}
-                sub={`CTR ${clickRate}`}
-                icon={<MousePointerClick className="w-3.5 h-3.5 text-purple-400" />}
-                accent="purple"
-              />
-              <StatKpi
-                label="Respuestas"
-                value={replies.length}
-                sub={replies.length > 0 ? "¡Interesados detectados!" : "Ninguna aún"}
-                icon={<MessageSquareReply className="w-3.5 h-3.5 text-yellow-400" />}
-                accent="orange"
-              />
-            </div>
-
-            {/* Bounces warning */}
+            {/* Bounce warning */}
             {displayBounces > 0 && (
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] bg-red-500/5 border border-red-900/30 text-red-400/70">
                 <AlertCircle className="w-3 h-3 shrink-0" />
-                {displayBounces} bounces (rebotes) — Brevo los ha bloqueado automáticamente por seguridad para proteger tu dominio.
+                {displayBounces} bounces — Brevo bloqueó automáticamente para proteger tu dominio.
               </div>
             )}
 
             {/* Funnel */}
             {displayDelivered > 0 && (
               <div className="flex flex-col gap-2 p-3 rounded-lg border border-neutral-800 bg-neutral-900/40">
-                <span className="text-[10px] text-neutral-500 flex items-center gap-1">
+                <span className="text-[10px] text-neutral-500 flex items-center gap-1 font-medium">
                   <TrendingUp className="w-3 h-3" /> Embudo de conversión
                 </span>
                 <div className="flex flex-col gap-1.5">
                   <div className="flex items-center justify-between text-[10px]">
                     <span className="text-neutral-500">Entregados</span>
-                    <span className="text-emerald-400 font-medium">{displayDelivered.toLocaleString("es-ES")}</span>
+                    <span className="text-emerald-400 font-semibold tabular-nums">{displayDelivered.toLocaleString("es-ES")}</span>
                   </div>
                   <FunnelBar pct={100} color="bg-emerald-600/60" />
 
                   <div className="flex items-center justify-between text-[10px] mt-0.5">
                     <span className="text-neutral-500">Abiertos</span>
-                    <span className="text-blue-400 font-medium">{openRate}</span>
+                    <span className="text-blue-400 font-semibold tabular-nums">{openRate}</span>
                   </div>
                   <FunnelBar pct={openPct} color="bg-blue-500" />
 
                   <div className="flex items-center justify-between text-[10px] mt-0.5">
                     <span className="text-neutral-500">Clicados</span>
-                    <span className="text-purple-400 font-medium">{clickRate}</span>
+                    <span className="text-purple-400 font-semibold tabular-nums">{clickRate}</span>
                   </div>
                   <FunnelBar pct={clickPct} color="bg-purple-500" />
+
+                  {replies.length > 0 && (
+                    <>
+                      <div className="flex items-center justify-between text-[10px] mt-0.5">
+                        <span className="text-neutral-500">Respuestas</span>
+                        <span className="text-yellow-400 font-semibold">{replies.length} ✦</span>
+                      </div>
+                      <FunnelBar
+                        pct={displayDelivered > 0 ? (replies.length / displayDelivered) * 100 : 0}
+                        color="bg-yellow-500"
+                      />
+                    </>
+                  )}
                 </div>
               </div>
             )}
@@ -399,8 +336,7 @@ export function BrevoActivity() {
                   >
                     {showAll
                       ? <><ChevronUp className="w-3 h-3" /> Mostrar menos</>
-                      : <><ChevronDown className="w-3 h-3" /> Ver {flatEvents.length - 5} más</>
-                    }
+                      : <><ChevronDown className="w-3 h-3" /> Ver {flatEvents.length - 5} más</>}
                   </button>
                 )}
               </>
@@ -410,40 +346,77 @@ export function BrevoActivity() {
 
         {/* Tab: Respuestas */}
         {tab === "respuestas" && (
-          <div className="flex flex-col gap-2">
-            {replies.length === 0 ? (
+          <div className="flex flex-col gap-2 -mx-2 px-2">
+            {inboxError && (
+              <div className="flex items-center gap-2 p-3 rounded-lg bg-red-500/10 border border-red-900/30 text-xs text-red-400">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <div className="flex flex-col gap-0.5">
+                  <span className="font-semibold">Error IMAP</span>
+                  <span className="text-[10px] text-red-400/80">{inboxError}</span>
+                </div>
+              </div>
+            )}
+
+            {loading && inboxMessages.length === 0 ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-4 h-4 animate-spin text-neutral-600" />
+              </div>
+            ) : inboxMessages.length === 0 && !inboxError ? (
               <div className="py-8 text-center">
                 <MessageSquareReply className="w-8 h-8 text-neutral-800 mx-auto mb-2" />
-                <p className="text-xs text-neutral-600">Sin respuestas detectadas aún.</p>
+                <p className="text-xs text-neutral-600">Bandeja de entrada vacía.</p>
                 <p className="text-[10px] text-neutral-700 mt-1">
-                  Los emails respondidos (asunto "Re:...") aparecerán aquí.
+                  Los correos que lleguen a tu cuenta aparecerán aquí.
                 </p>
               </div>
             ) : (
-              replies.map((em, i) => (
+              inboxMessages.map((msg) => (
                 <div
-                  key={i}
-                  className="flex flex-col gap-1 px-3 py-2.5 rounded-lg border border-yellow-900/40 bg-yellow-500/5"
+                  key={msg.uid}
+                  className="flex flex-col bg-neutral-900/50 border border-neutral-800 rounded-lg overflow-hidden transition-colors"
                 >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-xs font-semibold text-yellow-400 flex items-center gap-1.5 truncate">
-                      <MessageSquareReply className="w-3.5 h-3.5 shrink-0" />
-                      {em.email}
-                    </span>
-                    <span className="text-[10px] text-neutral-600 tabular-nums shrink-0">
-                      {fmtDate(em.date)}
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-neutral-300 truncate">{em.subject}</p>
-                  <p className="text-[10px] text-neutral-600">
-                    Dominio: <span className="text-neutral-400">{em.email.split("@")[1]}</span>
-                  </p>
-                  <a
-                    href={`mailto:${em.email}`}
-                    className="mt-1 inline-flex items-center gap-1 text-[10px] text-blue-400 hover:text-blue-300 transition-colors"
+                  {/* Header: clickable to expand */}
+                  <div 
+                    onClick={() => setExpandedEmail(expandedEmail === msg.uid ? null : msg.uid)}
+                    className="flex flex-col gap-1 p-3 cursor-pointer hover:bg-neutral-800/40"
                   >
-                    <Mail className="w-3 h-3" /> Responder ahora
-                  </a>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs font-semibold text-foreground flex items-center gap-1.5 truncate">
+                        <MessageSquareReply className="w-3.5 h-3.5 text-yellow-500 shrink-0" />
+                        {msg.from}
+                      </span>
+                      <span className="text-[10px] text-neutral-500 tabular-nums shrink-0">
+                        {fmtDate(msg.date)}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-neutral-300 font-medium truncate">{msg.subject}</p>
+                    <div className="flex items-center justify-between mt-1">
+                      <span className="text-[10px] text-neutral-600 truncate">{msg.fromAddress}</span>
+                      {expandedEmail === msg.uid ? (
+                        <ChevronUp className="w-3 h-3 text-neutral-500" />
+                      ) : (
+                        <ChevronDown className="w-3 h-3 text-neutral-500" />
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Body: expanded view */}
+                  {expandedEmail === msg.uid && (
+                    <div className="p-3 pt-0 border-t border-neutral-800/50 mt-1">
+                      <div className="bg-neutral-950 rounded p-3 text-[11px] text-neutral-300 max-h-64 overflow-y-auto whitespace-pre-wrap font-mono leading-relaxed scrollbar-thin scrollbar-thumb-neutral-800">
+                        {msg.text || "Este mensaje solo contiene HTML o está vacío."}
+                      </div>
+                      <div className="flex items-center justify-end mt-3 gap-2">
+                        <a
+                          href={`mailto:${msg.fromAddress}?subject=Re: ${encodeURIComponent(msg.subject)}`}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-blue-500 hover:bg-blue-600 text-white text-[10px] font-medium transition-colors"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Mail className="w-3 h-3" /> Responder
+                        </a>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))
             )}

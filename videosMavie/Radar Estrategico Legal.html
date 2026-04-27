@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<title>Mavie Automations · Radar Estratégico Legal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg:       #0B0D10;
+    --bg-2:     #0F1216;
+    --surface:  #12161B;
+    --surface-2:#171C22;
+    --hairline: #1E242C;
+    --hairline-strong: #2A323C;
+    --text:     #F2F4F7;
+    --text-2:   #9BA5B2;
+    --text-3:   #5B6573;
+    --accent:   #5B8DEF;
+    --accent-2: #7BA3F2;
+    --accent-dim: rgba(91, 141, 239, 0.16);
+  }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: #000;
+    color: var(--text);
+    font-family: "Geist", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-feature-settings: "ss01" on, "cv11" on;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .serif {
+    font-family: "Instrument Serif", "Times New Roman", serif;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+  }
+
+  .mono {
+    font-family: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  }
+
+  /* ── SLIDE BASE ─────────────────────────────────────────────── */
+  section.slide {
+    background: var(--bg);
+    color: var(--text);
+    font-size: 34px;
+    line-height: 1.45;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* subtle grain on dark bg */
+  section.slide::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+      radial-gradient(1200px 800px at 85% -10%, rgba(91,141,239,0.05) 0%, transparent 55%),
+      radial-gradient(900px 600px at 5% 110%, rgba(91,141,239,0.04) 0%, transparent 55%);
+    opacity: 1;
+  }
+
+  .slide-inner {
+    position: relative;
+    height: 100%;
+    width: 100%;
+    padding: 96px 100px 130px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── CHROME (header + footer) ─────────────────────────────── */
+  .chrome-top, .chrome-bottom {
+    position: absolute;
+    left: 100px;
+    right: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: var(--text-3);
+    font-size: 24px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 500;
+    z-index: 3;
+  }
+  .chrome-top { top: 48px; }
+  .chrome-bottom { bottom: 56px; }
+
+  .wordmark {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    color: var(--text);
+    font-family: "Geist", sans-serif;
+    font-weight: 500;
+    font-size: 24px;
+    letter-spacing: 0.02em;
+    text-transform: none;
+  }
+  .wordmark .mark {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 4px rgba(91,141,239,0.14), 0 0 20px rgba(91,141,239,0.55);
+    position: relative;
+  }
+  .wordmark .mark::after {
+    content: "";
+    position: absolute;
+    inset: -8px;
+    border-radius: 50%;
+    border: 1px solid rgba(91,141,239,0.3);
+  }
+
+  .chrome-bottom .page-num {
+    font-variant-numeric: tabular-nums;
+  }
+  .chrome-bottom .page-num b { color: var(--text); font-weight: 500; }
+
+  /* ── PORTADA (slide 1) ─────────────────────────────────────── */
+  .slide-cover .slide-inner {
+    justify-content: center;
+    padding: 100px 120px;
+  }
+
+  .radar-rings {
+    position: absolute;
+    right: -280px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 1400px;
+    height: 1400px;
+    pointer-events: none;
+  }
+  .radar-rings .ring {
+    position: absolute;
+    inset: 50% auto auto 50%;
+    border: 1px solid rgba(91,141,239,0.16);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+  }
+  .radar-rings .ring.r1 { width: 320px;  height: 320px;  border-color: rgba(91,141,239,0.40); }
+  .radar-rings .ring.r2 { width: 560px;  height: 560px;  border-color: rgba(91,141,239,0.28); }
+  .radar-rings .ring.r3 { width: 820px;  height: 820px;  border-color: rgba(91,141,239,0.18); }
+  .radar-rings .ring.r4 { width: 1100px; height: 1100px; border-color: rgba(91,141,239,0.12); }
+  .radar-rings .ring.r5 { width: 1400px; height: 1400px; border-color: rgba(91,141,239,0.07); }
+
+  .radar-rings .crosshair {
+    position: absolute;
+    inset: 50% auto auto 50%;
+    width: 1400px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent 0%, rgba(91,141,239,0.18) 30%, rgba(91,141,239,0.35) 50%, rgba(91,141,239,0.18) 70%, transparent 100%);
+    transform: translate(-50%, -50%);
+  }
+  .radar-rings .crosshair.v {
+    width: 1px;
+    height: 1400px;
+    background: linear-gradient(180deg, transparent 0%, rgba(91,141,239,0.18) 30%, rgba(91,141,239,0.35) 50%, rgba(91,141,239,0.18) 70%, transparent 100%);
+  }
+  .radar-rings .dot {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: var(--accent);
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 0 4px rgba(91,141,239,0.2), 0 0 32px rgba(91,141,239,0.9);
+  }
+  .radar-rings .blip {
+    position: absolute;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent-2);
+    box-shadow: 0 0 12px rgba(91,141,239,0.8);
+  }
+  .radar-rings .blip.b1 { top: calc(50% - 220px); left: calc(50% + 180px); }
+  .radar-rings .blip.b2 { top: calc(50% + 140px); left: calc(50% - 320px); opacity: 0.6; }
+  .radar-rings .blip.b3 { top: calc(50% + 310px); left: calc(50% + 260px); opacity: 0.4; }
+
+  .cover-content {
+    position: relative;
+    z-index: 2;
+    max-width: 1180px;
+  }
+  .cover-eyebrow {
+    color: var(--accent);
+    font-size: 24px;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    font-weight: 500;
+    margin-bottom: 48px;
+    display: inline-flex;
+    align-items: center;
+    gap: 18px;
+  }
+  .cover-eyebrow::before {
+    content: "";
+    width: 56px; height: 1px;
+    background: var(--accent);
+  }
+  .cover-title {
+    font-size: 148px;
+    line-height: 0.96;
+    letter-spacing: -0.03em;
+    color: var(--text);
+    margin: 0 0 40px;
+    font-weight: 400;
+  }
+  .cover-title em {
+    font-style: italic;
+    color: var(--accent-2);
+  }
+  .cover-subtitle {
+    font-family: "Instrument Serif", serif;
+    font-style: italic;
+    font-size: 56px;
+    line-height: 1.2;
+    color: var(--text-2);
+    max-width: 1000px;
+    margin: 0;
+    font-weight: 400;
+  }
+
+  .cover-meta {
+    position: absolute;
+    bottom: 100px;
+    left: 100px;
+    right: 100px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    color: var(--text-3);
+    font-size: 24px;
+    z-index: 2;
+  }
+  .cover-meta .left {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .cover-meta .left .label {
+    font-size: 24px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--text-3);
+  }
+  .cover-meta .left .value {
+    font-size: 26px;
+    color: var(--text-2);
+  }
+
+  /* ── SHARED TITLE SLIDE ────────────────────────────────────── */
+  .slide-title .eyebrow {
+    color: var(--accent);
+    font-size: 24px;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 18px;
+    margin-top: 40px;
+  }
+  .slide-title .eyebrow::before {
+    content: "";
+    width: 40px; height: 1px;
+    background: var(--accent);
+  }
+  .slide-title .eyebrow .num {
+    color: var(--text-3);
+    font-variant-numeric: tabular-nums;
+    margin-right: 4px;
+  }
+  .slide-title h1 {
+    font-family: "Instrument Serif", serif;
+    font-weight: 400;
+    font-size: 72px;
+    line-height: 1.04;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    margin: 24px 0 0;
+    max-width: 1400px;
+  }
+  .slide-title h1 em { color: var(--accent-2); }
+
+  /* ── SLIDE 2 · EL COSTE ────────────────────────────────────── */
+  .slide-problem .problem-grid {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 880px;
+    gap: 100px;
+    align-items: center;
+    margin-top: 56px;
+    min-height: 0;
+  }
+
+  .problem-copy .kicker {
+    font-size: 24px;
+    color: var(--text-3);
+    letter-spacing: 0.06em;
+    margin-bottom: 24px;
+  }
+  .problem-copy .lede {
+    font-family: "Instrument Serif", serif;
+    font-size: 54px;
+    line-height: 1.15;
+    color: var(--text);
+    letter-spacing: -0.015em;
+    margin: 0 0 36px;
+  }
+  .problem-copy .lede em {
+    font-style: italic;
+    color: var(--accent-2);
+  }
+  .problem-copy .support {
+    font-size: 24px;
+    line-height: 1.5;
+    color: var(--text-2);
+    max-width: 560px;
+  }
+
+  .figure-card {
+    position: relative;
+    background: linear-gradient(180deg, rgba(23,28,34,0.9) 0%, rgba(15,18,22,0.9) 100%);
+    border: 1px solid var(--hairline);
+    border-radius: 4px;
+    padding: 52px 64px 56px;
+    backdrop-filter: blur(12px);
+    overflow: hidden;
+  }
+  .figure-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(180deg, rgba(91,141,239,0.05) 0%, transparent 45%),
+      repeating-linear-gradient(0deg, transparent 0 39px, rgba(255,255,255,0.015) 39px 40px);
+    pointer-events: none;
+  }
+  .figure-card .fig-label {
+    position: relative;
+    font-size: 24px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    margin-bottom: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .figure-card .fig-label .tag {
+    color: var(--accent);
+    font-size: 24px;
+    letter-spacing: 0.18em;
+  }
+  .figure-card .figure {
+    position: relative;
+    font-family: "Instrument Serif", serif;
+    font-size: 220px;
+    line-height: 0.95;
+    letter-spacing: -0.04em;
+    color: var(--text);
+    font-weight: 400;
+    display: flex;
+    align-items: flex-start;
+  }
+  .figure-card .figure .unit {
+    font-size: 72px;
+    color: var(--text-2);
+    margin-left: 10px;
+    margin-top: 18px;
+    font-style: italic;
+  }
+  .figure-card .fig-caption {
+    position: relative;
+    margin-top: 36px;
+    padding-top: 24px;
+    border-top: 1px solid var(--hairline);
+    font-size: 24px;
+    line-height: 1.5;
+    color: var(--text-2);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+  }
+  .figure-card .fig-caption div .k {
+    display: block;
+    font-size: 24px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    margin-bottom: 10px;
+  }
+  .figure-card .fig-caption div .v {
+    color: var(--text);
+    font-size: 24px;
+  }
+
+  /* ── SLIDE 3 · SOLUCIÓN ────────────────────────────────────── */
+  .slide-solution .solution-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    margin-top: 56px;
+    min-height: 0;
+  }
+  .solution-lede {
+    font-family: "Instrument Serif", serif;
+    font-size: 60px;
+    line-height: 1.12;
+    color: var(--text);
+    letter-spacing: -0.02em;
+    max-width: 1500px;
+    margin: 0 0 64px;
+  }
+  .solution-lede em {
+    font-style: italic;
+    color: var(--accent-2);
+  }
+
+  .attrs {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    border-top: 1px solid var(--hairline);
+  }
+  .attr {
+    padding: 40px 48px 8px 0;
+    border-right: 1px solid var(--hairline);
+  }
+  .attr:last-child { border-right: none; padding-right: 0; }
+  .attr:not(:first-child) { padding-left: 48px; }
+
+  .attr .num {
+    font-family: "Geist Mono", monospace;
+    font-size: 24px;
+    letter-spacing: 0.18em;
+    color: var(--accent);
+    margin-bottom: 24px;
+  }
+  .attr h3 {
+    font-family: "Instrument Serif", serif;
+    font-weight: 400;
+    font-size: 40px;
+    line-height: 1.15;
+    color: var(--text);
+    margin: 0 0 18px;
+    letter-spacing: -0.01em;
+  }
+  .attr p {
+    font-size: 24px;
+    line-height: 1.5;
+    color: var(--text-2);
+    margin: 0;
+  }
+
+  /* ── SLIDE 4 · CÓMO FUNCIONA ───────────────────────────────── */
+  .slide-how .steps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 36px;
+    margin-top: 44px;
+    align-items: stretch;
+    position: relative;
+  }
+  .step {
+    position: relative;
+    background: linear-gradient(180deg, rgba(23,28,34,0.6) 0%, rgba(15,18,22,0.6) 100%);
+    border: 1px solid var(--hairline);
+    padding: 36px 36px 32px;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  .step .step-top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 28px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .step .step-num {
+    font-family: "Instrument Serif", serif;
+    font-style: italic;
+    font-size: 72px;
+    line-height: 1;
+    color: var(--accent);
+    letter-spacing: -0.03em;
+  }
+  .step .step-kicker {
+    font-family: "Geist Mono", monospace;
+    font-size: 24px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--text-3);
+  }
+  .step h3 {
+    font-family: "Instrument Serif", serif;
+    font-weight: 400;
+    font-size: 38px;
+    line-height: 1.1;
+    color: var(--text);
+    margin: 0 0 16px;
+    letter-spacing: -0.01em;
+  }
+  .step p {
+    font-size: 24px;
+    line-height: 1.42;
+    color: var(--text-2);
+    margin: 0 0 16px;
+    flex: 1;
+  }
+  .step .step-tag {
+    margin-top: auto;
+    padding-top: 18px;
+    border-top: 1px dashed var(--hairline);
+    font-family: "Geist Mono", monospace;
+    font-size: 24px;
+    color: var(--text-3);
+    letter-spacing: 0.04em;
+  }
+  .step .step-tag b {
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  /* ── SLIDE 5 · PRECIOS ─────────────────────────────────────── */
+  .slide-pricing .pricing-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 44px;
+    margin-top: 40px;
+    align-items: stretch;
+  }
+
+  .price-card {
+    position: relative;
+    background: linear-gradient(180deg, rgba(23,28,34,0.9) 0%, rgba(15,18,22,0.9) 100%);
+    border: 1px solid var(--hairline-strong);
+    padding: 28px 40px 24px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .price-card::before {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    background: linear-gradient(180deg, rgba(91,141,239,0.35), transparent 50%);
+    -webkit-mask: linear-gradient(#000, #000) content-box, linear-gradient(#000, #000);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    padding: 1px;
+    pointer-events: none;
+    border-radius: inherit;
+  }
+  .price-card .plan-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .price-card .plan-label .name {
+    font-family: "Geist Mono", monospace;
+    font-size: 24px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .price-card .plan-label .meta {
+    font-family: "Geist Mono", monospace;
+    font-size: 24px;
+    letter-spacing: 0.12em;
+    color: var(--text-3);
+  }
+  .price-card .price-figure {
+    font-family: "Instrument Serif", serif;
+    font-size: 104px;
+    line-height: 0.95;
+    letter-spacing: -0.04em;
+    color: var(--text);
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 4px;
+  }
+  .price-card .price-figure .currency {
+    font-size: 42px;
+    color: var(--text-2);
+    margin-top: 16px;
+    margin-right: 4px;
+    font-style: italic;
+  }
+  .price-card .price-figure .period {
+    font-family: "Geist", sans-serif;
+    font-size: 24px;
+    color: var(--text-3);
+    margin-top: 32px;
+    margin-left: 14px;
+    align-self: flex-start;
+  }
+  .price-card .price-strap {
+    font-family: "Instrument Serif", serif;
+    font-style: italic;
+    font-size: 24px;
+    color: var(--text-2);
+    margin: 0 0 10px;
+  }
+  .price-card ul.features {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    border-top: 1px solid var(--hairline);
+  }
+  .price-card ul.features li {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--hairline);
+    color: var(--text);
+    font-size: 24px;
+    line-height: 1.3;
+  }
+  .price-card ul.features li .check {
+    width: 8px; height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+    flex-shrink: 0;
+    box-shadow: 0 0 10px rgba(91,141,239,0.7);
+  }
+
+  .roi-card {
+    background: transparent;
+    border: 1px solid var(--hairline);
+    padding: 28px 40px 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .roi-card .roi-label {
+    font-family: "Geist Mono", monospace;
+    font-size: 24px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    margin-bottom: 20px;
+  }
+  .roi-card h2 {
+    font-family: "Instrument Serif", serif;
+    font-weight: 400;
+    font-size: 44px;
+    line-height: 1.12;
+    color: var(--text);
+    letter-spacing: -0.02em;
+    margin: 0 0 24px;
+  }
+  .roi-card h2 em {
+    font-style: italic;
+    color: var(--accent-2);
+  }
+  .compare-bars {
+    margin-top: auto;
+  }
+  .compare-row {
+    padding: 14px 0;
+    border-top: 1px solid var(--hairline);
+  }
+  .compare-row:last-child {
+    border-bottom: 1px solid var(--hairline);
+  }
+  .compare-row .top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 14px;
+  }
+  .compare-row .top .label {
+    font-size: 24px;
+    color: var(--text-2);
+    font-family: "Geist", sans-serif;
+  }
+  .compare-row .top .value {
+    font-family: "Instrument Serif", serif;
+    font-size: 36px;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+  .compare-row .bar {
+    height: 6px;
+    background: var(--hairline);
+    position: relative;
+    overflow: hidden;
+  }
+  .compare-row .bar .fill {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    background: var(--text-3);
+  }
+  .compare-row.accent .top .value { color: var(--accent-2); }
+  .compare-row.accent .bar .fill { background: var(--accent); box-shadow: 0 0 20px rgba(91,141,239,0.5); }
+
+  /* ── SLIDE 6 · CIERRE ──────────────────────────────────────── */
+  .slide-cta .slide-inner {
+    justify-content: space-between;
+  }
+  .cta-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    max-width: 1500px;
+    position: relative;
+    z-index: 2;
+  }
+  .cta-body .eyebrow {
+    color: var(--accent);
+    font-size: 24px;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 18px;
+    margin-bottom: 48px;
+  }
+  .cta-body .eyebrow::before {
+    content: "";
+    width: 56px; height: 1px;
+    background: var(--accent);
+  }
+  .cta-body h1 {
+    font-family: "Instrument Serif", serif;
+    font-weight: 400;
+    font-size: 112px;
+    line-height: 0.98;
+    letter-spacing: -0.025em;
+    color: var(--text);
+    margin: 0 0 40px;
+    max-width: 1600px;
+  }
+  .cta-body h1 em {
+    font-style: italic;
+    color: var(--accent-2);
+  }
+  .cta-body .sub {
+    font-family: "Instrument Serif", serif;
+    font-style: italic;
+    font-size: 38px;
+    line-height: 1.3;
+    color: var(--text-2);
+    margin: 0 0 56px;
+    max-width: 1300px;
+  }
+
+  .cta-row {
+    display: flex;
+    align-items: center;
+    gap: 56px;
+    padding: 40px 0;
+    border-top: 1px solid var(--hairline);
+    border-bottom: 1px solid var(--hairline);
+    max-width: 1500px;
+  }
+  .cta-row .url {
+    font-family: "Geist Mono", monospace;
+    font-size: 32px;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+  .cta-row .url .protocol {
+    color: var(--text-3);
+  }
+  .cta-row .url .slash {
+    color: var(--accent);
+  }
+  .cta-row .divider-v {
+    width: 1px;
+    height: 40px;
+    background: var(--hairline);
+  }
+  .cta-row .step {
+    font-family: "Geist", sans-serif;
+    font-size: 24px;
+    color: var(--text-2);
+    letter-spacing: 0;
+    background: transparent;
+    border: none;
+    padding: 0;
+    display: block;
+  }
+
+  .cta-footer {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 56px;
+    padding-top: 32px;
+    margin-top: 48px;
+    border-top: 1px solid var(--hairline);
+    position: relative;
+    z-index: 2;
+  }
+  .cta-footer .item .k {
+    display: block;
+    font-family: "Geist Mono", monospace;
+    font-size: 24px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    margin-bottom: 12px;
+  }
+  .cta-footer .item .v {
+    font-size: 24px;
+    color: var(--text);
+    line-height: 1.4;
+  }
+  .cta-footer .item .v em {
+    font-family: "Instrument Serif", serif;
+    font-style: italic;
+    color: var(--text-2);
+  }
+
+  /* Decorative rings on CTA, mirrored */
+  .cta-rings {
+    position: absolute;
+    left: -400px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 1200px; height: 1200px;
+    pointer-events: none;
+    opacity: 0.6;
+  }
+  .cta-rings .ring {
+    position: absolute;
+    inset: 50% auto auto 50%;
+    transform: translate(-50%, -50%);
+    border: 1px solid rgba(91,141,239,0.12);
+    border-radius: 50%;
+  }
+  .cta-rings .r1 { width: 300px; height: 300px; border-color: rgba(91,141,239,0.28); }
+  .cta-rings .r2 { width: 540px; height: 540px; border-color: rgba(91,141,239,0.18); }
+  .cta-rings .r3 { width: 820px; height: 820px; border-color: rgba(91,141,239,0.11); }
+  .cta-rings .r4 { width: 1200px; height: 1200px; border-color: rgba(91,141,239,0.06); }
+</style>
+</head>
+<body>
+
+<deck-stage width="1920" height="1080">
+
+  <!-- ── SLIDE 1 · PORTADA ───────────────────────────────────── -->
+  <section class="slide slide-cover" data-label="Portada">
+    <div class="radar-rings" aria-hidden="true">
+      <div class="crosshair h"></div>
+      <div class="crosshair v"></div>
+      <div class="ring r5"></div>
+      <div class="ring r4"></div>
+      <div class="ring r3"></div>
+      <div class="ring r2"></div>
+      <div class="ring r1"></div>
+      <div class="dot"></div>
+      <div class="blip b1"></div>
+      <div class="blip b2"></div>
+      <div class="blip b3"></div>
+    </div>
+
+    <div class="chrome-top">
+      <div class="wordmark"><span class="mark"></span>Mavie Automations</div>
+      <div>Propuesta · Confidencial</div>
+    </div>
+
+    <div class="slide-inner">
+      <div class="cover-content">
+        <div class="cover-eyebrow">Radar Estratégico Legal</div>
+        <h1 class="cover-title serif">El fin de leer<br/>boletines oficiales<br/><em>de madrugada.</em></h1>
+        <p class="cover-subtitle">Inteligencia documental automatizada para<br/>despachos que cobran por hora.</p>
+      </div>
+
+      <div class="cover-meta">
+        <div class="left">
+          <span class="label mono">Preparado para</span>
+          <span class="value">Dirección de Despachos &amp; Firmas Legales</span>
+        </div>
+        <div class="left" style="text-align:right; align-items:flex-end;">
+          <span class="label mono">Edición</span>
+          <span class="value">Q2 · 2026</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── SLIDE 2 · EL COSTE OCULTO ───────────────────────────── -->
+  <section class="slide slide-title slide-problem" data-label="El coste oculto">
+    <div class="chrome-top">
+      <div class="wordmark"><span class="mark"></span>Mavie Automations</div>
+      <div>Radar Estratégico Legal</div>
+    </div>
+
+    <div class="slide-inner">
+      <div class="eyebrow"><span class="num mono">01 ·</span> El coste oculto</div>
+      <h1>Mientras vuestros abogados<br/>leen el BOE, la competencia<br/>ya ha <em>enviado la oferta.</em></h1>
+
+      <div class="problem-grid">
+        <div class="problem-copy">
+          <div class="kicker mono">IMPACTO MENSUAL · DESPACHO TIPO</div>
+          <p class="lede">Dos horas diarias<br/>de tiempo facturable<br/><em>tiradas al boletín.</em></p>
+          <p class="support">Revisar licitaciones, decretos y resoluciones a mano consume horas que nadie factura. Entretanto, las firmas automatizadas preparan la propuesta antes de que vuestro equipo haya abierto el PDF.</p>
+        </div>
+
+        <div class="figure-card">
+          <div class="fig-label">
+            <span class="mono">Pérdida estimada</span>
+            <span class="tag mono">— COSTE DE OPORTUNIDAD</span>
+          </div>
+          <div class="figure serif">
+            3.500<span class="unit">€/mes</span>
+          </div>
+          <div class="fig-caption">
+            <div>
+              <span class="k mono">Horas/mes</span>
+              <span class="v">~40 h de lectura y clasificación manual</span>
+            </div>
+            <div>
+              <span class="k mono">Tarifa media</span>
+              <span class="v">87,50 € / hora de asociado</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="chrome-bottom">
+      <div class="mono">El problema</div>
+      <div class="page-num mono"><b>02</b> &nbsp;/&nbsp; 06</div>
+    </div>
+  </section>
+
+  <!-- ── SLIDE 3 · LA SOLUCIÓN ───────────────────────────────── -->
+  <section class="slide slide-title slide-solution" data-label="La solución">
+    <div class="chrome-top">
+      <div class="wordmark"><span class="mark"></span>Mavie Automations</div>
+      <div>Radar Estratégico Legal</div>
+    </div>
+
+    <div class="slide-inner">
+      <div class="eyebrow"><span class="num mono">02 ·</span> La solución Mavie</div>
+      <h1>Monitorización <em>serverless</em><br/>que no duerme, no factura<br/>horas y no se equivoca.</h1>
+
+      <div class="solution-body">
+        <p class="solution-lede">Extracción y filtrado inteligente del BOE y boletines autonómicos, directo a la bandeja de entrada según <em>vuestros</em> criterios.</p>
+
+        <div class="attrs">
+          <div class="attr">
+            <div class="num mono">— A</div>
+            <h3>Infraestructura serverless 24/7</h3>
+            <p>Escalado automático, sin servidores que mantener, sin ventanas ciegas. El radar está encendido mientras el despacho duerme.</p>
+          </div>
+          <div class="attr">
+            <div class="num mono">— B</div>
+            <h3>Filtros semánticos propios</h3>
+            <p>Reglas por materia, cuantía, ámbito territorial y cliente objetivo. La máquina descarta el ruido antes de que llegue a vosotros.</p>
+          </div>
+          <div class="attr">
+            <div class="num mono">— C</div>
+            <h3>Entrega al canal que ya usáis</h3>
+            <p>Email, Slack, Teams o webhook al CRM del despacho. Sin cambiar procesos, sin plataforma nueva que aprender.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="chrome-bottom">
+      <div class="mono">La solución</div>
+      <div class="page-num mono"><b>03</b> &nbsp;/&nbsp; 06</div>
+    </div>
+  </section>
+
+  <!-- ── SLIDE 4 · CÓMO FUNCIONA ─────────────────────────────── -->
+  <section class="slide slide-title slide-how" data-label="Cómo funciona">
+    <div class="chrome-top">
+      <div class="wordmark"><span class="mark"></span>Mavie Automations</div>
+      <div>Radar Estratégico Legal</div>
+    </div>
+
+    <div class="slide-inner">
+      <div class="eyebrow"><span class="num mono">03 ·</span> Cómo funciona</div>
+      <h1>Tres pasos. Una semana<br/>de puesta en marcha.<br/><em>Cero mantenimiento.</em></h1>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step-top">
+            <div class="step-num serif">I</div>
+            <div class="step-kicker">Configuración</div>
+          </div>
+          <h3>Fijamos de qué temas avisa.</h3>
+          <p>Sesión de una hora con vuestro equipo para definir materias, CNAEs, umbrales económicos y zonas geográficas de interés. Las reglas son vuestras.</p>
+          <div class="step-tag"><b>→</b> Workshop de alcance · 60 min</div>
+        </div>
+
+        <div class="step">
+          <div class="step-top">
+            <div class="step-num serif">II</div>
+            <div class="step-kicker">Operación</div>
+          </div>
+          <h3>Las máquinas escanean.</h3>
+          <p>Nuestros procesos serverless leen el BOE, BOEs autonómicos y plataformas de contratación pública cada noche. Extraen, clasifican y cotejan.</p>
+          <div class="step-tag"><b>→</b> 18 fuentes oficiales · 365 noches al año</div>
+        </div>
+
+        <div class="step">
+          <div class="step-top">
+            <div class="step-num serif">III</div>
+            <div class="step-kicker">Entrega</div>
+          </div>
+          <h3>Te alertamos antes de las 8 AM.</h3>
+          <p>Un único correo ejecutivo, con las oportunidades relevantes, enlaces al BOE y plazos de presentación. Todo listo para que el socio decida al primer café.</p>
+          <div class="step-tag"><b>→</b> Briefing diario · 07:30 h CET</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="chrome-bottom">
+      <div class="mono">Metodología</div>
+      <div class="page-num mono"><b>04</b> &nbsp;/&nbsp; 06</div>
+    </div>
+  </section>
+
+  <!-- ── SLIDE 5 · PRECIOS Y ROI ─────────────────────────────── -->
+  <section class="slide slide-title slide-pricing" data-label="Precios y ROI">
+    <div class="chrome-top">
+      <div class="wordmark"><span class="mark"></span>Mavie Automations</div>
+      <div>Radar Estratégico Legal</div>
+    </div>
+
+    <div class="slide-inner">
+      <div class="eyebrow"><span class="num mono">04 ·</span> Inversión</div>
+      <h1>Precios fijos. Sin<br/>consumos variables.<br/><em>Sin sorpresas.</em></h1>
+
+      <div class="pricing-grid">
+        <div class="price-card">
+          <div class="plan-label">
+            <span class="name">Plan Pro</span>
+            <span class="meta">Recomendado para despachos</span>
+          </div>
+          <div class="price-figure">
+            <span class="currency">€</span>179<span class="period">/ mes</span>
+          </div>
+          <p class="price-strap">Todo incluido. Sin letra pequeña.</p>
+          <ul class="features">
+            <li><span class="check"></span>Monitorización de BOE + 17 boletines autonómicos</li>
+            <li><span class="check"></span>Reglas de filtrado ilimitadas por materia</li>
+            <li><span class="check"></span>Briefing diario a todo el despacho</li>
+            <li><span class="check"></span>Integración con email, Slack, Teams y webhook</li>
+            <li><span class="check"></span>Soporte prioritario en horario laboral ibérico</li>
+          </ul>
+        </div>
+
+        <div class="roi-card">
+          <div class="roi-label">Retorno de inversión</div>
+          <h2>Cuesta menos que <em>una</em> hora<br/>de un socio del despacho.</h2>
+
+          <div class="compare-bars">
+            <div class="compare-row">
+              <div class="top">
+                <span class="label">Pérdida mensual sin Mavie</span>
+                <span class="value serif">3.500 €</span>
+              </div>
+              <div class="bar"><div class="fill" style="width:100%"></div></div>
+            </div>
+            <div class="compare-row">
+              <div class="top">
+                <span class="label">Hora facturada de socio</span>
+                <span class="value serif">~ 250 €</span>
+              </div>
+              <div class="bar"><div class="fill" style="width:18%"></div></div>
+            </div>
+            <div class="compare-row accent">
+              <div class="top">
+                <span class="label">Plan Pro · Mavie Automations</span>
+                <span class="value serif">179 € / mes</span>
+              </div>
+              <div class="bar"><div class="fill" style="width:12%"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="chrome-bottom">
+      <div class="mono">Inversión &amp; ROI</div>
+      <div class="page-num mono"><b>05</b> &nbsp;/&nbsp; 06</div>
+    </div>
+  </section>
+
+  <!-- ── SLIDE 6 · CIERRE / CTA ──────────────────────────────── -->
+  <section class="slide slide-cta" data-label="Contacto">
+    <div class="cta-rings" aria-hidden="true">
+      <div class="ring r4"></div>
+      <div class="ring r3"></div>
+      <div class="ring r2"></div>
+      <div class="ring r1"></div>
+    </div>
+
+    <div class="chrome-top">
+      <div class="wordmark"><span class="mark"></span>Mavie Automations</div>
+      <div>Radar Estratégico Legal</div>
+    </div>
+
+    <div class="slide-inner">
+      <div class="cta-body">
+        <div class="eyebrow">Siguiente paso</div>
+        <h1 class="serif">Agenda una prueba<br/><em>a medida</em> del despacho.</h1>
+        <p class="sub">Configuramos vuestro radar en una semana. Si no encuentra una oportunidad relevante en el primer mes, no pagáis.</p>
+
+        <div class="cta-row">
+          <div class="url mono"><span class="protocol">https://</span>mavieautomations.com<span class="slash">/</span>despachos</div>
+          <div class="divider-v"></div>
+          <div class="step">Formulario de 60 segundos · respuesta en 24 h hábiles</div>
+        </div>
+      </div>
+
+      <div class="cta-footer">
+        <div class="item">
+          <span class="k">Contacto directo</span>
+          <span class="v">Dirección de Ventas<br/><em>ventas@mavieautomations.com</em></span>
+        </div>
+        <div class="item">
+          <span class="k">Sede</span>
+          <span class="v">Madrid · Barcelona<br/><em>Operación en toda España</em></span>
+        </div>
+        <div class="item">
+          <span class="k">Garantía</span>
+          <span class="v">30 días sin resultados,<br/><em>30 días sin factura.</em></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</deck-stage>
+
+<script src="deck-stage.js"></script>
+</body>
+</html>

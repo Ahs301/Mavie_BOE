@@ -91,6 +91,7 @@ export function ControlPanel() {
   const [toast, setToast]         = useState<{ msg: string; ok: boolean } | null>(null)
   const [quickExit, setQuickExit] = useState<string | null>(null) // proceso iniciado pero paró rápido
   const [customOpen, setCustomOpen] = useState(false)
+  const [logsOpen, setLogsOpen]   = useState(false)
   const [niche, setNiche]         = useState("")
   const [location, setLocation]   = useState("")
   const logsRef = useRef<HTMLDivElement>(null)

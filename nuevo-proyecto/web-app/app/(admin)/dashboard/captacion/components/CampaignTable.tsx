@@ -2,7 +2,10 @@
 
 import { useState, useTransition, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Mail, MousePointerClick, Eye, Trash2, X, Database, AlertCircle, Loader2, RefreshCw } from "lucide-react"
+import {
+  Trash2, X, Database, AlertCircle, Loader2,
+  RefreshCw, Eye, TrendingUp,
+} from "lucide-react"
 import { deleteOutreachCampaignAction } from "@/app/actions/outreachActions"
 
 type Campaign = {
@@ -29,31 +32,67 @@ function StatusBadge({ status }: { status: string }) {
     error:    "bg-red-500/10 text-red-400 border-red-500/20",
     paused:   "bg-orange-500/10 text-orange-400 border-orange-500/20",
   }
+  const dotMap: Record<string, string> = { sending: "bg-blue-400", scraping: "bg-purple-400" }
   const cls = map[s] ?? map.draft
   const pulse = s === "scraping" || s === "sending"
-  const dotCls = s === "sending" ? "bg-blue-400" : "bg-purple-400"
   return (
     <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-md border ${cls}`}>
-      {pulse && <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${dotCls}`} />}
+      {pulse && <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${dotMap[s]}`} />}
       {s.toUpperCase()}
     </span>
   )
 }
 
+function OpenRateBadge({ sent, opened }: { sent: number; opened: number }) {
+  if (sent === 0) return <span className="text-xs text-neutral-700">—</span>
+  const pct = (opened / sent) * 100
+  const label = pct.toFixed(1) + "%"
+  const color = pct >= 25 ? "text-emerald-400" : pct >= 12 ? "text-yellow-400" : "text-red-400"
+  return <span className={`text-xs font-semibold tabular-nums ${color}`}>{label}</span>
+}
+
+function CtrBadge({ sent, clicked }: { sent: number; clicked: number }) {
+  if (sent === 0) return <span className="text-xs text-neutral-700">—</span>
+  const pct = (clicked / sent) * 100
+  return <span className="text-xs font-medium tabular-nums text-purple-400">{pct.toFixed(1)}%</span>
+}
+
 function DetailModal({ campaign, onClose }: { campaign: Campaign; onClose: () => void }) {
   const created = new Date(campaign.created_at).toLocaleString("es-ES")
   const updated = new Date(campaign.updated_at).toLocaleString("es-ES")
+  const openRate = campaign.emails_sent > 0
+    ? ((campaign.emails_opened / campaign.emails_sent) * 100).toFixed(1) + "%"
+    : "—"
+  const ctr = campaign.emails_sent > 0
+    ? ((campaign.emails_clicked / campaign.emails_sent) * 100).toFixed(1) + "%"
+    : "—"
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
       <div className="relative w-full max-w-md bg-card border border-neutral-800 rounded-2xl shadow-2xl p-6">
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-base font-bold text-foreground flex items-center gap-2">
-            <Eye className="w-4 h-4 text-blue-400" /> Detalle de campaña
+            <TrendingUp className="w-4 h-4 text-blue-400" /> Detalle campaña
           </h2>
           <button onClick={onClose} className="text-neutral-500 hover:text-foreground p-1.5 rounded-lg hover:bg-neutral-800/50 transition-colors">
             <X className="w-4 h-4" />
           </button>
+        </div>
+
+        {/* Performance summary */}
+        <div className="grid grid-cols-3 gap-3 mb-5">
+          <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-3 text-center">
+            <div className="text-lg font-bold text-foreground">{campaign.emails_sent}</div>
+            <div className="text-[10px] text-neutral-500 mt-0.5">Enviados</div>
+          </div>
+          <div className="rounded-lg border border-emerald-900/40 bg-emerald-500/5 p-3 text-center">
+            <div className="text-lg font-bold text-emerald-400">{openRate}</div>
+            <div className="text-[10px] text-neutral-500 mt-0.5">Open Rate</div>
+          </div>
+          <div className="rounded-lg border border-purple-900/40 bg-purple-500/5 p-3 text-center">
+            <div className="text-lg font-bold text-purple-400">{ctr}</div>
+            <div className="text-[10px] text-neutral-500 mt-0.5">CTR</div>
+          </div>
         </div>
 
         <div className="space-y-3 text-sm">
@@ -62,8 +101,8 @@ function DetailModal({ campaign, onClose }: { campaign: Campaign; onClose: () =>
           <Row label="Estado" value={<StatusBadge status={campaign.status} />} />
           <Row label="Leads encontrados" value={campaign.total_leads_found} />
           <Row label="Emails enviados" value={campaign.emails_sent} />
-          <Row label="Aperturas" value={campaign.emails_opened} />
-          <Row label="Clics" value={campaign.emails_clicked} />
+          <Row label="Aperturas" value={`${campaign.emails_opened} (${openRate})`} />
+          <Row label="Clics" value={`${campaign.emails_clicked} (${ctr})`} />
           <Row label="Creada" value={created} />
           <Row label="Actualizada" value={updated} />
           <Row label="ID" value={<span className="font-mono text-xs text-neutral-500 break-all">{campaign.id}</span>} />
@@ -74,7 +113,7 @@ function DetailModal({ campaign, onClose }: { campaign: Campaign; onClose: () =>
             <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
             <span>
               {campaign.status === "error"
-                ? "El VPS no pudo procesarla. Verifica que el captacion-worker esté corriendo en el VPS y que CAPTACION_WORKER_URL y CAPTACION_CRON_SECRET estén en Vercel."
+                ? "El VPS no pudo procesarla. Verifica que el captacion-worker esté corriendo y que CAPTACION_WORKER_URL y CAPTACION_CRON_SECRET estén en Vercel."
                 : "Campaña en cola. El VPS la procesará cuando esté disponible."}
             </span>
           </div>
@@ -99,7 +138,9 @@ export function CampaignTable({ campaigns }: { campaigns: Campaign[] }) {
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
 
-  const hasActive = campaigns.some(c => c.status === "scraping" || c.status === "sending" || c.status === "init")
+  const hasActive = campaigns.some(c =>
+    c.status === "scraping" || c.status === "sending" || c.status === "init"
+  )
 
   useEffect(() => {
     if (!hasActive) return
@@ -121,7 +162,9 @@ export function CampaignTable({ campaigns }: { campaigns: Campaign[] }) {
       <div className="px-6 py-16 text-center">
         <Database className="w-10 h-10 text-neutral-700 mx-auto mb-4" />
         <p className="text-neutral-400 font-medium mb-1">No hay campañas configuradas.</p>
-        <p className="text-neutral-600 text-xs">Crea tu primera campaña para alimentar el motor de scraping de tu VPS.</p>
+        <p className="text-neutral-600 text-xs">
+          Crea tu primera campaña para alimentar el motor de scraping de tu VPS.
+        </p>
       </div>
     )
   }
@@ -139,63 +182,65 @@ export function CampaignTable({ campaigns }: { campaigns: Campaign[] }) {
 
       {/* Mobile view (cards) */}
       <div className="md:hidden divide-y divide-neutral-800/50">
-        {campaigns.map(camp => (
-          <div key={camp.id} className="p-4 flex flex-col gap-3 hover:bg-neutral-800/10 transition-colors">
-            {/* Header: Name & Status */}
-            <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0">
-                <div className="font-semibold text-foreground text-sm truncate">{camp.name}</div>
-                <div className="text-xs text-neutral-500 flex items-center gap-1.5 mt-0.5 truncate">
-                  <Database className="w-3 h-3 shrink-0" /> {camp.target_audience}
+        {campaigns.map(camp => {
+          const openRate = camp.emails_sent > 0
+            ? ((camp.emails_opened / camp.emails_sent) * 100).toFixed(1) + "%"
+            : "—"
+          return (
+            <div key={camp.id} className="p-4 flex flex-col gap-3 hover:bg-neutral-800/10 transition-colors">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <div className="font-semibold text-foreground text-sm truncate">{camp.name}</div>
+                  <div className="text-xs text-neutral-500 flex items-center gap-1.5 mt-0.5 truncate">
+                    <Database className="w-3 h-3 shrink-0" /> {camp.target_audience}
+                  </div>
                 </div>
-              </div>
-              <div className="shrink-0">
                 <StatusBadge status={camp.status} />
               </div>
-            </div>
 
-            {/* Progress Bar */}
-            <div className="flex flex-col gap-1">
-              <div className="flex justify-between text-xs text-neutral-400">
-                <span>{camp.emails_sent} enviados</span>
-                <span>{camp.total_leads_found} leads</span>
-              </div>
-              <div className="h-1.5 w-full bg-neutral-800 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-blue-500 rounded-full"
-                  style={{ width: camp.total_leads_found > 0 ? `${(camp.emails_sent / camp.total_leads_found) * 100}%` : "0%" }}
-                />
-              </div>
-            </div>
-
-            {/* Performance & Actions */}
-            <div className="flex items-center justify-between pt-1">
-              <div className="flex items-center gap-4 text-xs">
-                <div className="flex items-center gap-1.5 text-emerald-400 font-medium">
-                  <Mail className="w-3.5 h-3.5" /> {camp.emails_opened}
+              <div className="flex flex-col gap-1">
+                <div className="flex justify-between text-xs text-neutral-400">
+                  <span>{camp.emails_sent} enviados</span>
+                  <span>{camp.total_leads_found} leads</span>
                 </div>
-                <div className="flex items-center gap-1.5 text-purple-400 font-medium">
-                  <MousePointerClick className="w-3.5 h-3.5" /> {camp.emails_clicked}
+                <div className="h-1.5 w-full bg-neutral-800 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-blue-500 rounded-full"
+                    style={{ width: camp.total_leads_found > 0 ? `${Math.min(100, (camp.emails_sent / camp.total_leads_found) * 100)}%` : "0%" }}
+                  />
                 </div>
               </div>
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={() => setSelected(camp)}
-                  className="p-2 text-neutral-500 hover:text-white hover:bg-neutral-800 rounded-lg transition-colors"
-                >
-                  <Eye className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => handleDelete(camp)}
-                  disabled={deleting === camp.id || isPending}
-                  className="p-2 text-neutral-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors disabled:opacity-50"
-                >
-                  {deleting === camp.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-                </button>
+
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4 text-xs">
+                  <div className="flex flex-col">
+                    <span className="text-neutral-600 text-[10px]">Open</span>
+                    <OpenRateBadge sent={camp.emails_sent} opened={camp.emails_opened} />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-neutral-600 text-[10px]">CTR</span>
+                    <CtrBadge sent={camp.emails_sent} clicked={camp.emails_clicked} />
+                  </div>
+                </div>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setSelected(camp)}
+                    className="p-2 text-neutral-500 hover:text-white hover:bg-neutral-800 rounded-lg transition-colors"
+                  >
+                    <Eye className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(camp)}
+                    disabled={deleting === camp.id || isPending}
+                    className="p-2 text-neutral-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    {deleting === camp.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
 
       {/* Desktop view (table) */}
@@ -203,50 +248,52 @@ export function CampaignTable({ campaigns }: { campaigns: Campaign[] }) {
         <table className="w-full text-sm text-left">
           <thead className="text-xs text-neutral-500 bg-neutral-800/20 border-b border-neutral-800 uppercase">
             <tr>
-              <th className="px-6 py-4 font-medium">Nombre & Target</th>
-              <th className="px-6 py-4 font-medium">Estado</th>
-              <th className="px-6 py-4 font-medium">Progreso</th>
-              <th className="px-6 py-4 font-medium">Performance</th>
-              <th className="px-6 py-4 font-medium text-right">Acciones</th>
+              <th className="px-5 py-3.5 font-medium">Campaña</th>
+              <th className="px-5 py-3.5 font-medium">Estado</th>
+              <th className="px-5 py-3.5 font-medium">Progreso</th>
+              <th className="px-5 py-3.5 font-medium">Open</th>
+              <th className="px-5 py-3.5 font-medium">CTR</th>
+              <th className="px-5 py-3.5 font-medium text-right">Acciones</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-neutral-800/50">
             {campaigns.map(camp => (
               <tr key={camp.id} className="hover:bg-neutral-800/20 transition-colors">
-                <td className="px-6 py-4">
-                  <div className="font-semibold text-foreground mb-0.5">{camp.name}</div>
+                <td className="px-5 py-4">
+                  <div className="font-semibold text-foreground mb-0.5 max-w-[200px] truncate">{camp.name}</div>
                   <div className="text-xs text-neutral-500 flex items-center gap-1.5">
-                    <Database className="w-3 h-3" /> {camp.target_audience}
+                    <Database className="w-3 h-3 shrink-0" />
+                    <span className="truncate max-w-[160px]">{camp.target_audience}</span>
                   </div>
                 </td>
-                <td className="px-6 py-4">
+                <td className="px-5 py-4">
                   <StatusBadge status={camp.status} />
                 </td>
-                <td className="px-6 py-4">
+                <td className="px-5 py-4 min-w-[140px]">
                   <div className="flex flex-col gap-1">
-                    <div className="flex justify-between text-xs text-neutral-400">
-                      <span>{camp.emails_sent} enviados</span>
-                      <span>{camp.total_leads_found} leads</span>
+                    <div className="flex justify-between text-xs text-neutral-400 tabular-nums">
+                      <span>{camp.emails_sent.toLocaleString("es-ES")} / {camp.total_leads_found.toLocaleString("es-ES")}</span>
+                      <span className="text-neutral-600">
+                        {camp.total_leads_found > 0
+                          ? Math.round((camp.emails_sent / camp.total_leads_found) * 100) + "%"
+                          : "0%"}
+                      </span>
                     </div>
                     <div className="h-1.5 w-full bg-neutral-800 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-blue-500 rounded-full"
-                        style={{ width: camp.total_leads_found > 0 ? `${(camp.emails_sent / camp.total_leads_found) * 100}%` : "0%" }}
+                        className="h-full bg-blue-500 rounded-full transition-all duration-500"
+                        style={{ width: camp.total_leads_found > 0 ? `${Math.min(100, (camp.emails_sent / camp.total_leads_found) * 100)}%` : "0%" }}
                       />
                     </div>
                   </div>
                 </td>
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-3 text-xs">
-                    <div className="flex items-center gap-1 text-emerald-400">
-                      <Mail className="w-3 h-3" /> {camp.emails_opened}
-                    </div>
-                    <div className="flex items-center gap-1 text-purple-400">
-                      <MousePointerClick className="w-3 h-3" /> {camp.emails_clicked}
-                    </div>
-                  </div>
+                <td className="px-5 py-4">
+                  <OpenRateBadge sent={camp.emails_sent} opened={camp.emails_opened} />
                 </td>
-                <td className="px-6 py-4">
+                <td className="px-5 py-4">
+                  <CtrBadge sent={camp.emails_sent} clicked={camp.emails_clicked} />
+                </td>
+                <td className="px-5 py-4">
                   <div className="flex items-center justify-end gap-1">
                     <button
                       onClick={() => setSelected(camp)}

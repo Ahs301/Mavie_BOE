@@ -8,6 +8,7 @@ import { CampaignTable } from "./components/CampaignTable"
 import { LiveMetrics } from "./components/LiveMetrics"
 import { ControlPanel } from "./components/ControlPanel"
 import { BrevoActivity } from "./components/BrevoActivity"
+import { CaptacionChart } from "./components/CaptacionChart"
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -83,6 +84,18 @@ export default async function CaptacionDashboard() {
         {/* Center — Live analytics + control panel */}
         <div className="flex flex-col gap-6">
           <LiveMetrics initial={initial} />
+
+          {/* Funnel + per-campaign analytics */}
+          <div className="rounded-xl border border-neutral-800 bg-card overflow-hidden">
+            <div className="px-4 py-3 border-b border-neutral-800 flex items-center gap-2">
+              <span className="text-xs font-semibold text-foreground">Análisis de Rendimiento</span>
+              <span className="text-[10px] text-neutral-600 font-normal">Funnel · Por campaña</span>
+            </div>
+            <div className="p-4">
+              <CaptacionChart campaigns={list} />
+            </div>
+          </div>
+
           <ControlPanel />
         </div>
 
