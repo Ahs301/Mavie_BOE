@@ -289,7 +289,7 @@ export function ControlPanel() {
           </p>
           <ProcessCard
             label={status?.scrapeCmd === "scrape-spain" ? "Scraping V1 (activo)" : "Scraping V1"}
-            running={status?.scraping && status?.scrapeCmd === "scrape-spain"}
+            running={!!(status?.scraping && status?.scrapeCmd === "scrape-spain")}
             color="emerald"
             loading={loading}
             onStart={() => action("scrape")}
@@ -297,7 +297,7 @@ export function ControlPanel() {
           />
           <ProcessCard
             label={status?.sendCmd === "send-all" ? "Envío V1 (activo)" : "Envío leads existentes"}
-            running={status?.sending && status?.sendCmd === "send-all"}
+            running={!!(status?.sending && status?.sendCmd === "send-all")}
             color="blue"
             loading={loading}
             onStart={() => action("send")}
@@ -320,7 +320,7 @@ export function ControlPanel() {
           </p>
           <ProcessCard
             label={status?.scrapeCmd === "scrape-spain-v2" ? "Scraping V2 (activo)" : "Scraping V2 — nuevos sectores"}
-            running={status?.scraping && status?.scrapeCmd === "scrape-spain-v2"}
+            running={!!(status?.scraping && status?.scrapeCmd === "scrape-spain-v2")}
             color="emerald"
             loading={loading}
             onStart={() => action("scrape-v2")}
@@ -328,7 +328,7 @@ export function ControlPanel() {
           />
           <ProcessCard
             label={status?.sendCmd === "send-new" ? "Envío V2 (activo)" : "Envío nuevos leads"}
-            running={status?.sending && status?.sendCmd === "send-new"}
+            running={!!(status?.sending && status?.sendCmd === "send-new")}
             color="purple"
             loading={loading}
             onStart={() => action("send-new")}
