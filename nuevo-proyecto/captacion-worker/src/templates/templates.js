@@ -1,7 +1,9 @@
 // src/templates/templates.js – generación de correos personalizados (HTML + texto)
 import getConfig from '../config.js';
 
-function getGreeting() {
+function getGreeting(lead = null) {
+    if (lead && lead.contact_name) return `Hola ${lead.contact_name.split(' ')[0]},`;
+    if (lead && lead.name) return `Hola,`;
     return 'Hola,';
 }
 
@@ -157,9 +159,8 @@ function simpleHash(str) {
 
 export function generateInitialEmail(lead, abOverride = null) {
     const { COMPANY_NAME } = getConfig();
-    const pdfNote = `\n\nTe adjunto también un pequeño dossier (PDF) con más detalles sobre el sistema, por si lo queréis revisar con calma.`;
-    const ctaLink = `\n\nSi te resulta interesante y quieres que te dé más detalles de cómo lo podéis aplicar, respóndeme a este correo o escríbeme directamente al WhatsApp: 633448806.`;
-    const successCase = `Actualmente nuestro sistema lo está utilizando, entre otros, una consultora tecnológica en España para detectar oportunidades relacionadas con IA y automatización.`;
+    const ctaLink = `\n\n¿Tendría sentido que os enseñe cómo funciona en una llamada de 10 minutos esta semana? Podéis reservar aquí directamente: https://cal.eu/josep-mes2ul/demo-radar-boe`;
+    const successCase = `La semana pasada, uno de nuestros clientes detectó 3 nuevas oportunidades de licitación en su sector que probablemente se le habrían pasado con revisión manual. Solo recibió el aviso en su bandeja mientras tomaba el café.`;
 
     let subjectOptions = [];
     let bodyContent = '';
@@ -190,15 +191,17 @@ export function generateInitialEmail(lead, abOverride = null) {
             bodyContent = `${openingBlock}Investigando despachos y asesorías he dado con ${lead.name || 'vosotros'}. Quería presentaros nuestro radar automático de boletines oficiales.\n\nAportar valor añadido hoy en día es vital, y enviar proactivamente información sobre ayudas y subvenciones a tus clientes marca la diferencia. Nuestro sistema filtra a diario BOE, BDNS y boletines autonómicos para que no perdáis ninguna convocatoria relevante.${persPhrase}\n\n${successCase}`;
             break;
 
-        case 'despacho_legal':
+        case 'despacho_legal': {
             templateKey = 'initial_legal';
+            const ciudad = lead.city || lead.ciudad || 'España';
             subjectOptions = [
-                'Monitorización legal de boletines oficiales y licitaciones',
-                'Automatización de alertas del BOE para tu despacho',
-                'Radar automático de convocatorias para clientes',
+                `Licitaciones y BOE para ${lead.name || 'vuestro despacho'} (Pregunta rápida)`,
+                `¿Cuánto tiempo dedica el despacho a revisar el BOE cada semana?`,
+                `${lead.name || 'Vuestro despacho'} y el BOE — os puede interesar esto`,
             ];
-            bodyContent = `${openingBlock}He llegado a ${lead.name || 'vuestro despacho'} y quería explorar si os resulta de interés automatizar la monitorización de boletines oficiales.\n\nNuestro sistema escanea a diario el BOE y boletines autonómicos, filtrando por las áreas de práctica de vuestro interés o de vuestros clientes. Nos encargamos de mandaros un informe diario limpio y sin duplicados.${persPhrase}\n\n${successCase}`;
+            bodyContent = `Soy Josep, fundador de Mavie.\n\nOs escribo porque trabajo con despachos en ${ciudad} que gestionan derecho administrativo, licitaciones y subvenciones públicas. Constantemente me decían que revisar el BOE, el DOUE y los boletines autonómicos a mano era una pérdida de tiempo enorme — y siempre con el miedo a que se pasara un plazo importante.\n\nHe desarrollado un sistema (Radar BOE) que hace este rastreo 24/7. Filtra por vuestras keywords exactas y os manda una alerta solo cuando sale algo relevante para el despacho o para vuestros clientes. Nada de entrar a 5 portales distintos cada mañana.\n\n${successCase}${persPhrase}`;
             break;
+        }
 
         case 'ingenieria':
             templateKey = 'initial_ingenieria';
@@ -231,6 +234,56 @@ export function generateInitialEmail(lead, abOverride = null) {
             break;
         }
 
+        case 'clinica_salud':
+            templateKey = 'initial_clinica';
+            subjectOptions = [
+                `Subvenciones y regulaciones sanitarias para ${lead.name || 'vuestra clínica'} (BOE automático)`,
+                '¿Seguís el BOE manualmente para ayudas a centros sanitarios?',
+                'Radar automático de ayudas, equipamiento y normativa sanitaria',
+            ];
+            bodyContent = `${openingBlock}Os escribo porque trabajo con clínicas y centros de salud que cada año pierden oportunidades de financiación pública por no estar al tanto del BOE, el BDNS y los boletines autonómicos.\n\nNuestro radar automatiza esa vigilancia: cada mañana filtra nuevas convocatorias de ayudas para equipamiento, digitalización o formación sanitaria, y os las envía directamente sin que tengáis que entrar a ningún portal.${persPhrase}\n\n${successCase}`;
+            break;
+
+        case 'hosteleria_turismo':
+            templateKey = 'initial_hosteleria';
+            subjectOptions = [
+                'Ayudas turísticas y BOE para alojamientos — ¿las aprovecháis todas?',
+                `Subvenciones de turismo para ${lead.name || 'vuestro negocio'} (sin revisión manual)`,
+                'Radar BOE: ayudas de turismo, reforma y sostenibilidad en un aviso',
+            ];
+            bodyContent = `${openingBlock}Soy Josep, de Mavie. Os escribo porque el sector turístico recibe cada año decenas de convocatorias de subvenciones autonómicas y estatales — para reformas, sostenibilidad, digitalización, accesibilidad — y la mayoría pasan desapercibidas porque nadie tiene tiempo de revisar el BOE cada día.\n\nNuestro sistema lo hace solo: escanea todos los boletines oficiales cada mañana y os avisa únicamente cuando hay algo relevante para vuestro tipo de negocio.${persPhrase}\n\n${successCase}`;
+            break;
+
+        case 'formacion_educacion':
+            templateKey = 'initial_formacion';
+            subjectOptions = [
+                'Convocatorias FUNDAE y SEPE para centros de formación (sin perderos ninguna)',
+                `Radar automático de ayudas educativas y BOE para ${lead.name || 'vuestro centro'}`,
+                '¿Cuántas convocatorias de formación habéis perdido por no ver el BOE a tiempo?',
+            ];
+            bodyContent = `${openingBlock}Os contacto porque los centros de formación y academias tienen una relación directa con el BOE y el BDNS: convocatorias FUNDAE, ayudas del SEPE, bonificaciones, cambios en cualificaciones y regulaciones del sector educativo.\n\nNuestro radar lo monitoriza todo a diario y os lo resume cada mañana en un email, filtrado por las keywords de vuestro ámbito. Sin entrar a cinco portales distintos.${persPhrase}\n\n${successCase}`;
+            break;
+
+        case 'construccion_arquitectura':
+            templateKey = 'initial_construccion';
+            subjectOptions = [
+                'Licitaciones de obra pública y ayudas para ${lead.name || "vuestro despacho/empresa"} (BOE automático)',
+                'Radar de licitaciones y subvenciones de rehabilitación/construcción',
+                '¿Cuántas licitaciones públicas revisáis manualmente cada semana?',
+            ];
+            bodyContent = `${openingBlock}Os escribo porque en construcción y arquitectura el BOE es una fuente constante de oportunidades: licitaciones de obra pública, ayudas a la rehabilitación, Next Generation EU, subvenciones a la eficiencia energética y cambios normativos urbanísticos.\n\nNuestro sistema escanea todas estas fuentes cada mañana y os envía solo lo que hace match con vuestro perfil: tipo de obra, comunidad autónoma, umbrales de importe.${persPhrase}\n\n${successCase}`;
+            break;
+
+        case 'industria_logistica':
+            templateKey = 'initial_industria';
+            subjectOptions = [
+                `Radar BOE de ayudas industriales y fondos europeos para ${lead.name || 'vuestro sector'}`,
+                'Subvenciones de industrialización, exportación y logística (sin perderos ninguna)',
+                '¿Tenéis un sistema para no perder convocatorias del ICEX, CDTI o fondos FEDER?',
+            ];
+            bodyContent = `${openingBlock}Me dirijo a vosotros porque las empresas industriales, de logística y agroalimentarias disponen de líneas de financiación muy específicas — CDTI, PERTE, fondos FEDER, ayudas a la exportación ICEX, subvenciones de modernización — que solo aparecen en el BOE y boletines autonómicos y que son difíciles de seguir sin dedicar tiempo a ello.\n\nNuestro radar hace ese seguimiento automáticamente, con filtros por sector y territorio, y os manda un resumen cada mañana con solo lo relevante.${persPhrase}\n\n${successCase}`;
+            break;
+
         default:
             templateKey = 'initial_general';
             subjectOptions = [
@@ -247,7 +300,7 @@ export function generateInitialEmail(lead, abOverride = null) {
     const subjIndex = abVariant % subjectOptions.length;
     const subject = subjectOptions[subjIndex];
 
-    const body = `${getGreeting()}\n\n${bodyContent}${pdfNote}${ctaLink}\n\nUn saludo,`;
+    const body = `${getGreeting(lead)}\n\n${bodyContent}${ctaLink}\n\nUn saludo,`;
 
     return { subject, body, templateKey, abVariant };
 }
@@ -255,11 +308,13 @@ export function generateInitialEmail(lead, abOverride = null) {
 // ─── Follow-up ───────────────────────────────────────────────────────────────
 
 export function generateFollowUpEmail(lead) {
-    const ctaLink = `\n\nSi creéis que os puede resultar interesante, respóndeme por aquí o mándame un mensaje al WhatsApp al 633448806 y os enseño un par de ejemplos rápidos.`;
-    const subject = `Re: Radar Automático de Ayudas — ¿Lo pudisteis ver?`;
     const templateKey = 'followup_general';
 
-    const body = `${getGreeting()}\n\nTe escribía para saber si pudiste ver el correo que te mandé hace unos días sobre nuestro radar automático de ayudas y licitaciones.\n\nEstoy convencido de que os podría ahorrar muchísimas horas de revisión manual de boletines oficiales y evitaría que se os pase alguna convocatoria clave. Por si no lo visteis, os reenvío también el dossier adjunto con más detalles.${ctaLink}\n\nCualquier cosa, quedo a tu entera disposición.\n\nUn saludo,`;
+    // El asunto debe ser Re: del email inicial para agruparse en el hilo
+    const initialSubject = lead.last_subject || `Licitaciones y BOE para ${lead.name || 'vuestro despacho'} (Pregunta rápida)`;
+    const subject = initialSubject.startsWith('Re:') ? initialSubject : `Re: ${initialSubject}`;
+
+    const body = `${getGreeting(lead)}\n\nSé que vais a tope, así que seré breve.\n\nSolo quería añadir un ejemplo real: la semana pasada uno de nuestros clientes detectó 3 nuevas oportunidades de licitación en su sector que probablemente se le habrían pasado con revisión manual. Simplemente recibió el aviso en su bandeja mientras tomaba el café.\n\nSi delegar la vigilancia del BOE en un sistema automático os suena bien, reservad 10 minutos aquí y os enseño la plataforma por dentro: https://cal.eu/josep-mes2ul/demo-radar-boe\n\n¿Qué os parece?\n\nUn saludo,`;
 
     return { subject, body, templateKey };
 }

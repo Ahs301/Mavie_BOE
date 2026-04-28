@@ -5,6 +5,7 @@ import { sleep } from '../utils/throttle.js';
 import fs from 'fs';
 import { closeBrowser } from '../utils/scraper.js';
 
+// ─── NICHOS ORIGINALES (18k leads existentes — no tocar) ─────────────────────
 const NICHES = [
     'Gestorías / asesorías', 'gestoría subvenciones', 'asesoría subvenciones',
     'gestoría ayudas', 'asesoría ayudas empresas', 'gestoría kit digital',
@@ -93,5 +94,77 @@ export async function scrapeAllSpain(limitPerSearch = 40) {
     }
 
     logger.info(`🎉 ¡SISTEMA FINALIZADO! Toda España ha sido escaneada. Leads: ${CSV_FILE} | Revisión: ${REVIEW_FILE}`);
+    await closeBrowser();
+}
+
+// ─── NICHOS V2 (20 nuevos sectores — sin solapamiento con los 18k existentes) ─
+export const NICHES_V2 = [
+    // Salud B2B
+    'clínica dental', 'clínica fisioterapia', 'clínica veterinaria',
+    // Construcción y arquitectura
+    'despacho de arquitectura', 'empresa constructora', 'instaladora solar fotovoltaica',
+    // Turismo y hostelería
+    'hotel alojamiento turístico', 'agencia de viajes', 'turismo rural casa rural',
+    // Industria y logística
+    'empresa manufacturera industrial', 'empresa logística transporte', 'empresa agroalimentaria',
+    // Educación y formación
+    'academia formación profesional', 'colegio privado concertado', 'centro formación empleo FUNDAE',
+    // Social y ambiental
+    'fundación ONG entidad social', 'consultora medioambiental sostenibilidad', 'colegio profesional federación empresarial',
+    // Exportación y farmacia
+    'empresa exportadora comercio exterior', 'farmacia distribuidora farmacéutica',
+];
+
+/**
+ * Scrape NICHES_V2 por toda España. Escribe a Spain_Leads_Nuevos.csv (archivo separado
+ * del principal) para poder ejecutar en paralelo con el envío de los 18k existentes.
+ */
+export async function scrapeAllSpainV2(limitPerSearch = 40) {
+    const STATE_FILE = './logs/bulk_state_v2.json';
+    const CSV_FILE = 'Spain_Leads_Nuevos.csv';
+    const REVIEW_FILE = 'Spain_Leads_Nuevos_Revisar.csv';
+
+    let state = { nicheIndex: 0, provinceIndex: 0 };
+
+    if (fs.existsSync(STATE_FILE)) {
+        try {
+            state = JSON.parse(fs.readFileSync(STATE_FILE, 'utf-8'));
+            logger.info(`♻️  Retomando V2 desde: Nicho ${state.nicheIndex}, Provincia ${state.provinceIndex}`);
+        } catch {
+            logger.warn('No se pudo leer estado V2. Empezando de cero.');
+        }
+    } else {
+        logger.info('🚀 Iniciando Scraper V2 — 20 nuevos sectores por toda España...');
+    }
+
+    const totalCombinations = NICHES_V2.length * PROVINCES.length;
+
+    for (let i = state.nicheIndex; i < NICHES_V2.length; i++) {
+        const niche = NICHES_V2[i];
+        const startProv = (i === state.nicheIndex) ? state.provinceIndex : 0;
+
+        for (let j = startProv; j < PROVINCES.length; j++) {
+            const province = PROVINCES[j];
+            const currentCombo = (i * PROVINCES.length) + j + 1;
+
+            logger.info(`[V2 ${currentCombo}/${totalCombinations}] 📍 "${niche}" en ${province}`);
+
+            try {
+                const { leads, reviewLeads } = await scrapeGoogleMapsMultiQuery(niche, province, limitPerSearch, false);
+                appendScrapedLeadsToCSV(leads, CSV_FILE);
+                appendReviewLeadsToCSV(reviewLeads, REVIEW_FILE);
+                logger.info(`✅ V2: +${leads.length} con email | +${reviewLeads.length} para revisión`);
+            } catch (err) {
+                logger.error(`Error V2 "${niche}" en ${province}: ${err.message}`);
+            }
+
+            fs.writeFileSync(STATE_FILE, JSON.stringify({ nicheIndex: i, provinceIndex: j + 1 }), 'utf-8');
+
+            const delayInSeconds = Math.floor(Math.random() * 8) + 5;
+            await sleep(delayInSeconds * 1000);
+        }
+    }
+
+    logger.info(`🎉 V2 FINALIZADO. Nuevos leads: ${CSV_FILE} | Revisión: ${REVIEW_FILE}`);
     await closeBrowser();
 }

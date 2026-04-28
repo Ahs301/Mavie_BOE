@@ -59,13 +59,16 @@ export async function POST(req: NextRequest) {
   const { action, payload } = await req.json()
 
   const actionMap: Record<string, string> = {
-    scrape:   "/trigger/scrape",
-    send:     "/trigger/send",
-    parallel: "/trigger/parallel",
-    stop:     "/stop",
-    followup: "/trigger/followup",
-    config:   "/config",
-    custom:   "/trigger/custom-campaign",
+    scrape:      "/trigger/scrape",
+    send:        "/trigger/send",
+    parallel:    "/trigger/parallel",
+    stop:        "/stop",
+    followup:    "/trigger/followup",
+    config:      "/config",
+    custom:      "/trigger/custom-campaign",
+    "scrape-v2":    "/trigger/scrape-v2",
+    "send-new":     "/trigger/send-new",
+    "parallel-v2":  "/trigger/parallel-v2",
   }
 
   const endpoint = actionMap[action]

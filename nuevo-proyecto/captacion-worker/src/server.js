@@ -29,6 +29,7 @@ if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
 
 // ─── Process registry + Log buffer ───────────────────────────────────────────
 const procs = { scrape: null, send: null };
+const procCmd = { scrape: null, send: null }; // qué comando está corriendo por slot
 const logBuffer = []; // { ts, source, line }
 
 function addLog(source, text) {
@@ -135,6 +136,8 @@ function spawnProc(key, args, campaignId = null) {
   let statsBefore = null;
   try { statsBefore = getStats(); } catch (_) {}
 
+  const cmdLabel = args[0];
+  procCmd[key] = cmdLabel;
   addLog(key, `--- Iniciando: node cli.js ${args.join(' ')} ---`);
 
   const child = spawn('node', [CLI_PATH, ...args], {
@@ -156,6 +159,7 @@ function spawnProc(key, args, campaignId = null) {
   child.on('exit', async (code) => {
     if (syncInterval) clearInterval(syncInterval);
     procs[key] = null;
+    procCmd[key] = null;
     addLog(key, `--- Proceso terminado (código ${code}) ---`);
     if (campaignId) await syncCampaignToSupabase(campaignId, code, statsBefore);
   });
@@ -195,8 +199,10 @@ const server = createServer((req, res) => {
     let stats = null;
     try { stats = getStats(); } catch (_) {}
     return send(200, {
-      scraping: procs.scrape !== null,
-      sending:  procs.send   !== null,
+      scraping:     procs.scrape !== null,
+      sending:      procs.send   !== null,
+      scrapeCmd:    procCmd.scrape,
+      sendCmd:      procCmd.send,
       stats,
     });
   }
@@ -254,6 +260,25 @@ const server = createServer((req, res) => {
   if (req.method === 'POST' && pathname === '/trigger/parallel') {
     const r1 = spawnProc('scrape', ['scrape-spain', '--limit', '500']);
     const r2 = spawnProc('send',   ['send-all']);
+    return send(202, { scrape: r1, send: r2 });
+  }
+
+  // ── Trigger: scrape V2 (20 nuevos sectores → Spain_Leads_Nuevos.csv) ──
+  if (req.method === 'POST' && pathname === '/trigger/scrape-v2') {
+    const result = spawnProc('scrape', ['scrape-spain-v2', '--limit', '40']);
+    return send(result.ok ? 202 : 409, result);
+  }
+
+  // ── Trigger: send nuevos leads (Spain_Leads_Nuevos.csv) ──
+  if (req.method === 'POST' && pathname === '/trigger/send-new') {
+    const result = spawnProc('send', ['send-new']);
+    return send(result.ok ? 202 : 409, result);
+  }
+
+  // ── Trigger: parallel V2 (scrape nuevos + send nuevos) ──
+  if (req.method === 'POST' && pathname === '/trigger/parallel-v2') {
+    const r1 = spawnProc('scrape', ['scrape-spain-v2', '--limit', '40']);
+    const r2 = spawnProc('send',   ['send-new']);
     return send(202, { scrape: r1, send: r2 });
   }
 

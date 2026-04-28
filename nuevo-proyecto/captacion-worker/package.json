@@ -21,6 +21,8 @@
     "report": "node src/cli.js report",
     "scrape": "node src/cli.js scrape",
     "scrape-spain": "node src/cli.js scrape-spain",
+    "scrape-spain-v2": "node src/cli.js scrape-spain-v2",
+    "send-new": "node src/cli.js send-new",
     "tracking": "node src/cli.js tracking-server",
     "check-bounces": "node src/cli.js check-bounces",
     "outreach:preview": "node src/cli.js preview",

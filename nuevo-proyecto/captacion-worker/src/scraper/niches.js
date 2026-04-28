@@ -76,6 +76,42 @@ export const NICHE_VARIANTS = {
     'gestoria subvenciones': ['gestoría subvenciones', 'asesoría subvenciones', 'consultora subvenciones', 'gestoría ayudas', 'asesoría ayudas empresas'],
     'consultora digital': ['consultora digitalización', 'consultora transformación digital', 'consultora IA', 'agente digitalizador', 'kit digital'],
     'licitaciones': ['consultora licitaciones', 'asesoría licitaciones', 'contratación pública', 'licitaciones públicas'],
+
+    // ── Salud B2B ─────────────────────────────────────
+    'clinica dental b2b': ['clínica dental', 'centro dental', 'odontología clínica', 'ortodoncia clínica'],
+    'clinica fisioterapia b2b': ['clínica fisioterapia', 'centro rehabilitación', 'clínica osteopatía', 'centro fisioterapia'],
+    'clinica veterinaria b2b': ['clínica veterinaria', 'hospital veterinario', 'centro veterinario'],
+
+    // ── Construcción y arquitectura ───────────────────
+    'arquitectura despacho': ['despacho de arquitectura', 'estudio de arquitectura', 'arquitectos', 'arquitectura urbanismo'],
+    'constructora mediana': ['empresa constructora', 'constructora', 'contratista obra', 'empresa de construcción obras'],
+    'instaladora solar': ['empresa instaladora solar', 'instaladora fotovoltaica', 'empresa energía solar', 'instaladora placas solares'],
+
+    // ── Turismo y hostelería ──────────────────────────
+    'hotel alojamiento': ['hotel', 'hostal', 'apartahotel', 'alojamiento turístico', 'hotel boutique'],
+    'agencia de viajes b2b': ['agencia de viajes', 'tour operador', 'viajes corporativos', 'turismo corporativo'],
+    'turismo rural b2b': ['casa rural', 'turismo rural', 'hotel rural', 'alojamiento rural'],
+
+    // ── Industria y logística ─────────────────────────
+    'manufactura industrial': ['empresa manufacturera', 'empresa industrial', 'fabricante', 'taller industrial', 'industria'],
+    'logistica empresa': ['empresa de logística', 'empresa de transporte', 'distribuidora', 'operador logístico'],
+    'agroalimentaria': ['empresa agroalimentaria', 'industria alimentaria', 'empresa agrícola', 'cooperativa agraria', 'agroalimentaria'],
+
+    // ── Educación y formación ─────────────────────────
+    'academia formacion b2b': ['academia de formación', 'centro de formación profesional', 'escuela de negocios', 'formación continua empresa'],
+    'colegio privado b2b': ['colegio privado', 'colegio concertado', 'centro educativo privado', 'centro escolar privado'],
+    'centro formacion empleo': ['centro de formación para el empleo', 'formación ocupacional', 'centro SEPE', 'formación FUNDAE'],
+
+    // ── Social y ambiental ────────────────────────────
+    'fundacion ong': ['fundación', 'ONG', 'asociación sin ánimo de lucro', 'entidad social', 'fundación empresarial'],
+    'medio ambiente empresa': ['consultora medioambiental', 'empresa gestión residuos', 'consultoría sostenibilidad', 'empresa ambiental'],
+    'colegio profesional b2b': ['colegio profesional', 'asociación empresarial sectorial', 'federación empresarial', 'colegio oficial'],
+
+    // ── Exportación ───────────────────────────────────
+    'exportadora': ['empresa exportadora', 'pyme exportadora', 'empresa comercio exterior', 'empresa importadora exportadora'],
+
+    // ── Farmacia y distribución ───────────────────────
+    'farmacia distribucion': ['farmacia', 'distribuidora farmacéutica', 'parafarmacia', 'almacén farmacéutico'],
 };
 
 /**

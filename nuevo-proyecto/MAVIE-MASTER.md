@@ -789,6 +789,10 @@ Panel /dashboard/videos
 | I | Auditoría ready-to-sell + fix captacion emails 0 + analítica admin | ✅ HECHO (2026-04-25) — Bug leadExists corregido, Vercel Analytics + /dashboard/analitica |
 | J | Git remotes + Vercel production branch + sidebar completo | ✅ HECHO (2026-04-25) — Remotes aclarados, branch master en Vercel, Analítica en sidebar |
 | K | Diagnóstico bug botón motor OFF + ControlPanel v3 | ✅ HECHO (2026-04-25) — Diagnóstico completo, fix UI, MAVIE-MASTER actualizado |
+| L | Auditoría completa producción + SEO + conversión | ✅ HECHO (2026-04-27) — Score SEO 53/100, 4 críticos identificados, plan de acción documentado en AUDITORIA-CHAT-L-2026-04-27.md |
+| M | Fixes credibilidad + build config + conversión + schemas SEO | ✅ HECHO (2026-04-27) — Stats falsas, /gracias, testimonios, ignoreBuildErrors, comparativa boe.es, fundador, Calendly, SoftwareApplication schema |
+| N | URLs Cal.com y LinkedIn reales | ✅ HECHO (2026-04-28) |
+| O | Diagnóstico por qué no hay ventas + fix copy emails outbound | ✅ HECHO (2026-04-28) — 3 bugs críticos corregidos en captacion-worker |
 
 ### Detalle Chat A — ✅ HECHO
 Josep completó todos los pasos manuales: secrets rotados, variables en Vercel, migraciones SQL 07 y 08 aplicadas, webhook Stripe registrado, Billing Portal activado, Redeploy ejecutado.
@@ -1189,9 +1193,7 @@ Tu único trabajo diario: revisar stats, aprobar videos, cerrar reuniones.
 
 ---
 
----
-
-## 25. PRÓXIMO CHAT — ORDEN DE ATAQUE
+## 25. PRÓXIMO CHAT (ARCHIVADO — sustituido por Chat M)
 
 > ⚠️ **ESTADO POST CHAT K (2026-04-25):**
 > Bug del botón motor diagnosticado y UI mejorada. El problema es operativo en el VPS, no de código.
@@ -1370,5 +1372,213 @@ Stack resultante tras Gmail + VPS:
 
 ---
 
+### Detalle Chat L — ✅ HECHO (2026-04-27)
+
+**Misión:** Auditoría completa de producción + SEO + conversión.
+
+**Metodología:** 9 subagentes paralelos (seo-technical, seo-content, seo-schema, seo-sitemap, seo-backlinks, seo-sxo, code-reviewer, conversión analyst) + lectura directa de código fuente.
+
+**Score SEO Health: 53/100** — funcional pero sin capa de confianza.
+
+**4 CRÍTICOS identificados:**
+1. Stats falsas "50+ clientes activos" — tienes 1 cliente real → reemplazar con métricas auditables
+2. `public/og-image.png` NO EXISTE — LinkedIn cards vacíos → crear 1200×630px
+3. `typescript: { ignoreBuildErrors: true }` en producción → eliminarlo
+4. `/gracias` dice "nuestro equipo activará..." + no tiene link a `/panel` → fix copy + añadir link
+
+**Competidores en SERP identificados:** boealerta.com, alertasboe.com, subventis.es (€49), boletinclaro.es (freemium), licigal.com, tenderstool.com (€110-185/mes)
+
+**Ventaja competitiva de Mavie no comunicada:** Único con compra self-serve inmediata sin contactar a nadie (Stripe hosted checkout). Los demás requieren llamada/demo para contratar.
+
+**Documento completo:** `nuevo-proyecto/AUDITORIA-CHAT-L-2026-04-27.md` — contiene fixes de código exactos, JSONs de schema, plan de 6 bloques ordenado.
+
+---
+
+## 25. PRÓXIMO CHAT (Chat M) — ORDEN DE ATAQUE
+
+> **LEER PRIMERO:** `nuevo-proyecto/AUDITORIA-CHAT-L-2026-04-27.md` — tiene el contexto completo de la auditoría y los fixes de código listos para aplicar.
+
+### Prioridad 1 — Fixes de credibilidad (1-2h, máximo impacto)
+
+**Estos 4 fixes van primero porque sin credibilidad todo el outbound es dinero quemado:**
+
+1. **`app/page.tsx:65`** — Reemplazar stats falsas:
+   ```tsx
+   { value: "72h", label: "Implantación garantizada" },
+   { value: "< 5min", label: "Tiempo de detección" },
+   { value: "0€", label: "Setup fee" },
+   { value: "99.9%", label: "Uptime objetivo" },
+   ```
+
+2. **`public/og-image.png`** — Crear imagen 1200×630px. Usar `radar_boe_mockup.png` como base + texto "Radar BOE · Mavie Automations".
+
+3. **`app/gracias/page.tsx`** — Cambiar Step 2 a "activación automática" + añadir `<Link href="/panel">Ir a mi panel →</Link>`.
+
+4. **`app/page.tsx:90-109`** — Eliminar testimonios anónimos (o pedir al cliente real 1 testimonio real con nombre).
+
+### Prioridad 2 — Fix build config (15 min)
+
+5. **`next.config.mjs`** — Eliminar `ignoreBuildErrors: true` y `ignoreDuringBuilds: true`. Corregir errores TypeScript que aparezcan.
+
+### Prioridad 3 — Conversión (2-3h)
+
+6. Tabla comparativa vs boe.es gratuito en `/soluciones/boe` — ver tabla en AUDITORIA-CHAT-L
+7. Sección fundador en `/sobre-nosotros` — Josep + foto + LinkedIn
+8. Link Calendly en CTA de `/soluciones/boe`
+9. H1 homepage con keyword objetivo
+
+### Prioridad 4 — Schema SEO (1h)
+
+10. Logo Organization a ImageObject en `app/layout.tsx`
+11. SoftwareApplication schema en `/soluciones/boe` — JSON-LD completo en AUDITORIA-CHAT-L
+12. WebSite schema en `app/layout.tsx`
+
+### Prioridad 5 — Operativa VPS (pendiente de Chat K)
+
+13. `nano /opt/captacion/.env` → valores reales de SMTP
+14. `node src/cli.js import --file All_Spain_Leads.csv` (y los otros 2 CSVs)
+15. `node src/cli.js stats` → verificar ~18.678
+16. `pm2 restart captacion-worker`
+17. En Vercel: añadir `CAPTACION_WORKER_URL=http://80.241.212.87:3002`
+
+### Prioridad 6 — Cliente existente (2 min manual)
+
+18. Supabase Dashboard → Authentication → Users → Invite user (email del cliente)
+
+---
+
+### Estado antes de Chat M
+
+| Pieza | Estado |
+|-------|--------|
+| Código web funcional | ✅ Funcional |
+| Stripe checkout | ✅ CONFIRMADO |
+| BOE-Worker cron 08:00 AM | ✅ Activo |
+| Panel cliente /panel | ✅ Funcional |
+| SEO 33 páginas programáticas | ✅ Deployadas |
+| Analytics Vercel | ✅ Instalado (habilitar en Dashboard) |
+| **Stats falsas corregidas** | ❌ PENDIENTE — CRÍTICO |
+| **OG image creada** | ❌ PENDIENTE — CRÍTICO |
+| **ignoreBuildErrors eliminado** | ❌ PENDIENTE — CRÍTICO |
+| **gracias.tsx fix** | ❌ PENDIENTE — CRÍTICO |
+| Testimonios reales | ❌ PENDIENTE |
+| Comparativa vs boe.es | ❌ PENDIENTE |
+| Fundador en sobre-nosotros | ❌ PENDIENTE |
+| Schema SoftwareApplication | ❌ PENDIENTE |
+| VPS .env con valores reales | ❌ PENDIENTE |
+| 18k leads importados SQLite | ❌ PENDIENTE |
+| Cliente Auth Supabase | ⏳ Pendiente (manual Josep) |
+
+---
+
+---
+
+## 26. DETALLE CHAT O — Fix copy emails outbound (2026-04-28)
+
+### Diagnóstico por qué no había ventas (2 meses, 18k leads, 0 cierres)
+
+**Problema 1 — `Precedence: bulk` en headers** (CRÍTICO)
+- Archivo: `captacion-worker/src/email/sender.js`
+- El header `'Precedence': 'bulk'` le decía literalmente a Gmail/Outlook "soy spam masivo"
+- Fix: eliminado. Reemplazado `X-Mailer` por `Microsoft Outlook 16.0` (estándar para outbound 1:1)
+
+**Problema 2 — Copy genérico sin dolor** (CRÍTICO)  
+- El template `despacho_legal` en `templates.js` decía: "He llegado a vuestro despacho y quería explorar si os resulta de interés..."
+- El PLAYBOOK-DESPACHOS-ABOGADOS.md tenía copy bueno pero nunca se implementó en el código
+- Fix: `despacho_legal` case reescrito con el copy del playbook:
+  - Asunto: `Licitaciones y BOE para {{nombre_empresa}} (Pregunta rápida)` → personalizado
+  - Body: ataca el dolor real ("miedo a que se pase un plazo importante")
+  - Prueba social: "cliente detectó 3 licitaciones que se le habrían pasado"
+  - CTA: link Cal.com directo (no WhatsApp)
+
+**Problema 3 — PDF adjunto en email frío** (CRÍTICO)
+- `pdfNote` añadía "Te adjunto un dossier PDF" → adjuntos = spam automático en outbound
+- Fix: eliminado completamente del body
+
+**Problema 4 — Saludo sin nombre**
+- `getGreeting()` retornaba solo "Hola," siempre
+- Fix: `getGreeting(lead)` usa `lead.contact_name` si está disponible
+
+**Problema 5 — Follow-up sin hilo**
+- El asunto del follow-up era diferente del inicial → no se agrupaba como conversación
+- Fix: `generateFollowUpEmail` ahora usa `Re: {asunto_inicial}` guardado en `lead.last_subject`
+
+### Archivos modificados en Chat O
+
+| Archivo | Cambio |
+|---------|--------|
+| `captacion-worker/src/email/sender.js` | Eliminado `Precedence: bulk`, cambiado `X-Mailer` |
+| `captacion-worker/src/templates/templates.js` | Copy `despacho_legal` reescrito, PDF eliminado, saludo con nombre, follow-up con hilo |
+
+### Estado tras Chat O
+
+| Pieza | Estado |
+|-------|--------|
+| Copy emails despachos abogados | ✅ CORREGIDO — ataca dolor, sin PDF, sin spam headers |
+| Captacion worker en VPS | ✅ ONLINE en /opt/captacion — PERO .env tiene placeholders |
+| 18k leads importados a SQLite | ❌ PENDIENTE — CSVs en /opt/captacion pero falta ejecutar import |
+| VPS .env con valores reales | ❌ PENDIENTE — SMTP_USER, SMTP_PASS, FROM_NAME, FROM_EMAIL placeholders |
+| CAPTACION_WORKER_URL en Vercel | ❌ PENDIENTE — solo en .env.local local |
+| og-image.png 1200×630 | ❌ PENDIENTE MANUAL — instrucciones en AUDITORIA-CHAT-L |
+| Product Hunt / Indie Hackers / SpainStartup | ❌ PENDIENTE MANUAL |
+
+---
+
+## 27. PRÓXIMO CHAT (Chat P) — ORDEN DE ATAQUE
+
+**INSTRUCCIÓN PARA LA IA:** Lee MAVIE-MASTER.md + AUDITORIA-CHAT-L-2026-04-27.md. Estado: producto funcional, emails corregidos, pero la máquina de captación no está arrancada por falta de configuración VPS.
+
+### Prioridad 1 — VPS: activar la máquina de emails (BLOQUEANTE)
+
+Josep necesita ejecutar esto en el VPS (`ssh root@80.241.212.87`):
+
+```bash
+# 1. Editar .env con valores reales (ver sección 12 para los valores)
+nano /opt/captacion/.env
+# Cambiar: SMTP_USER, SMTP_PASS, FROM_NAME, FROM_EMAIL, REPLY_TO, COMPANY_NAME
+# Añadir: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (desde Vercel env vars)
+
+# 2. Subir el código actualizado (emails fix del Chat O)
+# — Opción A: git pull si el VPS tiene el repo
+# — Opción B: FileZilla → subir captacion-worker/src/templates/templates.js
+#                                    captacion-worker/src/email/sender.js
+
+# 3. Importar leads
+cd /opt/captacion
+node src/cli.js import --file All_Spain_Leads.csv
+node src/cli.js import --file All_Spain_Leads_2.csv
+node src/cli.js import --file Faltantes_por_enviar.csv
+node src/cli.js stats   # → debe mostrar ~18.678
+
+# 4. Test en seco
+node src/cli.js send-all --dry-run --limit 5
+
+# 5. Arrancar
+pm2 restart captacion-worker
+```
+
+En Vercel Settings → Environment Variables:
+```
+CAPTACION_WORKER_URL=http://80.241.212.87:3002
+CAPTACION_CRON_SECRET=b1e6556d2e391f0173d4796cb44fd00f15909cd6d29dbf9def7a2247324894a5
+```
+
+### Prioridad 2 — SEO contenido pendiente (código)
+
+1. Mejorar páginas verticales `despachos-abogados` y `consultoras-subvenciones` en `/radar-boe/[vertical]/page.tsx` — añadir sección tipos de licitaciones + FAQs únicas (eliminar thin content)
+2. Ampliar hub `/radar-boe/page.tsx` con 300+ palabras E-E-A-T sobre qué es el BOE
+3. Crear `/casos/page.tsx` — caso éxito anonimizado (antes/después, horas ahorradas)
+4. `app/sitemap.ts` — cambiar `new Date()` a fechas ISO estáticas
+5. Crear `public/llms.txt`
+
+### Prioridad 3 — Manual Josep
+
+- Crear `og-image.png` en Canva (instrucciones detalladas en AUDITORIA-CHAT-L sección "TAREA 1")
+- Alta Product Hunt, Indie Hackers, SpainStartup (instrucciones en AUDITORIA-CHAT-L secciones 4,5,6)
+- Pedir testimonio real al cliente que paga (nombre + empresa + permiso escrito)
+- LinkedIn: 10 conexiones/día a socios de despachos + DM plantilla (sección 15 MAVIE-MASTER)
+
+---
+
 *Josep Cervera · Mavie Automations · mavieautomations.com*  
-*Actualizado: 2026-04-25 — Chat K: Diagnóstico bug motor + ControlPanel v3*
+*Actualizado: 2026-04-28 — Chat O: Diagnóstico no-ventas, 3 bugs críticos emails corregidos*

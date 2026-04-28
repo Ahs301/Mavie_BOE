@@ -17,7 +17,7 @@ import { sendEmail, verifySMTP } from './email/sender.js';
 import { sleep, HourlyRateLimiter, DailyWarmupLimiter } from './utils/throttle.js';
 import { fetchEmailFromWebsite } from './utils/scraper.js';
 import { scrapeGoogleMaps, scrapeGoogleMapsMultiQuery } from './scraper/google.js';
-import { scrapeAllSpain } from './scraper/bulk_spain.js';
+import { scrapeAllSpain, scrapeAllSpainV2 } from './scraper/bulk_spain.js';
 import { writeScrapedLeadsToCSV, writeReviewLeadsToCSV } from './csv/writer.js';
 import { closeBrowser } from './utils/scraper.js';
 import { buildPixelUrl, buildClickUrl, buildUnsubscribeUrl } from './tracking/pixel.js';
@@ -505,6 +505,19 @@ program
         }
     });
 
+// ─── 11b. SCRAPE SPAIN V2 ────────────────────────────────────────────────────
+program
+    .command('scrape-spain-v2')
+    .description('Scrapea 20 nuevos sectores por toda España — sin solapamiento con los 18k existentes. Escribe a Spain_Leads_Nuevos.csv (se puede ejecutar en paralelo con send-all).')
+    .option('--limit <number>', 'Límite por ciudad y nicho', '40')
+    .action(async (options) => {
+        try {
+            await scrapeAllSpainV2(parseInt(options.limit, 10));
+        } catch (error) {
+            logger.error(`Error en Scrape Spain V2: ${error.message}`);
+        }
+    });
+
 // ─── 12. SEND ALL ────────────────────────────────────────────────────────────
 program
     .command('send-all')
@@ -517,6 +530,21 @@ program
             return;
         }
         logger.info('🚀 SEND ALL — archivo maestro de España...');
+        await sendAction({ file, dryRun: options.dryRun });
+    });
+
+// ─── 12b. SEND NEW ───────────────────────────────────────────────────────────
+program
+    .command('send-new')
+    .description('Envía a Spain_Leads_Nuevos.csv (leads de los 20 nuevos sectores). Ejecutar después de scrape-spain-v2.')
+    .option('--dry-run', 'Modo simulado')
+    .action(async (options) => {
+        const file = 'Spain_Leads_Nuevos.csv';
+        if (!fs.existsSync(file)) {
+            logger.error(`No existe ${file}. Ejecuta scrape-spain-v2 primero.`);
+            return;
+        }
+        logger.info('🚀 SEND NEW — nuevos sectores V2...');
         await sendAction({ file, dryRun: options.dryRun });
     });
 

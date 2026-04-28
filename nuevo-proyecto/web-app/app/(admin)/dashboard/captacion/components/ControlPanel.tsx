@@ -7,7 +7,7 @@ import {
   WifiOff, Wifi, TriangleAlert,
 } from "lucide-react"
 
-type ProcessStatus = { scraping: boolean; sending: boolean; stats: Record<string, number> | null }
+type ProcessStatus = { scraping: boolean; sending: boolean; scrapeCmd: string | null; sendCmd: string | null; stats: Record<string, number> | null }
 type LogEntry      = { ts: number; source: string; line: string }
 type Config        = Record<string, string>
 
@@ -282,37 +282,70 @@ export function ControlPanel() {
           </div>
         )}
 
-        {/* Process cards */}
-        <div className="flex flex-col gap-2">
+        {/* ── V1: Leads existentes (18k) ─────────────────────── */}
+        <div className="flex flex-col gap-1.5">
+          <p className="text-[10px] text-neutral-600 uppercase tracking-wide font-medium px-0.5">
+            Base actual (~18k leads) — gestorías, consultoras, licitaciones
+          </p>
           <ProcessCard
-            label="Scraping"
-            running={status?.scraping ?? false}
+            label={status?.scrapeCmd === "scrape-spain" ? "Scraping V1 (activo)" : "Scraping V1"}
+            running={status?.scraping && status?.scrapeCmd === "scrape-spain"}
             color="emerald"
             loading={loading}
             onStart={() => action("scrape")}
             onStop={() => action("stop")}
           />
           <ProcessCard
-            label="Envío de Emails"
-            running={status?.sending ?? false}
+            label={status?.sendCmd === "send-all" ? "Envío V1 (activo)" : "Envío leads existentes"}
+            running={status?.sending && status?.sendCmd === "send-all"}
             color="blue"
             loading={loading}
             onStart={() => action("send")}
             onStop={() => action("stop")}
           />
-        </div>
-
-        {/* Parallel + custom */}
-        <div className="flex flex-col gap-2">
           <button
-            disabled={loading || (status?.scraping && status?.sending)}
+            disabled={loading || (status?.scraping || status?.sending)}
             onClick={() => action("parallel")}
             className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-500 hover:to-blue-500 disabled:opacity-40 disabled:cursor-not-allowed text-white transition-all"
           >
             {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />}
-            Scraping + Envío en Paralelo
+            V1 Scraping + Envío en Paralelo
           </button>
+        </div>
 
+        {/* ── V2: 20 nuevos sectores ───────────────────────────── */}
+        <div className="flex flex-col gap-1.5">
+          <p className="text-[10px] text-neutral-600 uppercase tracking-wide font-medium px-0.5">
+            Nuevos sectores (20 campañas) — clínicas, hoteles, industria, etc.
+          </p>
+          <ProcessCard
+            label={status?.scrapeCmd === "scrape-spain-v2" ? "Scraping V2 (activo)" : "Scraping V2 — nuevos sectores"}
+            running={status?.scraping && status?.scrapeCmd === "scrape-spain-v2"}
+            color="emerald"
+            loading={loading}
+            onStart={() => action("scrape-v2")}
+            onStop={() => action("stop")}
+          />
+          <ProcessCard
+            label={status?.sendCmd === "send-new" ? "Envío V2 (activo)" : "Envío nuevos leads"}
+            running={status?.sending && status?.sendCmd === "send-new"}
+            color="purple"
+            loading={loading}
+            onStart={() => action("send-new")}
+            onStop={() => action("stop")}
+          />
+          <button
+            disabled={loading || (status?.scraping || status?.sending)}
+            onClick={() => action("parallel-v2")}
+            className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold bg-gradient-to-r from-emerald-600 to-purple-600 hover:from-emerald-500 hover:to-purple-500 disabled:opacity-40 disabled:cursor-not-allowed text-white transition-all"
+          >
+            {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />}
+            V2 Scraping + Envío en Paralelo
+          </button>
+        </div>
+
+        {/* ── Acciones comunes ─────────────────────────────────── */}
+        <div className="flex flex-col gap-2">
           <button
             disabled={loading}
             onClick={() => action("followup")}
