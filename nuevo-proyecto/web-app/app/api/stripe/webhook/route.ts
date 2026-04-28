@@ -5,7 +5,7 @@ import { createClient } from '@supabase/supabase-js'
 function getStripe() {
   const key = process.env.STRIPE_SECRET_KEY?.trim()
   if (!key) throw new Error('[webhook] STRIPE_SECRET_KEY no configurada')
-  return new Stripe(key, { apiVersion: '2024-09-30.acacia' })
+  return new Stripe(key, { apiVersion: '2026-03-25.dahlia' as const })
 }
 
 // Service role client — bypasses RLS, safe only in server-side webhook

@@ -87,7 +87,7 @@ export default function ProspeccionB2BPage() {
                 </div>
                 <div>
                   <h4 className="font-bold mb-1 text-neutral-900 dark:text-white">Pixel Invisible (Apertura)</h4>
-                  <p className="text-neutral-600 dark:text-neutral-400 text-sm">Sabemos exactamente quién y cuántas veces abre el correo, detectando el grado de "ansiedad" del cliente potencial.</p>
+                  <p className="text-neutral-600 dark:text-neutral-400 text-sm">Sabemos exactamente quién y cuántas veces abre el correo, detectando el grado de &ldquo;ansiedad&rdquo; del cliente potencial.</p>
                 </div>
               </div>
               <div className="flex gap-4">

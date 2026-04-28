@@ -1,7 +1,7 @@
 import Link from "next/link";
 import {
   ArrowRight, Bell, Filter, Zap, Database, Activity,
-  Shield, Clock, ChevronRight, Settings2, Send, BarChart3,
+  Shield, Clock, ChevronRight, Settings2, Send,
 } from "lucide-react";
 import type { Metadata } from "next";
 import { ParticleBackground } from "@/components/ParticleBackground";
@@ -60,10 +60,10 @@ const featureIconStyles: Record<string, { wrap: string; icon: string }> = {
 }
 
 const stats = [
-  { value: "24/7", label: "Monitoreo continuo" },
-  { value: "< 5min", label: "Tiempo de alerta" },
-  { value: "50+", label: "Clientes activos" },
-  { value: "99.9%", label: "Uptime garantizado" },
+  { value: "72h", label: "Implantación garantizada" },
+  { value: "< 5min", label: "Tiempo de detección" },
+  { value: "0€", label: "Setup fee" },
+  { value: "99.9%", label: "Uptime objetivo" },
 ]
 
 const steps = [
@@ -87,26 +87,6 @@ const steps = [
   },
 ]
 
-const testimonials = [
-  {
-    quote: "Antes revisábamos el BOE manualmente cada mañana. Con Mavie, recibimos directamente lo relevante. Ahora presentamos ofertas antes que la competencia.",
-    author: "Directora de Desarrollo de Negocio",
-    company: "Consultora jurídica, Madrid",
-    icon: BarChart3,
-  },
-  {
-    quote: "El Radar BOE nos ha abierto un canal de captación que no teníamos. Detectamos convocatorias de digitalización que antes perdíamos por llegar tarde.",
-    author: "CEO",
-    company: "Empresa tecnológica, Barcelona",
-    icon: Zap,
-  },
-  {
-    quote: "La implantación fue en menos de 48 horas. Sin tocar nada de nuestros sistemas. El nivel de personalización del filtrado es lo que nos convenció.",
-    author: "Responsable de Operaciones",
-    company: "Asesoría tributaria, Valencia",
-    icon: Shield,
-  },
-]
 
 export default function Home() {
   return (
@@ -129,9 +109,9 @@ export default function Home() {
             </div>
 
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-tight mb-6 text-gradient animate-fade-in-up">
-              Tu empresa,<br />
-              trabajando en<br />
-              automático.
+              Detecta licitaciones<br />
+              del BOE antes<br />
+              que tu competencia.
             </h1>
 
             <p className="text-xl text-neutral-400 leading-relaxed mb-10 max-w-2xl animate-fade-in-up delay-100">
@@ -376,55 +356,6 @@ export default function Home() {
                 </div>
               )
             })}
-          </div>
-        </div>
-      </section>
-
-      {/* ── SOCIAL PROOF / TESTIMONIALS ── */}
-      <section className="py-24 px-6 border-b border-neutral-800 bg-neutral-950/30">
-        <div className="max-w-7xl mx-auto">
-          <div className="max-w-2xl mb-16">
-            <div className="flex items-center gap-3 mb-6">
-              <span className="h-px flex-1 bg-neutral-800 max-w-[40px]" />
-              <span className="text-xs font-semibold text-neutral-500 uppercase tracking-widest">Clientes</span>
-            </div>
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Lo que dicen quienes<br />ya automatizan con nosotros.
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {testimonials.map((t, i) => (
-              <div
-                key={i}
-                className="rounded-2xl border border-neutral-800 bg-neutral-950/60 p-7 flex flex-col gap-5 hover:border-neutral-700 transition-all duration-200 group relative overflow-hidden"
-              >
-                <div className="absolute -top-10 -left-10 w-32 h-32 rounded-full bg-blue-600/5 blur-2xl pointer-events-none" />
-
-                {/* Stars */}
-                <div className="flex gap-0.5 relative">
-                  {[...Array(5)].map((_, si) => (
-                    <svg key={si} className="w-3.5 h-3.5 text-amber-400 fill-amber-400" viewBox="0 0 20 20">
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                  ))}
-                </div>
-
-                <p className="text-sm text-neutral-300 leading-relaxed flex-1">
-                  &ldquo;{t.quote}&rdquo;
-                </p>
-
-                <div className="flex items-center gap-3 pt-2 border-t border-neutral-800/80">
-                  <div className="w-9 h-9 rounded-full bg-neutral-800 border border-neutral-700 flex items-center justify-center shrink-0 group-hover:border-blue-900/50 group-hover:bg-blue-950/20 transition-colors duration-200">
-                    <t.icon className="w-4 h-4 text-neutral-500 group-hover:text-blue-400 transition-colors duration-200" />
-                  </div>
-                  <div>
-                    <div className="text-xs font-semibold text-foreground">{t.author}</div>
-                    <div className="text-xs text-neutral-500">{t.company}</div>
-                  </div>
-                </div>
-              </div>
-            ))}
           </div>
         </div>
       </section>

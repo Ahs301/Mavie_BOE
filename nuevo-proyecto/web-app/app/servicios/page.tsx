@@ -67,7 +67,7 @@ export default function ServicesPage() {
               <Workflow className="h-10 w-10 text-amber-400 mb-6 relative z-10" />
               <h3 className="text-2xl font-bold mb-3 text-white relative z-10">Automatización de Procesos (n8n / APIs)</h3>
               <p className="text-neutral-400 leading-relaxed relative z-10 max-w-lg">
-                Auditamos cómo se mueve la información en tu empresa. Reemplazamos tareas de "copiar y pegar" por flujos automatizados (webhooks, APIs) que operan 24/7 sin fatiga ni latencia.
+                Auditamos cómo se mueve la información en tu empresa. Reemplazamos tareas de &ldquo;copiar y pegar&rdquo; por flujos automatizados (webhooks, APIs) que operan 24/7 sin fatiga ni latencia.
               </p>
             </div>
           </div>

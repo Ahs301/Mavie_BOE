@@ -71,13 +71,25 @@ export const metadata: Metadata = {
   },
 }
 
+const websiteSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'Mavie Automations',
+  url: BASE_URL,
+}
+
 // Schema Organization JSON-LD para SEO
 const organizationSchema = {
   '@context': 'https://schema.org',
   '@type': 'Organization',
   name: 'Mavie Automations',
   url: BASE_URL,
-  logo: `${BASE_URL}/logo.png`,
+  logo: {
+    '@type': 'ImageObject',
+    url: `${BASE_URL}/logo.png`,
+    width: 512,
+    height: 512,
+  },
   description: 'Ingeniería de automatización y datos B2B. Sistemas de detección de oportunidades públicas y automatización de procesos empresariales.',
   address: {
     '@type': 'PostalAddress',
@@ -103,6 +115,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
         />
       </head>
       <body className="min-h-screen bg-background text-foreground antialiased flex flex-col font-sans">

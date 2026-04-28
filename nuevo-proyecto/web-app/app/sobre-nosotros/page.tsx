@@ -45,13 +45,13 @@ export default function SobreMaviePage() {
               <span className="h-px flex-1 bg-neutral-800 max-w-[40px]" />
               <span className="text-xs font-semibold text-blue-500 uppercase tracking-widest">El Problema</span>
             </div>
-            <h2 className="text-3xl md:text-5xl font-bold mb-8 leading-tight">El fin del <span className="text-neutral-500 italic font-normal">"trabajo en la sombra"</span></h2>
+            <h2 className="text-3xl md:text-5xl font-bold mb-8 leading-tight">El fin del <span className="text-neutral-500 italic font-normal">&ldquo;trabajo en la sombra&rdquo;</span></h2>
             <div className="space-y-6 text-neutral-400 text-lg leading-relaxed">
               <p>
                 Asesorías perdiendo horas rastreando boletines. Departamentos comerciales actualizando CRMs de forma manual. Operaciones colapsando bajo el peso de copiar y pegar datos entre plataformas inconexas.
               </p>
               <p>
-                Mavie Automations existe para extirpar la fricción operativa. No vendemos "humo tecnológico" ni tendencias de inteligencia artificial vacías de casos de uso reales. 
+                Mavie Automations existe para extirpar la fricción operativa. No vendemos &ldquo;humo tecnológico&rdquo; ni tendencias de inteligencia artificial vacías de casos de uso reales.
               </p>
               <p className="font-medium text-neutral-200 border-l-2 border-blue-500 pl-4">
                 Diseñamos e implementamos ecosistemas de datos, scraping avanzado y alertas automatizadas que devuelven a las empresas el recurso más caro que existe: el tiempo de su talento humano.
@@ -117,6 +117,44 @@ export default function SobreMaviePage() {
             <div className="relative z-10 mt-12">
               <h3 className="text-2xl font-bold mb-4 text-white">Despliegue ERP</h3>
               <p className="text-neutral-400 leading-relaxed">Entregamos la solución operativa, alojada y conectada a tus sistemas actuales. Monitorizamos los logs técnicos del bot en tu panel privado en tiempo real.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Quién está detrás */}
+      <section className="py-24 px-6 border-t border-neutral-800 bg-neutral-950">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center gap-3 mb-12">
+            <span className="h-px flex-1 bg-neutral-800 max-w-[40px]" />
+            <span className="text-xs font-semibold text-neutral-500 uppercase tracking-widest">El equipo</span>
+          </div>
+          <div className="flex flex-col md:flex-row gap-10 items-start">
+            <div className="w-24 h-24 rounded-2xl bg-neutral-800 border border-neutral-700 flex items-center justify-center shrink-0 text-3xl font-bold text-neutral-400">
+              JC
+            </div>
+            <div className="flex-1">
+              <h2 className="text-2xl font-bold text-white mb-1">Josep Cervera</h2>
+              <p className="text-sm text-blue-400 mb-4">Fundador · Ingeniero de automatización y datos · Valencia</p>
+              <div className="space-y-3 text-neutral-400 leading-relaxed mb-6">
+                <p>
+                  Después de ver cómo despachos y consultoras perdían licitaciones por llegar tarde al BOE, construí el primer Radar para un cliente real. Funcionó. Lo convertí en producto.
+                </p>
+                <p>
+                  Mavie Automations es la extensión lógica de eso: si un proceso es repetitivo y crítico, hay que automatizarlo. Sin humo, sin dashboards vacíos. Solo sistemas que facturan.
+                </p>
+              </div>
+              <div className="flex gap-4">
+                <a
+                  href="https://www.linkedin.com/in/josep-cervera-fern%C3%A1ndez-8539ab312"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-sm font-semibold text-blue-400 hover:text-blue-300 transition-colors"
+                >
+                  LinkedIn <MoveRight className="w-4 h-4" />
+                </a>
+                <span className="text-sm text-neutral-600">Desde 2025</span>
+              </div>
             </div>
           </div>
         </div>

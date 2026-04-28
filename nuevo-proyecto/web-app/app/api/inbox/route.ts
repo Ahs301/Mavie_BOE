@@ -30,8 +30,8 @@ export async function GET() {
     const messages = []
     
     try {
-      const total = client.mailbox.exists
-      if (total > 0) {
+      const total = client.mailbox && client.mailbox.exists
+      if (total && total > 0) {
         const start = Math.max(1, total - 19) // Last 20 emails
         
         const msgs = client.fetch(`${start}:*`, { source: true, envelope: true })

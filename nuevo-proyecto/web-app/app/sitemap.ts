@@ -8,61 +8,67 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const staticPages: MetadataRoute.Sitemap = [
     {
       url: `${baseUrl}`,
-      lastModified: new Date(),
+      lastModified: '2026-04-27',
       changeFrequency: 'monthly',
       priority: 1,
     },
     {
       url: `${baseUrl}/servicios`,
-      lastModified: new Date(),
+      lastModified: '2026-04-15',
       changeFrequency: 'monthly',
       priority: 0.8,
     },
     {
       url: `${baseUrl}/soluciones`,
-      lastModified: new Date(),
+      lastModified: '2026-04-15',
       changeFrequency: 'weekly',
       priority: 0.9,
     },
     {
       url: `${baseUrl}/soluciones/boe`,
-      lastModified: new Date(),
+      lastModified: '2026-04-27',
       changeFrequency: 'weekly',
       priority: 0.9,
     },
     {
       url: `${baseUrl}/sobre-nosotros`,
-      lastModified: new Date(),
+      lastModified: '2026-04-27',
       changeFrequency: 'monthly',
       priority: 0.7,
     },
     {
       url: `${baseUrl}/contacto`,
-      lastModified: new Date(),
+      lastModified: '2026-04-15',
       changeFrequency: 'yearly',
       priority: 0.6,
     },
     {
       url: `${baseUrl}/soluciones/prospeccion`,
-      lastModified: new Date(),
+      lastModified: '2026-04-15',
       changeFrequency: 'weekly',
       priority: 0.8,
     },
     {
       url: `${baseUrl}/privacidad`,
-      lastModified: new Date(),
+      lastModified: '2026-04-15',
+      changeFrequency: 'yearly',
+      priority: 0.3,
+    },
+    {
+      url: `${baseUrl}/terminos`,
+      lastModified: '2026-04-28',
       changeFrequency: 'yearly',
       priority: 0.3,
     },
     {
       url: `${baseUrl}/aviso-legal`,
-      lastModified: new Date(),
+      lastModified: '2026-04-15',
       changeFrequency: 'yearly',
       priority: 0.3,
     },
     {
       url: `${baseUrl}/cookies`,
-      lastModified: new Date(),
+      lastModified: '2026-04-15',
       changeFrequency: 'yearly',
       priority: 0.3,
     },
@@ -73,7 +79,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const hubPage: MetadataRoute.Sitemap = [
     {
       url: `${baseUrl}/radar-boe`,
-      lastModified: new Date(),
+      lastModified: '2026-04-15',
       changeFrequency: 'weekly',
       priority: 0.9,
     },
@@ -82,7 +88,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // 12 vertical pages
   const verticalPages: MetadataRoute.Sitemap = getAllVerticalSlugs().map((slug) => ({
     url: `${baseUrl}/radar-boe/${slug}`,
-    lastModified: new Date(),
+    lastModified: '2026-04-15',
     changeFrequency: 'monthly' as const,
     priority: 0.8,
   }))
@@ -90,7 +96,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // 20 city pages
   const ciudadPages: MetadataRoute.Sitemap = getAllCiudadSlugs().map((slug) => ({
     url: `${baseUrl}/radar-boe/ciudad/${slug}`,
-    lastModified: new Date(),
+    lastModified: '2026-04-15',
     changeFrequency: 'monthly' as const,
     priority: 0.7,
   }))

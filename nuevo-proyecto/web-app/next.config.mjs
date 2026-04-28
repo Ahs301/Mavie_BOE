@@ -38,8 +38,6 @@ const securityHeaders = [
 ]
 
 const nextConfig = {
-  typescript: { ignoreBuildErrors: true },
-  eslint: { ignoreDuringBuilds: true },
   poweredByHeader: false,
   compress: true,
   images: {
@@ -48,6 +46,14 @@ const nextConfig = {
   async headers() {
     return [
       { source: '/:path*', headers: securityHeaders },
+    ]
+  },
+  async redirects() {
+    return [
+      { source: '/es/privacidad', destination: '/privacidad', permanent: true },
+      { source: '/es/terminos',   destination: '/terminos',   permanent: true },
+      { source: '/es/faq',        destination: '/contacto',   permanent: true },
+      { source: '/es/nosotros',   destination: '/sobre-nosotros', permanent: true },
     ]
   },
 }

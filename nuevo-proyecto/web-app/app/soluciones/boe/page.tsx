@@ -65,6 +65,20 @@ const pricing = [
   },
 ]
 
+const softwareSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'Radar Estratégico BOE / DOUE',
+  url: 'https://mavieautomations.com/soluciones/boe',
+  applicationCategory: 'BusinessApplication',
+  operatingSystem: 'Web',
+  offers: [
+    { '@type': 'Offer', name: 'Básico', price: '79', priceCurrency: 'EUR', priceSpecification: { '@type': 'UnitPriceSpecification', price: '79', priceCurrency: 'EUR', billingDuration: 1, unitCode: 'MON' } },
+    { '@type': 'Offer', name: 'Pro', price: '179', priceCurrency: 'EUR', priceSpecification: { '@type': 'UnitPriceSpecification', price: '179', priceCurrency: 'EUR', billingDuration: 1, unitCode: 'MON' } },
+    { '@type': 'Offer', name: 'Business', price: '399', priceCurrency: 'EUR', priceSpecification: { '@type': 'UnitPriceSpecification', price: '399', priceCurrency: 'EUR', billingDuration: 1, unitCode: 'MON' } },
+  ],
+}
+
 const schema = serviceSchema({
   name: "Radar Estratégico BOE / DOUE",
   description:
@@ -90,6 +104,7 @@ export default function RadarBOEPage() {
     <div className="flex flex-col">
       <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript({ data: schema })} />
       <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript({ data: breadcrumbs })} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareSchema) }} />
       {/* Hero */}
       <section className="relative overflow-hidden py-20 md:py-28 px-6 border-b border-neutral-800">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_0%,rgba(0,120,220,0.08),transparent)]" />
@@ -105,9 +120,14 @@ export default function RadarBOEPage() {
               Detectamos licitaciones, ayudas y subvenciones públicas relevantes para tu empresa — automáticamente, 24 horas al día, filtradas por tus criterios exactos.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Link href="/contacto" className="inline-flex h-12 items-center gap-2 rounded-lg bg-white px-6 text-sm font-semibold text-black hover:bg-neutral-100 transition-colors">
-                Solicitar demo gratuita <ArrowRight className="w-4 h-4" />
-              </Link>
+              <a
+                href="https://cal.eu/josep-mes2ul/demo-radar-boe"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex h-12 items-center gap-2 rounded-lg bg-white px-6 text-sm font-semibold text-black hover:bg-neutral-100 transition-colors"
+              >
+                Reservar demo en 30 segundos <ArrowRight className="w-4 h-4" />
+              </a>
               <a href="#precios" className="inline-flex h-12 items-center gap-2 rounded-lg border border-neutral-800 px-6 text-sm font-medium text-neutral-400 hover:text-white hover:bg-neutral-900 transition-colors">
                 Ver precios
               </a>
@@ -162,6 +182,44 @@ export default function RadarBOEPage() {
         </div>
       </section>
 
+      {/* Comparativa vs BOE gratuito */}
+      <section className="py-20 px-6 border-b border-neutral-800">
+        <div className="max-w-7xl mx-auto">
+          <div className="mb-10 max-w-2xl">
+            <h2 className="text-3xl font-bold text-white mb-3">¿Por qué no basta con boe.es?</h2>
+            <p className="text-neutral-400">Las alertas gratuitas de boe.es te mandan texto crudo sin filtrar. Llegas cuando ya llegaron todos.</p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm border-collapse">
+              <thead>
+                <tr className="border-b border-neutral-800">
+                  <th className="text-left py-3 pr-6 text-neutral-500 font-medium w-1/3"></th>
+                  <th className="py-3 px-4 text-neutral-500 font-medium text-center">BOE.es gratuito</th>
+                  <th className="py-3 px-4 text-emerald-400 font-semibold text-center bg-emerald-950/20 rounded-t-lg">Radar BOE Mavie</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  ["Alertas de publicación", "✓ Texto crudo", "✓ Resumen ejecutivo IA"],
+                  ["Filtrado semántico", "✗", "✓ Keywords positivas/negativas"],
+                  ["Cobertura", "Solo BOE", "BOE + DOUE + autonómico"],
+                  ["Tiempo de alerta", "Manual (tú revisas)", "< 5 minutos automático"],
+                  ["Falsos positivos", "Muchos (sin filtro)", "Eliminados por motor IA"],
+                  ["Resumen diario", "✗", "✓ Email ejecutivo"],
+                  ["Panel de gestión", "✗", "✓ Auto-servicio"],
+                ].map(([feature, free, mavie], i) => (
+                  <tr key={i} className="border-b border-neutral-800/50">
+                    <td className="py-3 pr-6 text-neutral-400">{feature}</td>
+                    <td className="py-3 px-4 text-neutral-500 text-center">{free}</td>
+                    <td className="py-3 px-4 text-neutral-200 text-center bg-emerald-950/10">{mavie}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
       {/* Precios */}
       <section id="precios" className="py-20 px-6 border-b border-neutral-800">
         <div className="max-w-7xl mx-auto">
@@ -202,9 +260,14 @@ export default function RadarBOEPage() {
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-3xl font-bold text-white mb-4">La próxima licitación que se te escapa<br />es ingresos que pierdes.</h2>
           <p className="text-neutral-400 mb-8">Agenda una llamada técnica de 30 minutos. Sin compromiso.</p>
-          <Link href="/contacto" className="inline-flex h-12 items-center gap-2 rounded-lg bg-white px-8 text-sm font-semibold text-black hover:bg-neutral-100 transition-colors">
-            Solicitar demo gratuita <ArrowRight className="w-4 h-4" />
-          </Link>
+          <a
+            href="https://cal.eu/josep-mes2ul/demo-radar-boe"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex h-12 items-center gap-2 rounded-lg bg-white px-8 text-sm font-semibold text-black hover:bg-neutral-100 transition-colors"
+          >
+            Reservar demo en 30 segundos <ArrowRight className="w-4 h-4" />
+          </a>
         </div>
       </section>
     </div>

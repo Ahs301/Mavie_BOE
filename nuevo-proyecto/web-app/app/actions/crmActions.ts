@@ -39,7 +39,7 @@ export async function createClientAction(formData: FormData) {
 
   const parsed = CreateClientSchema.safeParse(raw)
   if (!parsed.success) {
-    const msg = parsed.error.errors.map(e => e.message).join(", ")
+    const msg = parsed.error.issues.map(e => e.message).join(", ")
     return { success: false, error: msg }
   }
 

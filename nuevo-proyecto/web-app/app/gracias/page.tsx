@@ -17,9 +17,9 @@ const steps = [
   },
   {
     icon: Settings,
-    title: "Configuramos tu radar",
-    desc: "Nuestro equipo activará tus keywords y fuentes en menos de 24h. Recibirás un email cuando todo esté listo.",
-    time: "< 24 horas",
+    title: "Tu radar se activa automáticamente",
+    desc: "El sistema configura tus keywords en minutos. Accede a tu panel para ver el estado en tiempo real.",
+    time: "< 5 minutos",
   },
   {
     icon: Clock,
@@ -98,12 +98,20 @@ export default function GraciasPage() {
               <p className="text-sm text-neutral-400 mb-4 leading-relaxed">
                 Puedes cancelar, cambiar de plan o actualizar tu método de pago en cualquier momento desde el portal de cliente.
               </p>
-              <a
-                href="/api/stripe/portal"
-                className="inline-flex items-center gap-2 text-sm font-semibold text-blue-400 hover:text-blue-300 transition-colors"
-              >
-                Gestionar suscripción <ArrowRight className="w-4 h-4" />
-              </a>
+              <div className="flex flex-col gap-3">
+                <Link
+                  href="/panel"
+                  className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-400 hover:text-emerald-300 transition-colors"
+                >
+                  Ir a mi panel <ArrowRight className="w-4 h-4" />
+                </Link>
+                <a
+                  href="/api/stripe/portal"
+                  className="inline-flex items-center gap-2 text-sm font-semibold text-blue-400 hover:text-blue-300 transition-colors"
+                >
+                  Gestionar suscripción <ArrowRight className="w-4 h-4" />
+                </a>
+              </div>
             </div>
 
             {/* Soporte */}

@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
   }
 
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
-  const stripe = new Stripe(stripeKey, { apiVersion: '2024-09-30.acacia' })
+  const stripe = new Stripe(stripeKey, { apiVersion: '2026-03-25.dahlia' as const })
 
   try {
     const session = await stripe.checkout.sessions.create({
