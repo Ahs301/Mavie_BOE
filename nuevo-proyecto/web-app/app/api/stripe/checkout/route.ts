@@ -9,6 +9,7 @@ const PLAN_KEYS: Record<string, string> = {
 
 export async function GET(req: NextRequest) {
   const plan = req.nextUrl.searchParams.get('plan')
+  const withTrial = req.nextUrl.searchParams.get('trial') === '1'
 
   if (!plan || !(plan in PLAN_KEYS)) {
     return NextResponse.json({ error: 'Plan inválido' }, { status: 400 })
@@ -40,7 +41,11 @@ export async function GET(req: NextRequest) {
       locale: 'es',
       billing_address_collection: 'required',
       allow_promotion_codes: true,
-      subscription_data: { metadata: { plan } },
+      subscription_data: {
+        metadata: { plan },
+        // Trial de 14 días si viene de /demo o con ?trial=1
+        ...(withTrial ? { trial_period_days: 14 } : {}),
+      },
     })
 
     if (!session.url) {

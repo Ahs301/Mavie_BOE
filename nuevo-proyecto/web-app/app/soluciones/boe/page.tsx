@@ -1,7 +1,7 @@
 import Link from "next/link"
 import {
   Bell, Filter, ArrowRight, CheckCircle, ChevronRight,
-  Clock, Mail, RefreshCcw, Target
+  Clock, Mail, RefreshCcw, Target, MessageSquare
 } from "lucide-react"
 import type { Metadata } from "next"
 import { serviceSchema, breadcrumbSchema, jsonLdScript } from "@/lib/seo"
@@ -120,22 +120,55 @@ export default function RadarBOEPage() {
               Detectamos licitaciones, ayudas y subvenciones públicas relevantes para tu empresa — automáticamente, 24 horas al día, filtradas por tus criterios exactos.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <a
-                href="https://cal.eu/josep-mes2ul/demo-radar-boe"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex h-12 items-center gap-2 rounded-lg bg-white px-6 text-sm font-semibold text-black hover:bg-neutral-100 transition-colors"
-              >
-                Reservar demo en 30 segundos <ArrowRight className="w-4 h-4" />
-              </a>
-              <a href="#precios" className="inline-flex h-12 items-center gap-2 rounded-lg border border-neutral-800 px-6 text-sm font-medium text-neutral-400 hover:text-white hover:bg-neutral-900 transition-colors">
-                Ver precios
+              <Link href="/demo" className="inline-flex h-12 items-center gap-2 rounded-lg bg-white px-6 text-sm font-semibold text-black hover:bg-neutral-100 transition-colors">
+                Demo gratuita — 15 min <ArrowRight className="w-4 h-4" />
+              </Link>
+              <a href="/api/stripe/checkout?plan=basico&trial=1" className="inline-flex h-12 items-center gap-2 rounded-lg border border-blue-800/60 bg-blue-950/20 px-6 text-sm font-semibold text-blue-300 hover:bg-blue-950/40 transition-colors">
+                Prueba 14 días gratis
               </a>
             </div>
             <div className="flex flex-wrap gap-6 mt-10">
               {["Sin intervención manual", "Implantación en 72h", "Sin IT compleja", "Cancelación mensual"].map((item) => (
                 <div key={item} className="flex items-center gap-2 text-sm text-neutral-500">
                   <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" />{item}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Prueba social — caso real */}
+      <section className="py-14 px-6 border-b border-neutral-800 bg-neutral-950/50">
+        <div className="max-w-5xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-8 items-center">
+            {/* Testimonio */}
+            <div className="rounded-2xl border border-neutral-800 bg-neutral-900/60 p-8">
+              <MessageSquare className="w-6 h-6 text-blue-400 mb-4" />
+              <p className="text-neutral-300 leading-relaxed mb-6 text-sm">
+                &ldquo;Antes revisábamos el BOE manualmente cada mañana. Con el Radar recibimos directamente
+                las alertas filtradas — en el último mes detectamos más de 50 oportunidades relevantes
+                que de otra forma habríamos perdido o visto tarde.&rdquo;
+              </p>
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-blue-950 border border-blue-800/40 flex items-center justify-center text-blue-400 text-xs font-bold">D</div>
+                <div>
+                  <div className="text-sm font-semibold text-white">Despacho de derecho administrativo</div>
+                  <div className="text-xs text-neutral-500">Cliente activo desde 2025 · España</div>
+                </div>
+              </div>
+            </div>
+            {/* Números */}
+            <div className="grid grid-cols-2 gap-4">
+              {[
+                { value: "+50", label: "oportunidades detectadas al mes" },
+                { value: "0", label: "convocatorias perdidas desde que empezaron" },
+                { value: "72h", label: "de implantación desde el primer contacto" },
+                { value: "79€", label: "por mes — menos de lo que cuesta 1 hora de abogado" },
+              ].map((item) => (
+                <div key={item.label} className="rounded-xl border border-neutral-800 bg-neutral-900/40 p-5 text-center">
+                  <div className="text-2xl font-bold text-white mb-1">{item.value}</div>
+                  <div className="text-xs text-neutral-500 leading-snug">{item.label}</div>
                 </div>
               ))}
             </div>
@@ -226,6 +259,10 @@ export default function RadarBOEPage() {
           <div className="mb-12 text-center">
             <h2 className="text-3xl font-bold text-white mb-4">Precios claros y directos</h2>
             <p className="text-neutral-400 max-w-xl mx-auto">Suscripción mensual pura. Sin setup fee, sin permanencia, cancelas cuando quieras.</p>
+            <div className="inline-flex items-center gap-2 mt-4 rounded-full border border-emerald-900/50 bg-emerald-950/30 px-3 py-1.5 text-xs font-semibold text-emerald-400">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+              14 días de prueba gratuita — sin cargo hasta el día 15
+            </div>
           </div>
           <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
             {pricing.map((item) => (
@@ -246,9 +283,11 @@ export default function RadarBOEPage() {
                     </li>
                   ))}
                 </ul>
-                <a href={`/api/stripe/checkout?plan=${item.plan}`} className={`flex items-center justify-center gap-2 h-11 rounded-lg text-sm font-semibold transition-colors ${item.highlight ? "bg-white text-black hover:bg-neutral-100" : "border border-neutral-700 text-neutral-300 hover:bg-neutral-800 hover:text-white"}`}>
-                  {item.cta} <ArrowRight className="w-4 h-4" />
+                {/* Botón principal: pago directo */}
+                <a href={`/api/stripe/checkout?plan=${item.plan}&trial=1`} className={`flex items-center justify-center gap-2 h-11 rounded-lg text-sm font-semibold transition-colors mb-2 ${item.highlight ? "bg-white text-black hover:bg-neutral-100" : "border border-neutral-700 text-neutral-300 hover:bg-neutral-800 hover:text-white"}`}>
+                  Empezar 14 días gratis <ArrowRight className="w-4 h-4" />
                 </a>
+                <p className="text-center text-xs text-neutral-600">Luego {item.price}€/mes · Cancela cuando quieras</p>
               </div>
             ))}
           </div>
@@ -259,15 +298,15 @@ export default function RadarBOEPage() {
       <section className="py-20 px-6">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-3xl font-bold text-white mb-4">La próxima licitación que se te escapa<br />es ingresos que pierdes.</h2>
-          <p className="text-neutral-400 mb-8">Agenda una llamada técnica de 30 minutos. Sin compromiso.</p>
-          <a
-            href="https://cal.eu/josep-mes2ul/demo-radar-boe"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex h-12 items-center gap-2 rounded-lg bg-white px-8 text-sm font-semibold text-black hover:bg-neutral-100 transition-colors"
-          >
-            Reservar demo en 30 segundos <ArrowRight className="w-4 h-4" />
-          </a>
+          <p className="text-neutral-400 mb-8">Demo de 15 min o empieza directamente con 14 días gratis. Sin compromiso.</p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link href="/demo" className="inline-flex h-12 items-center gap-2 rounded-lg bg-white px-8 text-sm font-semibold text-black hover:bg-neutral-100 transition-colors">
+              Reservar demo gratuita <ArrowRight className="w-4 h-4" />
+            </Link>
+            <a href="/api/stripe/checkout?plan=basico&trial=1" className="inline-flex h-12 items-center gap-2 rounded-lg border border-blue-800/60 bg-blue-950/20 px-8 text-sm font-semibold text-blue-300 hover:bg-blue-950/40 transition-colors">
+              Prueba 14 días gratis
+            </a>
+          </div>
         </div>
       </section>
     </div>
