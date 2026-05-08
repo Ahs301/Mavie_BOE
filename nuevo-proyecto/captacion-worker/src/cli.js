@@ -12,6 +12,7 @@ import {
     getDB, leadExists, insertLead, updateLeadStatus, insertSend,
     getLeadsForFollowup, markReplied, getStats, getDetailedStats,
     getUnrepliedLeads, getHotLeads, markBounced, getLeadMessageId, getAbTestingStats,
+    incrementFollowupCount,
 } from './db/index.js';
 import { sendEmail, verifySMTP } from './email/sender.js';
 import { sleep, HourlyRateLimiter, DailyWarmupLimiter } from './utils/throttle.js';
@@ -171,7 +172,7 @@ async function sendAction(options) {
             });
 
             const now = new Date().toISOString();
-            updateLeadStatus(db, leadId, 'SENT', { sentAt: now, messageId: result.messageId });
+            updateLeadStatus(db, leadId, 'SENT', { sentAt: now, messageId: result.messageId, lastSubject: subject });
             insertSend(db, { leadId, kind: 'INITIAL', subject, body, status: 'SENT', messageId: result.messageId });
 
             rateLimiter.record();
@@ -236,9 +237,9 @@ program
         const { SEND_DELAY_MS, MAX_PER_HOUR, MAX_PER_DAY } = config;
         const rateLimiter = new HourlyRateLimiter(MAX_PER_HOUR);
         const days = parseInt(options.days, 10);
-        const pending = getLeadsForFollowup(db, days);
+        const pending = getLeadsForFollowup(db, days, 3);
 
-        logger.info(`🚀 FOLLOW-UP (>${days} días) para ${pending.length} leads`);
+        logger.info(`🚀 FOLLOW-UP (>${days} días, <3 FUs) para ${pending.length} leads`);
         let sent = 0, errors = 0;
 
         for (const lead of pending) {
@@ -249,13 +250,15 @@ program
             }
 
             await rateLimiter.waitIfNeeded();
-            const { subject, body } = generateFollowUpEmail(lead);
+            const fuNumber = (lead.followup_count || 0) + 1;
+            const { subject, body } = generateFollowUpEmail(lead, fuNumber);
 
             // Obtener message_id del email original para threading
             const originalMessageId = getLeadMessageId(db, lead.id);
             const trackingPixelUrl = buildPixelUrl(lead.id);
             const unsubscribeUrl = buildUnsubscribeUrl(lead.id);
-            const ctaLink = buildClickUrl(lead.id, `https://wa.me/34633448806`);
+            const calUrl = getConfig().CALENDLY_URL || `https://wa.me/34633448806`;
+            const ctaLink = buildClickUrl(lead.id, calUrl);
 
             try {
                 const result = await sendEmail(lead.email, subject, body, PDF_ATTACHMENT, {
@@ -265,9 +268,10 @@ program
                 });
 
                 insertSend(db, { leadId: lead.id, kind: 'FOLLOWUP', subject, body, status: 'SENT', messageId: result.messageId });
+                incrementFollowupCount(db, lead.id, subject);
                 rateLimiter.record();
                 sent++;
-                logger.info(`📧 Follow-up a ${lead.email} (en hilo). Esperando ${SEND_DELAY_MS / 1000}s...`);
+                logger.info(`📧 FU${fuNumber} a ${lead.email} (en hilo). Esperando ${SEND_DELAY_MS / 1000}s...`);
                 await sleep(SEND_DELAY_MS);
             } catch (err) {
                 insertSend(db, { leadId: lead.id, kind: 'FOLLOWUP', subject, body, status: 'FAILED', error: err.message });

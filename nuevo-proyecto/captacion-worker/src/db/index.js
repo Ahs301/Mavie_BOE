@@ -77,7 +77,8 @@ export function updateLeadStatus(db, id, status, extra = {}) {
       replied_at   = COALESCE(?, replied_at),
       last_error   = COALESCE(?, last_error),
       template_key = COALESCE(?, template_key),
-      message_id   = COALESCE(?, message_id)
+      message_id   = COALESCE(?, message_id),
+      last_subject = COALESCE(?, last_subject)
     WHERE id = ?
   `).run(
     status, now,
@@ -86,20 +87,33 @@ export function updateLeadStatus(db, id, status, extra = {}) {
     extra.lastError || null,
     extra.templateKey || null,
     extra.messageId || null,
+    extra.lastSubject || null,
     id
   );
 }
 
-export function getLeadsForFollowup(db, days = 4) {
+export function getLeadsForFollowup(db, days = 4, maxFollowups = 3) {
   const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
   return db.prepare(`
     SELECT * FROM leads
     WHERE status = 'SENT'
       AND sent_at <= ?
+      AND followup_count < ?
       AND bounced_at IS NULL
       AND unsubscribed_at IS NULL
     ORDER BY sent_at ASC
-  `).all(cutoff);
+  `).all(cutoff, maxFollowups);
+}
+
+export function incrementFollowupCount(db, leadId, lastSubject) {
+  const now = new Date().toISOString();
+  db.prepare(`
+    UPDATE leads SET
+      followup_count = followup_count + 1,
+      last_subject   = COALESCE(?, last_subject),
+      updated_at     = ?
+    WHERE id = ?
+  `).run(lastSubject || null, now, leadId);
 }
 
 export function getUnrepliedLeads(db) {

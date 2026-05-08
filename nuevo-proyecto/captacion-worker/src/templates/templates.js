@@ -293,22 +293,54 @@ He montado un radar automático que filtra a diario el BOE y el BDNS y manda sol
     return { subject, body, templateKey, abVariant };
 }
 
-// ─── Follow-up ───────────────────────────────────────────────────────────────
-// Corto, en hilo (Re:), recordatorio + pregunta suave.
-export function generateFollowUpEmail(lead) {
-    const templateKey = 'followup_general';
+// ─── Follow-up (secuencia 3 toques) ──────────────────────────────────────────
+// FU1 día ~4: retomar hilo brevemente + caso real
+// FU2 día ~10: ángulo ROI distinto + precio explícito
+// FU3 día ~17: cierre ("break-up") — deja la puerta abierta, no insiste
+export function generateFollowUpEmail(lead, fuNumber = 1) {
+    const { CALENDLY_URL } = getConfig();
+    const calLink = CALENDLY_URL || 'https://cal.eu/josep-mes2ul/demo-radar-boe';
     const initialSubject = lead.last_subject || `¿Tendría sentido una llamada de 10 minutos?`;
-    const subject = initialSubject.startsWith('Re:') ? initialSubject : `Re: ${initialSubject}`;
+    const reSubject = initialSubject.startsWith('Re:') ? initialSubject : `Re: ${initialSubject}`;
 
-    const body = `${getGreeting(lead)}\n\nSolo quería retomar este mensaje por si se perdió.
+    if (fuNumber === 1) {
+        return {
+            subject: reSubject,
+            templateKey: 'followup_1',
+            body: `${getGreeting(lead)}\n\nSolo retomo por si se perdió entre el ruido de la bandeja.
 
-Un ejemplo rápido: la semana pasada uno de mis clientes encontró 3 licitaciones en su nicho que no habría visto con revisión manual. Solo recibió el aviso en su bandeja por la mañana.
+Un cliente de despacho me comentaba la semana pasada que lo que más le sorprendió fue recibir el aviso de una licitación 3 días antes de que cerrara el plazo. Sin haber entrado al BOE ese día.
 
-Si os parece que puede encajar, podéis reservar 10 minutos aquí: https://cal.eu/josep-mes2ul/demo-radar-boe
+Si tiene sentido verlo, aquí puedes reservar 10 minutos: ${calLink}
 
-¿Qué os parece?\n\nUn saludo,`;
+¿Qué te parece?`,
+        };
+    }
 
-    return { subject, body, templateKey };
+    if (fuNumber === 2) {
+        return {
+            subject: reSubject,
+            templateKey: 'followup_2',
+            body: `${getGreeting(lead)}\n\nTe doy un poco más de contexto antes de dejarte tranquilo.
+
+La diferencia con el BOE oficial: boe.es te manda PDFs enteros. Radar BOE te manda solo los artículos que encajan con tu actividad. Sin leer 40 páginas. Sin entrar a ningún portal cada mañana.
+
+79€/mes, cancelas cuando quieras, prueba 14 días gratis.
+
+¿Vale la pena 10 minutos? Aquí el enlace: ${calLink}`,
+        };
+    }
+
+    // FU3 — break-up, sin presión
+    return {
+        subject: reSubject,
+        templateKey: 'followup_3',
+        body: `${getGreeting(lead)}\n\nEntiendo que no es el momento o que no encaja ahora mismo.
+
+Dejo aquí el enlace por si en algún momento quieres echarle un vistazo: ${calLink}
+
+Si alguna vez os pasa una convocatoria por encima por el volumen de trabajo, ya sabes dónde estoy.`,
+    };
 }
 
 // ─── Firma (texto plano) ──────────────────────────────────────────────────────

@@ -85,6 +85,8 @@ export function runMigrations(db) {
     { name: 'unsubscribed_at', def: 'TEXT' },
     { name: 'message_id', def: 'TEXT' },
     { name: 'ab_variant', def: 'INTEGER DEFAULT 0' },
+    { name: 'followup_count', def: 'INTEGER DEFAULT 0' },
+    { name: 'last_subject', def: 'TEXT' },
   ];
 
   for (const col of newCols) {
