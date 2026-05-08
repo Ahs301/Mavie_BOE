@@ -26,12 +26,10 @@ import { fetchAndProcessBounces } from './email/bounce_handler.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // ─── ADJUNTO PDF ──────────────────────────────────────────────────────────────
+// El PDF NO va en el email inicial — dispara filtros antispam y parece newsletter.
+// Solo se adjunta en follow-ups (cuando ya hay contexto previo).
 const PDF_PATH = path.resolve('BOE Radar Inteligente.pdf');
 const PDF_ATTACHMENT = fs.existsSync(PDF_PATH) ? [{ filename: 'BOE Radar Inteligente.pdf', path: PDF_PATH }] : [];
-
-if (PDF_ATTACHMENT.length === 0) {
-    logger.warn('⚠️  PDF no encontrado en la raíz del proyecto. Los emails se enviarán sin adjunto.');
-}
 
 // ─── CLI SETUP ────────────────────────────────────────────────────────────────
 const program = new Command();
@@ -167,7 +165,8 @@ async function sendAction(options) {
             const unsubscribeUrl = buildUnsubscribeUrl(leadId);
             const ctaLink = buildClickUrl(leadId, `https://wa.me/34633448806`);
 
-            const result = await sendEmail(fullLead.email, subject, body, PDF_ATTACHMENT, {
+            // Sin adjunto en primer contacto: PDF en email inicial = señal spam
+            const result = await sendEmail(fullLead.email, subject, body, [], {
                 trackingPixelUrl, unsubscribeUrl, ctaLink,
             });
 

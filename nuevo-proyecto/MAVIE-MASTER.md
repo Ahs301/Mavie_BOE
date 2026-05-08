@@ -793,6 +793,7 @@ Panel /dashboard/videos
 | M | Fixes credibilidad + build config + conversión + schemas SEO | ✅ HECHO (2026-04-27) — Stats falsas, /gracias, testimonios, ignoreBuildErrors, comparativa boe.es, fundador, Calendly, SoftwareApplication schema |
 | N | URLs Cal.com y LinkedIn reales | ✅ HECHO (2026-04-28) |
 | O | Diagnóstico por qué no hay ventas + fix copy emails outbound | ✅ HECHO (2026-04-28) — 3 bugs críticos corregidos en captacion-worker |
+| P | Diagnóstico 0 respuestas outbound + fix email format + copy | ✅ HECHO (2026-05-01) — HTML plain-text style, sin PDF inicial, subjects como preguntas, body 4-6 líneas. Ver Sección 26. |
 
 ### Detalle Chat A — ✅ HECHO
 Josep completó todos los pasos manuales: secrets rotados, variables en Vercel, migraciones SQL 07 y 08 aplicadas, webhook Stripe registrado, Billing Portal activado, Redeploy ejecutado.
@@ -1473,112 +1474,81 @@ Stack resultante tras Gmail + VPS:
 
 ---
 
-## 26. DETALLE CHAT O — Fix copy emails outbound (2026-04-28)
+## 26. EMAIL OUTBOUND — REGLAS PARA NO QUEMARSE (Chat P, 2026-05-01)
 
-### Diagnóstico por qué no había ventas (2 meses, 18k leads, 0 cierres)
+> **Síntoma que disparó esto:** el worker enviaba cientos de emails, los números crecían, pero NADIE respondía. 0 reuniones, 0 respuestas, 0 clientes nuevos.
 
-**Problema 1 — `Precedence: bulk` en headers** (CRÍTICO)
-- Archivo: `captacion-worker/src/email/sender.js`
-- El header `'Precedence': 'bulk'` le decía literalmente a Gmail/Outlook "soy spam masivo"
-- Fix: eliminado. Reemplazado `X-Mailer` por `Microsoft Outlook 16.0` (estándar para outbound 1:1)
+### 26.1 Root cause — por qué fallaba
 
-**Problema 2 — Copy genérico sin dolor** (CRÍTICO)  
-- El template `despacho_legal` en `templates.js` decía: "He llegado a vuestro despacho y quería explorar si os resulta de interés..."
-- El PLAYBOOK-DESPACHOS-ABOGADOS.md tenía copy bueno pero nunca se implementó en el código
-- Fix: `despacho_legal` case reescrito con el copy del playbook:
-  - Asunto: `Licitaciones y BOE para {{nombre_empresa}} (Pregunta rápida)` → personalizado
-  - Body: ataca el dolor real ("miedo a que se pase un plazo importante")
-  - Prueba social: "cliente detectó 3 licitaciones que se le habrían pasado"
-  - CTA: link Cal.com directo (no WhatsApp)
+| Problema | Efecto | Fix aplicado |
+|----------|--------|-------------|
+| Email HTML con header de marca (`📡 BOE Radar Inteligente` + gradiente azul + botón CTA) | Filtros antispam lo clasifican como bulk/newsletter. Los que llegan, los ignoran porque parece marketing automático, no mensaje humano | `buildHtmlEmail` reescrito: solo `<p>` tags, fondo blanco, firma simple. Indistinguible de un email escrito a mano |
+| PDF adjunto en primer email | Señal de spam para filtros empresariales. Bloqueo o carpeta spam antes de que lo lea nadie | PDF eliminado del email inicial. Solo en follow-up (cuando ya hay contexto) |
+| Copy demasiado largo (5-8 párrafos) | El lector no llega a la pregunta final. Cierra antes de terminar | Body reescrito a 4-5 líneas + una pregunta directa al final |
+| Subjects genéricos ("Radar automático de subvenciones y licitaciones (BOE)") | Sin curiosidad, sin hook, parece newsletter. Se borra sin abrir | Subjects como preguntas directas: `¿Cuánto tiempo dedica el despacho a revisar el BOE?` |
 
-**Problema 3 — PDF adjunto en email frío** (CRÍTICO)
-- `pdfNote` añadía "Te adjunto un dossier PDF" → adjuntos = spam automático en outbound
-- Fix: eliminado completamente del body
+### 26.2 Regla de oro del cold outreach B2B (no negociable)
 
-**Problema 4 — Saludo sin nombre**
-- `getGreeting()` retornaba solo "Hola," siempre
-- Fix: `getGreeting(lead)` usa `lead.contact_name` si está disponible
+**El email tiene que parecer que lo escribió Josep a mano para ESA empresa.**
 
-**Problema 5 — Follow-up sin hilo**
-- El asunto del follow-up era diferente del inicial → no se agrupaba como conversación
-- Fix: `generateFollowUpEmail` ahora usa `Re: {asunto_inicial}` guardado en `lead.last_subject`
+- **Plain text o HTML mínimo.** Sin logo, sin colores corporativos, sin botones.
+- **Máximo 5 párrafos.** Idealmente 4: contexto → problema → solución en 1 frase → caso real → pregunta.
+- **Una sola pregunta al final.** No "mira el PDF adjunto y si quieres podemos hablar y también te enseño la web y..."
+- **Sin PDF en primer contacto.** El PDF va DESPUÉS de la primera respuesta, cuando ya hay interés.
+- **Subject = pregunta o tension.** `¿Cuánto tiempo...?` convierte más que `Radar automático de...`.
+- **No mencionar features.** Mencionar el problema que resuelve y un resultado concreto de un cliente real.
 
-### Archivos modificados en Chat O
+### 26.3 Estructura de email que convierte (patrón fijo)
+
+```
+[Saludo con nombre]
+
+[1 frase: quién eres + a quién te diriges]
+
+[1-2 frases: el problema que tienen, dicho con sus palabras]
+
+[1 frase: tu solución, concreta y sin jerga]
+
+[1 frase: caso real con resultado numérico concreto]
+
+[Pregunta directa: ¿tendría sentido 10 minutos esta semana?]
+[Link cal.com]
+
+Un saludo,
+```
+
+### 26.4 Archivos modificados (Chat P)
 
 | Archivo | Cambio |
 |---------|--------|
-| `captacion-worker/src/email/sender.js` | Eliminado `Precedence: bulk`, cambiado `X-Mailer` |
-| `captacion-worker/src/templates/templates.js` | Copy `despacho_legal` reescrito, PDF eliminado, saludo con nombre, follow-up con hilo |
+| `captacion-worker/src/templates/templates.js` | `buildHtmlEmail` → HTML mínimo sin branding. Todos los templates → 4-5 líneas. Subjects → preguntas. |
+| `captacion-worker/src/cli.js` | Email inicial: `PDF_ATTACHMENT` → `[]`. Follow-up conserva PDF. |
 
-### Estado tras Chat O
+### 26.5 Qué hacer después del fix (Josep)
 
-| Pieza | Estado |
-|-------|--------|
-| Copy emails despachos abogados | ✅ CORREGIDO — ataca dolor, sin PDF, sin spam headers |
-| Captacion worker en VPS | ✅ ONLINE en /opt/captacion — PERO .env tiene placeholders |
-| 18k leads importados a SQLite | ❌ PENDIENTE — CSVs en /opt/captacion pero falta ejecutar import |
-| VPS .env con valores reales | ❌ PENDIENTE — SMTP_USER, SMTP_PASS, FROM_NAME, FROM_EMAIL placeholders |
-| CAPTACION_WORKER_URL en Vercel | ❌ PENDIENTE — solo en .env.local local |
-| og-image.png 1200×630 | ❌ PENDIENTE MANUAL — instrucciones en AUDITORIA-CHAT-L |
-| Product Hunt / Indie Hackers / SpainStartup | ❌ PENDIENTE MANUAL |
+1. **Subir los cambios al VPS:**
+   ```bash
+   # En el VPS
+   cd /opt/captacion
+   git pull  # o FileZilla con los dos archivos
+   pm2 restart captacion-worker
+   ```
+2. **Test en seco con 3 leads reales:**
+   ```bash
+   node src/cli.js preview -f All_Spain_Leads.csv -l 3
+   ```
+   Verificar que el email generado parece escrito a mano, no newsletter.
+3. **Enviar batch de 20 emails a despachos de abogados primero** (vertical 1 — los que más necesitan el producto).
+4. **Medir apertura 48h.** Si apertura <20% → problema de deliverability (SPF/DKIM). Si apertura >20% y 0 respuestas → copy aún demasiado comercial.
 
----
+### 26.6 Siguiente palanca si sigue sin respuestas
 
-## 27. PRÓXIMO CHAT (Chat P) — ORDEN DE ATAQUE
-
-**INSTRUCCIÓN PARA LA IA:** Lee MAVIE-MASTER.md + AUDITORIA-CHAT-L-2026-04-27.md. Estado: producto funcional, emails corregidos, pero la máquina de captación no está arrancada por falta de configuración VPS.
-
-### Prioridad 1 — VPS: activar la máquina de emails (BLOQUEANTE)
-
-Josep necesita ejecutar esto en el VPS (`ssh root@80.241.212.87`):
-
-```bash
-# 1. Editar .env con valores reales (ver sección 12 para los valores)
-nano /opt/captacion/.env
-# Cambiar: SMTP_USER, SMTP_PASS, FROM_NAME, FROM_EMAIL, REPLY_TO, COMPANY_NAME
-# Añadir: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (desde Vercel env vars)
-
-# 2. Subir el código actualizado (emails fix del Chat O)
-# — Opción A: git pull si el VPS tiene el repo
-# — Opción B: FileZilla → subir captacion-worker/src/templates/templates.js
-#                                    captacion-worker/src/email/sender.js
-
-# 3. Importar leads
-cd /opt/captacion
-node src/cli.js import --file All_Spain_Leads.csv
-node src/cli.js import --file All_Spain_Leads_2.csv
-node src/cli.js import --file Faltantes_por_enviar.csv
-node src/cli.js stats   # → debe mostrar ~18.678
-
-# 4. Test en seco
-node src/cli.js send-all --dry-run --limit 5
-
-# 5. Arrancar
-pm2 restart captacion-worker
-```
-
-En Vercel Settings → Environment Variables:
-```
-CAPTACION_WORKER_URL=http://80.241.212.87:3002
-CAPTACION_CRON_SECRET=b1e6556d2e391f0173d4796cb44fd00f15909cd6d29dbf9def7a2247324894a5
-```
-
-### Prioridad 2 — SEO contenido pendiente (código)
-
-1. Mejorar páginas verticales `despachos-abogados` y `consultoras-subvenciones` en `/radar-boe/[vertical]/page.tsx` — añadir sección tipos de licitaciones + FAQs únicas (eliminar thin content)
-2. Ampliar hub `/radar-boe/page.tsx` con 300+ palabras E-E-A-T sobre qué es el BOE
-3. Crear `/casos/page.tsx` — caso éxito anonimizado (antes/después, horas ahorradas)
-4. `app/sitemap.ts` — cambiar `new Date()` a fechas ISO estáticas
-5. Crear `public/llms.txt`
-
-### Prioridad 3 — Manual Josep
-
-- Crear `og-image.png` en Canva (instrucciones detalladas en AUDITORIA-CHAT-L sección "TAREA 1")
-- Alta Product Hunt, Indie Hackers, SpainStartup (instrucciones en AUDITORIA-CHAT-L secciones 4,5,6)
-- Pedir testimonio real al cliente que paga (nombre + empresa + permiso escrito)
-- LinkedIn: 10 conexiones/día a socios de despachos + DM plantilla (sección 15 MAVIE-MASTER)
+Si tras 100 emails con el fix sigue en 0 respuestas:
+1. **LinkedIn manual en paralelo.** 10 DMs/día. Copy igual de corto: "¿Cómo seguís el BOE en el despacho?" — sin links en el primer mensaje.
+2. **Llamada en frío.** 5 llamadas/día a los leads que abrieron el email (tracking pixel → VPS stats).
+3. **Revisar SPF/DKIM/DMARC** de `mavieautomations.com` — si los emails no llegan a inbox todo lo demás da igual.
 
 ---
 
 *Josep Cervera · Mavie Automations · mavieautomations.com*  
-*Actualizado: 2026-04-28 — Chat O: Diagnóstico no-ventas, 3 bugs críticos emails corregidos*
+*Actualizado: 2026-05-01 — Chat P: Fix email outbound (0 respuestas → formato correcto)*

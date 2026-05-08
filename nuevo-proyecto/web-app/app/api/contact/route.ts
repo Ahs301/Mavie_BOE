@@ -101,7 +101,7 @@ export async function POST(request: Request) {
           },
           body: JSON.stringify({
             sender: { name: "Mavie Web Form", email: "noreply@mavieautomations.com" },
-            to: [{ email: "contacto@mavieautomations.com", name: "Mavie Automations" }],
+            to: [{ email: "mavie.contact.dev@gmail.com", name: "Mavie Automations" }],
             subject: `[Lead Web] ${escapeHtml(data.company_name || data.contact_name)} — ${escapeHtml(data.service_interest)}`,
             htmlContent: `
               <h2>Nueva solicitud de contacto</h2>
