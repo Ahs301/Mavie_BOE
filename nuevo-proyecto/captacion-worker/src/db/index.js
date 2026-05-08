@@ -265,3 +265,7 @@ export function getLeadMessageId(db, leadId) {
   const row = db.prepare(`SELECT message_id FROM leads WHERE id = ?`).get(leadId);
   return row?.message_id || null;
 }
+
+export function getLead(db, leadId) {
+  return db.prepare(`SELECT * FROM leads WHERE id = ?`).get(leadId) || null;
+}

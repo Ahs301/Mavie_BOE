@@ -55,6 +55,12 @@ const ConfigSchema = z.object({
   IMAP_USER: z.string().optional(),
   IMAP_PASS: z.string().optional(),
 
+  // Cal.com / CTA link en emails outbound
+  CALENDLY_URL: z.string().url().optional(),
+
+  // Notificaciones internas (hot lead alert)
+  ALERT_EMAIL: z.string().email().optional(),
+
   // Multi-SMTP rotación — opcionales (se activan solo si están presentes)
   RESEND_SMTP_PASS: z.string().optional(),
   RESEND_FROM_EMAIL: z.string().email().optional(),

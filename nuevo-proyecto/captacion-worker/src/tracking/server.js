@@ -1,9 +1,30 @@
 // src/tracking/server.js – servidor HTTP mínimo para tracking de aperturas y clics
 import http from 'http';
 import { URL } from 'url';
-import { getDB, recordOpen, recordClick, markUnsubscribed } from '../db/index.js';
+import { getDB, recordOpen, recordClick, markUnsubscribed, getLead } from '../db/index.js';
 import getConfig from '../config.js';
 import logger from '../utils/logger.js';
+import nodemailer from 'nodemailer';
+
+function sendHotLeadAlert(config, lead, trigger) {
+    const alertTo = config.ALERT_EMAIL || config.SMTP_USER;
+    if (!alertTo) return;
+    const transporter = nodemailer.createTransport({
+        host: config.SMTP_HOST,
+        port: config.SMTP_PORT,
+        secure: config.SMTP_SECURE,
+        auth: { user: config.SMTP_USER, pass: config.SMTP_PASS },
+    });
+    const googleLink = `https://www.google.com/search?q=${encodeURIComponent((lead.name || lead.email) + ' linkedin')}`;
+    const subject = `🔥 Hot lead: ${lead.name || lead.email} (${trigger})`;
+    const text = `Hot lead detectado:\n\nEmpresa: ${lead.name || '-'}\nEmail: ${lead.email}\nSector: ${lead.type || '-'}\nCiudad: ${lead.city || '-'}\nTrigger: ${trigger}\nAperturas: ${lead.open_count}\nClics: ${lead.click_count}\n\nBuscar en LinkedIn: ${googleLink}\n\nActúa en <1 hora para mayor conversión.`;
+    transporter.sendMail({
+        from: config.FROM_EMAIL,
+        to: alertTo,
+        subject,
+        text,
+    }).catch(err => logger.warn(`Alert email failed: ${err.message}`));
+}
 
 // Imagen transparente 1x1 GIF
 const TRANSPARENT_GIF = Buffer.from(
@@ -48,6 +69,11 @@ export function startTrackingServer() {
                 if (leadId) {
                     recordOpen(db, leadId, ip, ua);
                     logger.info(`👁️  Apertura registrada: lead=${leadId} ip=${ip}`);
+                    // Alerta en 2ª apertura (interés real, no solo preview)
+                    const lead = getLead(db, leadId);
+                    if (lead && lead.open_count === 2) {
+                        sendHotLeadAlert(config, lead, '2ª apertura');
+                    }
                 }
                 res.writeHead(200, {
                     'Content-Type': 'image/gif',
@@ -65,6 +91,9 @@ export function startTrackingServer() {
                 if (leadId) {
                     recordClick(db, leadId, targetUrl, ip, ua);
                     logger.info(`🖱️  Clic registrado: lead=${leadId} url=${targetUrl}`);
+                    // Alerta en cualquier clic = intent máximo
+                    const lead = getLead(db, leadId);
+                    if (lead) sendHotLeadAlert(config, lead, 'clic en CTA');
                 }
                 res.writeHead(302, { 'Location': targetUrl });
                 res.end();
