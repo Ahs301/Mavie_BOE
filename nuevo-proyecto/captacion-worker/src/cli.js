@@ -26,12 +26,11 @@ import { fetchAndProcessBounces } from './email/bounce_handler.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // ─── ADJUNTO PDF ──────────────────────────────────────────────────────────────
+// El PDF NO se adjunta en el primer email — aumenta el spam score.
+// Se adjunta SOLO en el follow-up (segundo email), donde ya hay contexto.
 const PDF_PATH = path.resolve('BOE Radar Inteligente.pdf');
 const PDF_ATTACHMENT = fs.existsSync(PDF_PATH) ? [{ filename: 'BOE Radar Inteligente.pdf', path: PDF_PATH }] : [];
-
-if (PDF_ATTACHMENT.length === 0) {
-    logger.warn('⚠️  PDF no encontrado en la raíz del proyecto. Los emails se enviarán sin adjunto.');
-}
+const NO_ATTACHMENT = [];  // primer email siempre sin adjunto
 
 // ─── CLI SETUP ────────────────────────────────────────────────────────────────
 const program = new Command();
@@ -166,9 +165,11 @@ async function sendAction(options) {
             // Construir URLs de tracking
             const trackingPixelUrl = buildPixelUrl(leadId);
             const unsubscribeUrl = buildUnsubscribeUrl(leadId);
-            const ctaLink = buildClickUrl(leadId, `https://wa.me/34633448806`);
+            const ctaLink = buildClickUrl(leadId, getConfig().CALENDLY_URL || 'https://wa.me/34633448806');
 
-            const result = await sendEmail(fullLead.email, subject, body, PDF_ATTACHMENT, {
+            // Sin adjunto en el primer email — los adjuntos en frío aumentan el spam score.
+            // El PDF va en el follow-up (donde ya hay contexto y el lead espera una respuesta).
+            const result = await sendEmail(fullLead.email, subject, body, NO_ATTACHMENT, {
                 trackingPixelUrl, unsubscribeUrl, ctaLink,
             });
 
@@ -257,9 +258,10 @@ program
             const originalMessageId = getLeadMessageId(db, lead.id);
             const trackingPixelUrl = buildPixelUrl(lead.id);
             const unsubscribeUrl = buildUnsubscribeUrl(lead.id);
-            const ctaLink = buildClickUrl(lead.id, `https://wa.me/34633448806`);
+            const ctaLink = buildClickUrl(lead.id, getConfig().CALENDLY_URL || 'https://wa.me/34633448806');
 
             try {
+                // En el follow-up sí adjuntamos el PDF — ya hay contexto y el lead lo espera
                 const result = await sendEmail(lead.email, subject, body, PDF_ATTACHMENT, {
                     trackingPixelUrl, unsubscribeUrl, ctaLink,
                     inReplyTo: originalMessageId || undefined,

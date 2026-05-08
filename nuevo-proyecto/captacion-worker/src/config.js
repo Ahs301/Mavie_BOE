@@ -49,6 +49,9 @@ const ConfigSchema = z.object({
   TRACKING_URL: z.string().optional(), // ej: https://tu-servidor.com/track
   TRACKING_PORT: z.coerce.number().default(3456),
 
+  // CTA de reuniones (Calendly u otro scheduling link)
+  CALENDLY_URL: z.string().url().optional(),
+
   // IMAP (lectura de bounces) — opcionales
   IMAP_HOST: z.string().optional(),
   IMAP_PORT: z.coerce.number().default(993),
