@@ -287,7 +287,8 @@ He montado un radar automático que filtra a diario el BOE y el BDNS y manda sol
     const abVariant = abOverride !== null ? abOverride : (hash % subjectOptions.length);
     const subject = subjectOptions[abVariant % subjectOptions.length];
 
-    const calLink = 'https://cal.eu/josep-mes2ul/demo-radar-boe';
+    const { CALENDLY_URL } = getConfig();
+    const calLink = CALENDLY_URL || 'https://cal.eu/josep-mes2ul/demo-radar-boe';
     const body = `${getGreeting(lead)}\n\n${bodyContent}\n\nPodéis reservar aquí directamente si os viene mejor: ${calLink}\n\nUn saludo,`;
 
     return { subject, body, templateKey, abVariant };

@@ -162,9 +162,10 @@ async function sendAction(options) {
 
         try {
             // Construir URLs de tracking
+            const calUrl = config.CALENDLY_URL || `https://wa.me/34633448806`;
             const trackingPixelUrl = buildPixelUrl(leadId);
             const unsubscribeUrl = buildUnsubscribeUrl(leadId);
-            const ctaLink = buildClickUrl(leadId, `https://wa.me/34633448806`);
+            const ctaLink = buildClickUrl(leadId, calUrl);
 
             // Sin adjunto en primer contacto: PDF en email inicial = señal spam
             const result = await sendEmail(fullLead.email, subject, body, [], {
