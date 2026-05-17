@@ -80,7 +80,6 @@ export async function POST(request: Request) {
   }
 
   try {
-    // Admin client (service role) bypasses RLS — necesario para inserts desde rutas públicas
     const supabase = createAdminClient()
     const { error: dbError } = await supabase.from("leads").insert([
       {
