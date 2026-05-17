@@ -1,10 +1,14 @@
 import Link from "next/link";
 import {
   ArrowRight, Bell, Filter, Zap, Database, Activity,
-  Shield, Clock, ChevronRight, Settings2, Send,
+  Shield, Clock, ChevronRight, Settings2, Send, CalendarDays,
 } from "lucide-react";
 import type { Metadata } from "next";
 import { ParticleBackground } from "@/components/ParticleBackground";
+
+// ⚙️ CONFIGURACIÓN: reemplaza con tu link real de Cal.com
+// En Vercel añade: NEXT_PUBLIC_CAL_BOOKING_URL=https://cal.com/tu-usuario/llamada-discovery
+const CAL_URL = process.env.NEXT_PUBLIC_CAL_BOOKING_URL || "/contacto"
 
 export const metadata: Metadata = {
   title: "Mavie Automations | Radar BOE Automático y Automatización Empresarial",
@@ -126,10 +130,12 @@ export default function Home() {
                 Ver Radar BOE <ArrowRight className="w-4 h-4" />
               </Link>
               <Link
-                href="/contacto"
-                className="inline-flex h-12 items-center justify-center gap-2 rounded-lg border border-neutral-800 bg-neutral-950/50 px-8 text-sm font-medium text-neutral-300 hover:bg-neutral-900 hover:text-white transition-colors"
+                href={CAL_URL}
+                target={CAL_URL.startsWith("http") ? "_blank" : undefined}
+                rel={CAL_URL.startsWith("http") ? "noopener noreferrer" : undefined}
+                className="inline-flex h-12 items-center justify-center gap-2 rounded-lg border border-emerald-700/50 bg-emerald-950/40 px-8 text-sm font-medium text-emerald-300 hover:bg-emerald-900/50 hover:text-white transition-colors"
               >
-                Hablar con un experto
+                <CalendarDays className="w-4 h-4" /> Reserva una llamada gratis
               </Link>
             </div>
 
@@ -378,10 +384,12 @@ export default function Home() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link
-                  href="/contacto"
+                  href={CAL_URL}
+                  target={CAL_URL.startsWith("http") ? "_blank" : undefined}
+                  rel={CAL_URL.startsWith("http") ? "noopener noreferrer" : undefined}
                   className="inline-flex h-12 items-center gap-2 rounded-lg bg-white px-8 text-sm font-semibold text-black hover:bg-neutral-100 transition-colors"
                 >
-                  Solicitar diagnóstico gratuito <ArrowRight className="w-4 h-4" />
+                  <CalendarDays className="w-4 h-4" /> Reserva tu diagnóstico gratuito
                 </Link>
                 <Link
                   href="/soluciones"

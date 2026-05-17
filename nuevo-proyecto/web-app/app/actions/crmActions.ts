@@ -212,6 +212,29 @@ export async function convertLeadToClientAction(leadId: string) {
   return { success: true, newClientId: newClient.id }
 }
 
+export async function markLeadContactedAction(leadId: string) {
+  await requireAuth() // 🔐
+
+  if (!leadId || !/^[0-9a-f-]{36}$/i.test(leadId)) {
+    return { success: false, error: "ID de lead inválido." }
+  }
+
+  const supabase = createClient()
+  const { error } = await supabase
+    .from("leads")
+    .update({ status: "contacted" })
+    .eq("id", leadId)
+    .eq("status", "new")
+
+  if (error) {
+    console.error("[markLeadContacted] Supabase error:", error.message)
+    return { success: false, error: "Error actualizando el lead." }
+  }
+
+  revalidatePath("/dashboard/leads")
+  return { success: true }
+}
+
 export async function resolveIncidentAction(incidentId: string) {
   await requireAuth() // 🔐
   

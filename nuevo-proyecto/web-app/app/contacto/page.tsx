@@ -2,12 +2,16 @@
 
 import { useCallback, useState } from "react"
 import { useTheme } from "next-themes"
-import { Send, CheckCircle, Loader2 } from "lucide-react"
+import { Send, CheckCircle, Loader2, CalendarDays, Clock, ArrowRight } from "lucide-react"
 import { HCaptcha } from "@/components/HCaptcha"
 import { HoneypotFields } from "@/components/HoneypotFields"
 import { HONEYPOT_FIELD, TIMESTAMP_FIELD } from "@/lib/security/honeypot"
 
 const captchaEnabled = Boolean(process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY)
+
+// ⚙️ CONFIGURACIÓN: reemplaza con tu link real de Cal.com
+// En Vercel añade: NEXT_PUBLIC_CAL_BOOKING_URL=https://cal.com/tu-usuario/llamada-discovery
+const CAL_URL = process.env.NEXT_PUBLIC_CAL_BOOKING_URL || ""
 
 type Status = "idle" | "submitting" | "success" | "error"
 
@@ -85,10 +89,38 @@ export default function ContactPage() {
     <div className="flex flex-col min-h-screen pt-32 pb-24 px-6">
       <div className="max-w-2xl mx-auto w-full">
         <h1 className="text-4xl md:text-5xl font-bold mb-4 text-center text-foreground">Inicia tu transformación</h1>
-        <p className="text-lg text-neutral-500 text-center mb-12">
+        <p className="text-lg text-neutral-500 text-center mb-8">
           Déjanos tus datos y un especialista técnico analizará tu caso{" "}
           <strong className="text-foreground font-semibold">sin compromiso en menos de 24h.</strong>
         </p>
+
+        {/* Reserva de llamada directa */}
+        {CAL_URL && (
+          <div className="mb-10 rounded-2xl border border-emerald-700/30 bg-emerald-950/20 p-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-start gap-4">
+                <div className="w-11 h-11 rounded-xl bg-emerald-900/40 border border-emerald-700/30 flex items-center justify-center shrink-0">
+                  <CalendarDays className="w-5 h-5 text-emerald-400" />
+                </div>
+                <div>
+                  <h3 className="text-base font-semibold text-foreground mb-1">¿Prefieres hablar directamente?</h3>
+                  <div className="flex items-center gap-2 text-sm text-neutral-400">
+                    <Clock className="w-3.5 h-3.5 text-emerald-500" />
+                    Llamada de diagnóstico gratuita · 30 minutos · Sin compromiso
+                  </div>
+                </div>
+              </div>
+              <a
+                href={CAL_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 h-10 px-5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold transition-colors shrink-0 shadow-sm"
+              >
+                Reservar ahora <ArrowRight className="w-3.5 h-3.5" />
+              </a>
+            </div>
+          </div>
+        )}
 
         {status === "success" ? (
           <div className="bg-card border border-neutral-200 dark:border-neutral-800 p-10 rounded-2xl text-center">
