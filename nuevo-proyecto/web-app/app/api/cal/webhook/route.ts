@@ -101,26 +101,51 @@ export async function POST(request: Request) {
           sender: { name: "Mavie Reservas", email: "noreply@mavieautomations.com" },
           to: [{ email: adminEmail, name: "Josep" }],
           subject: `[CITA RESERVADA] ${escapeHtml(name)} — ${escapeHtml(startFormatted)}`,
-          htmlContent: `
-            <div style="font-family:sans-serif;max-width:600px;margin:0 auto">
-              <div style="background:#1a1a2e;padding:20px;border-radius:8px 8px 0 0">
-                <h2 style="color:#ffffff;margin:0">Nueva cita reservada</h2>
-                <p style="color:#6b7280;margin:4px 0 0">vía Cal.com → Mavie Automations</p>
-              </div>
-              <div style="background:#f9fafb;padding:24px;border-radius:0 0 8px 8px;border:1px solid #e5e7eb">
-                <table style="border-collapse:collapse;width:100%">
-                  <tr><td style="padding:8px 0;color:#6b7280;font-size:14px;width:120px">Nombre</td><td style="padding:8px 0;font-weight:600">${escapeHtml(name)}</td></tr>
-                  <tr><td style="padding:8px 0;color:#6b7280;font-size:14px">Email</td><td style="padding:8px 0"><a href="mailto:${escapeHtml(email)}" style="color:#2563eb">${escapeHtml(email)}</a></td></tr>
-                  <tr><td style="padding:8px 0;color:#6b7280;font-size:14px">Fecha/Hora</td><td style="padding:8px 0;font-weight:600;color:#059669">${escapeHtml(startFormatted)}</td></tr>
-                  <tr><td style="padding:8px 0;color:#6b7280;font-size:14px">Tipo</td><td style="padding:8px 0">${escapeHtml(eventType)}</td></tr>
-                  ${description ? `<tr><td style="padding:8px 0;color:#6b7280;font-size:14px;vertical-align:top">Notas</td><td style="padding:8px 0">${escapeHtml(description)}</td></tr>` : ""}
-                </table>
-                <div style="margin-top:20px;padding-top:20px;border-top:1px solid #e5e7eb">
-                  <a href="https://mavieautomations.com/dashboard/leads" style="background:#2563eb;color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none;font-weight:600">Ver en el dashboard →</a>
-                </div>
-              </div>
-            </div>
-          `,
+          htmlContent: `<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f3f4f6;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;padding:24px 0;">
+<tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;font-family:Arial,Helvetica,sans-serif;">
+  <tr>
+    <td style="background:#1a1a2e;padding:20px 24px;border-radius:8px 8px 0 0;">
+      <p style="margin:0;font-size:20px;font-weight:700;color:#ffffff;">Nueva cita reservada</p>
+      <p style="margin:4px 0 0;font-size:13px;color:#a78bfa;">via Cal.com &rarr; Mavie Automations</p>
+    </td>
+  </tr>
+  <tr>
+    <td style="background:#ffffff;padding:24px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 8px 8px;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;">
+        <tr><td style="padding:8px 0;color:#6b7280;width:120px;border-bottom:1px solid #f3f4f6;">Nombre</td><td style="padding:8px 0;font-weight:600;color:#111827;border-bottom:1px solid #f3f4f6;">${escapeHtml(name)}</td></tr>
+        <tr><td style="padding:8px 0;color:#6b7280;border-bottom:1px solid #f3f4f6;">Email</td><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><a href="mailto:${escapeHtml(email)}" style="color:#2563eb;text-decoration:none;">${escapeHtml(email)}</a></td></tr>
+        <tr><td style="padding:8px 0;color:#6b7280;border-bottom:1px solid #f3f4f6;">Fecha/Hora</td><td style="padding:8px 0;font-weight:600;color:#059669;border-bottom:1px solid #f3f4f6;">${escapeHtml(startFormatted)}</td></tr>
+        <tr><td style="padding:8px 0;color:#6b7280;border-bottom:1px solid #f3f4f6;">Tipo</td><td style="padding:8px 0;color:#374151;border-bottom:1px solid #f3f4f6;">${escapeHtml(eventType)}</td></tr>
+        ${description ? `<tr><td style="padding:8px 0;color:#6b7280;vertical-align:top;">Notas</td><td style="padding:8px 0;color:#374151;">${escapeHtml(description)}</td></tr>` : ""}
+      </table>
+      <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:20px;padding-top:20px;border-top:1px solid #e5e7eb;">
+        <tr>
+          <td style="padding:4px;">
+            <a href="mailto:${escapeHtml(email)}?subject=Re%3A%20Tu%20cita%20con%20Mavie%20Automations" style="display:inline-block;background:#2563eb;color:#ffffff;padding:10px 18px;border-radius:6px;text-decoration:none;font-weight:600;font-size:13px;">Responder</a>
+          </td>
+          <td style="padding:4px;">
+            <a href="https://cal.com/josep-ndwyo3/30min" style="display:inline-block;background:#7c3aed;color:#ffffff;padding:10px 18px;border-radius:6px;text-decoration:none;font-weight:600;font-size:13px;">Cal.com</a>
+          </td>
+          <td style="padding:4px;">
+            <a href="https://mavieautomations.com/dashboard/leads" style="display:inline-block;background:#f3f4f6;color:#374151;padding:10px 18px;border-radius:6px;text-decoration:none;font-weight:600;font-size:13px;">Ver dashboard</a>
+          </td>
+          <td style="padding:4px;">
+            <a href="https://mavieautomations.com" style="display:inline-block;background:#f3f4f6;color:#374151;padding:10px 18px;border-radius:6px;text-decoration:none;font-weight:600;font-size:13px;">Web</a>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>`,
         }),
       }).catch((e) => console.error("[Cal Webhook] Error email:", e))
     }
