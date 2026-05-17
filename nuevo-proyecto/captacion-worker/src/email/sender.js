@@ -208,8 +208,6 @@ export async function sendEmail(to, subject, body, attachments = [], opts = {}) 
         attachments,
         messageId,
         headers: {
-            'X-Mailer': 'Microsoft Outlook 16.0',
-            'X-Priority': '3',
             'List-Unsubscribe': opts.unsubscribeUrl
                 ? `<${opts.unsubscribeUrl}>`
                 : `<mailto:${FROM_EMAIL}?subject=unsubscribe>`,
