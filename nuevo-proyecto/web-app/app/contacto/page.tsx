@@ -9,9 +9,7 @@ import { HONEYPOT_FIELD, TIMESTAMP_FIELD } from "@/lib/security/honeypot"
 
 const captchaEnabled = Boolean(process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY)
 
-// ⚙️ CONFIGURACIÓN: reemplaza con tu link real de Cal.com
-// En Vercel añade: NEXT_PUBLIC_CAL_BOOKING_URL=https://cal.com/tu-usuario/llamada-discovery
-const CAL_URL = process.env.NEXT_PUBLIC_CAL_BOOKING_URL || ""
+const CAL_URL = process.env.NEXT_PUBLIC_CAL_BOOKING_URL || "https://cal.com/josep-ndwyo3/30min"
 
 type Status = "idle" | "submitting" | "success" | "error"
 

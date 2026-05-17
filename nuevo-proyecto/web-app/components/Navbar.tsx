@@ -131,12 +131,14 @@ export function Navbar() {
           {/* CTA & Theme */}
           <div className="hidden md:flex items-center gap-3">
             <ThemeToggle />
-            <Link
-              href="/contacto"
+            <a
+              href="https://cal.com/josep-ndwyo3/30min"
+              target="_blank"
+              rel="noopener noreferrer"
               className="inline-flex items-center gap-2 h-9 px-4 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-colors shadow-sm"
             >
-              Hablar con experto <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
+              Reservar llamada <ArrowRight className="w-3.5 h-3.5" />
+            </a>
           </div>
 
           {/* Mobile toggle */}
@@ -210,13 +212,15 @@ export function Navbar() {
               })}
             </nav>
             <div className="p-4 border-t border-neutral-800">
-              <Link
-                href="/contacto"
+              <a
+                href="https://cal.com/josep-ndwyo3/30min"
+                target="_blank"
+                rel="noopener noreferrer"
                 onClick={() => setIsOpen(false)}
                 className="flex items-center justify-center gap-2 w-full h-10 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-colors"
               >
-                Hablar con experto <ArrowRight className="w-4 h-4" />
-              </Link>
+                Reservar llamada <ArrowRight className="w-4 h-4" />
+              </a>
             </div>
           </div>
         </div>

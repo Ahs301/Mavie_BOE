@@ -6,9 +6,7 @@ import {
 import type { Metadata } from "next";
 import { ParticleBackground } from "@/components/ParticleBackground";
 
-// ⚙️ CONFIGURACIÓN: reemplaza con tu link real de Cal.com
-// En Vercel añade: NEXT_PUBLIC_CAL_BOOKING_URL=https://cal.com/tu-usuario/llamada-discovery
-const CAL_URL = process.env.NEXT_PUBLIC_CAL_BOOKING_URL || "/contacto"
+const CAL_URL = process.env.NEXT_PUBLIC_CAL_BOOKING_URL || "https://cal.com/josep-ndwyo3/30min"
 
 export const metadata: Metadata = {
   title: "Mavie Automations | Radar BOE Automático y Automatización Empresarial",
