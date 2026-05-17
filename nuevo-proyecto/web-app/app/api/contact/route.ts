@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
-import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { rateLimit, RATE_LIMITS } from "@/lib/security/rateLimit"
 import { verifyCaptcha, captchaEnabled } from "@/lib/security/captcha"
 import { checkHoneypot, HONEYPOT_FIELD, TIMESTAMP_FIELD } from "@/lib/security/honeypot"
@@ -18,6 +18,15 @@ const contactSchema = z.object({
   [TIMESTAMP_FIELD]: z.union([z.string(), z.number()]).optional().nullable(),
   consent: z.literal(true, { message: "Debes aceptar la política de privacidad" }),
 })
+
+const serviceLabels: Record<string, string> = {
+  boe: "Radar BOE / DOUE",
+  outreach: "Captación B2B AI",
+  scraping: "Scraping / Leads",
+  automation: "Automatización",
+  consulting: "Consultoría",
+  other: "Otro",
+}
 
 function escapeHtml(value: string): string {
   return value
@@ -71,7 +80,8 @@ export async function POST(request: Request) {
   }
 
   try {
-    const supabase = createClient()
+    // Admin client (service role) bypasses RLS — necesario para inserts desde rutas públicas
+    const supabase = createAdminClient()
     const { error: dbError } = await supabase.from("leads").insert([
       {
         company_name: data.company_name ?? null,
@@ -87,11 +97,15 @@ export async function POST(request: Request) {
 
     if (dbError) {
       console.error("[API/contact] Supabase error:", dbError)
+      return NextResponse.json({ error: "Error al guardar la solicitud. Inténtalo de nuevo." }, { status: 500 })
     }
 
     const brevoKey = process.env.BREVO_API_KEY
+    const adminEmail = process.env.ADMIN_EMAILS?.split(",")[0]?.trim() ?? "mavie.contact.dev@gmail.com"
+
     if (brevoKey) {
       try {
+        const serviceLabel = serviceLabels[data.service_interest] ?? data.service_interest
         await fetch("https://api.brevo.com/v3/smtp/email", {
           method: "POST",
           headers: {
@@ -101,22 +115,34 @@ export async function POST(request: Request) {
           },
           body: JSON.stringify({
             sender: { name: "Mavie Web Form", email: "noreply@mavieautomations.com" },
-            to: [{ email: "mavie.contact.dev@gmail.com", name: "Mavie Automations" }],
-            subject: `[Lead Web] ${escapeHtml(data.company_name || data.contact_name)} — ${escapeHtml(data.service_interest)}`,
+            to: [{ email: adminEmail, name: "Josep" }],
+            subject: `[LEAD WEB] ${escapeHtml(data.company_name || data.contact_name)} — ${serviceLabel}`,
             htmlContent: `
-              <h2>Nueva solicitud de contacto</h2>
-              <table style="border-collapse: collapse; width: 100%; font-family: sans-serif;">
-                <tr><td style="padding: 8px; font-weight: bold; color: #666;">Empresa</td><td style="padding: 8px;">${escapeHtml(data.company_name || "No indicada")}</td></tr>
-                <tr style="background:#f9f9f9"><td style="padding: 8px; font-weight: bold; color: #666;">Contacto</td><td style="padding: 8px;">${escapeHtml(data.contact_name)}</td></tr>
-                <tr><td style="padding: 8px; font-weight: bold; color: #666;">Email</td><td style="padding: 8px;">${escapeHtml(data.email)}</td></tr>
-                <tr style="background:#f9f9f9"><td style="padding: 8px; font-weight: bold; color: #666;">Teléfono</td><td style="padding: 8px;">${escapeHtml(data.phone || "No indicado")}</td></tr>
-                <tr><td style="padding: 8px; font-weight: bold; color: #666;">Servicio</td><td style="padding: 8px;">${escapeHtml(data.service_interest)}</td></tr>
-                <tr style="background:#f9f9f9"><td style="padding: 8px; font-weight: bold; color: #666;">Mensaje</td><td style="padding: 8px;">${escapeHtml(data.message)}</td></tr>
-              </table>
+              <div style="font-family:sans-serif;max-width:600px;margin:0 auto">
+                <div style="background:#1e3a5f;padding:20px;border-radius:8px 8px 0 0">
+                  <h2 style="color:#ffffff;margin:0">Nuevo lead desde mavieautomations.com</h2>
+                  <p style="color:#93c5fd;margin:4px 0 0;font-size:14px">Formulario de contacto web</p>
+                </div>
+                <div style="background:#f9fafb;padding:24px;border-radius:0 0 8px 8px;border:1px solid #e5e7eb">
+                  <table style="border-collapse:collapse;width:100%;font-size:14px">
+                    <tr><td style="padding:10px 0;color:#6b7280;width:130px">Empresa</td><td style="padding:10px 0;font-weight:600">${escapeHtml(data.company_name || "—")}</td></tr>
+                    <tr style="border-top:1px solid #f3f4f6"><td style="padding:10px 0;color:#6b7280">Contacto</td><td style="padding:10px 0;font-weight:600">${escapeHtml(data.contact_name)}</td></tr>
+                    <tr style="border-top:1px solid #f3f4f6"><td style="padding:10px 0;color:#6b7280">Email</td><td style="padding:10px 0"><a href="mailto:${escapeHtml(data.email)}" style="color:#2563eb">${escapeHtml(data.email)}</a></td></tr>
+                    <tr style="border-top:1px solid #f3f4f6"><td style="padding:10px 0;color:#6b7280">Teléfono</td><td style="padding:10px 0">${escapeHtml(data.phone || "—")}</td></tr>
+                    <tr style="border-top:1px solid #f3f4f6"><td style="padding:10px 0;color:#6b7280">Servicio</td><td style="padding:10px 0"><span style="background:#dbeafe;color:#1d4ed8;padding:2px 10px;border-radius:20px;font-size:12px;font-weight:600">${escapeHtml(serviceLabel)}</span></td></tr>
+                    <tr style="border-top:1px solid #f3f4f6"><td style="padding:10px 0;color:#6b7280;vertical-align:top">Mensaje</td><td style="padding:10px 0;font-style:italic;color:#374151">"${escapeHtml(data.message)}"</td></tr>
+                  </table>
+                  <div style="margin-top:20px;padding-top:20px;border-top:1px solid #e5e7eb;display:flex;gap:12px">
+                    <a href="mailto:${escapeHtml(data.email)}?subject=Mavie Automations - Tu solicitud" style="background:#2563eb;color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none;font-weight:600;font-size:14px">Responder ahora</a>
+                    <a href="https://mavieautomations.com/dashboard/leads" style="background:#f3f4f6;color:#374151;padding:10px 20px;border-radius:6px;text-decoration:none;font-weight:600;font-size:14px">Ver en dashboard</a>
+                  </div>
+                </div>
+              </div>
             `,
           }),
         })
       } catch (emailErr) {
+        // El lead ya está guardado en DB — el email es secundario
         console.error("[API/contact] Brevo notification error:", emailErr)
       }
     }
