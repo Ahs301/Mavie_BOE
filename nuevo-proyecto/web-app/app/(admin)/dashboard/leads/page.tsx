@@ -1,9 +1,10 @@
 import { requireAuth } from "@/lib/auth"
 import { createClient } from "@/lib/supabase/server"
-import { UserPlus, Mail, Building2, Calendar, ArrowRight, CheckCircle, Clock, XCircle, Loader } from "lucide-react"
+import { UserPlus, Mail, Building2, Calendar, ArrowRight, CheckCircle, Clock, XCircle, Loader, CalendarCheck } from "lucide-react"
 import type { Metadata } from "next"
 import Link from "next/link"
 import { ConvertLeadBtn } from "./components/ConvertLeadBtn"
+import { MarkContactedBtn } from "./components/MarkContactedBtn"
 
 export const dynamic = "force-dynamic"
 
@@ -20,12 +21,33 @@ const statusConfig: Record<string, { label: string; class: string; icon: React.E
 }
 
 const serviceLabels: Record<string, string> = {
-  boe:        "Radar BOE / DOUE",
-  outreach:   "Captación B2B AI",
-  scraping:   "Scraping / Leads",
-  automation: "Automatización",
-  consulting: "Consultoría",
-  other:      "Otro",
+  boe:         "Radar BOE / DOUE",
+  outreach:    "Captación B2B AI",
+  scraping:    "Scraping / Leads",
+  automation:  "Automatización",
+  consulting:  "Consultoría",
+  other:       "Otro",
+  cal_booking: "Cita Cal.com",
+}
+
+function timeAgo(dateStr: string): { label: string; urgency: "critical" | "warning" | "ok" } {
+  const diffMs = Date.now() - new Date(dateStr).getTime()
+  const hours = diffMs / (1000 * 60 * 60)
+
+  let label: string
+  if (hours < 1) label = "hace <1h"
+  else if (hours < 24) label = `hace ${Math.floor(hours)}h`
+  else if (hours < 48) label = "hace 1 día"
+  else label = `hace ${Math.floor(hours / 24)} días`
+
+  const urgency = hours > 24 ? "critical" : hours > 12 ? "warning" : "ok"
+  return { label, urgency }
+}
+
+const urgencyClass: Record<string, string> = {
+  critical: "text-red-400 font-semibold",
+  warning:  "text-amber-400 font-medium",
+  ok:       "text-neutral-500",
 }
 
 export default async function LeadsPage() {
@@ -37,8 +59,15 @@ export default async function LeadsPage() {
     .select("*", { count: "exact" })
     .order("created_at", { ascending: false })
 
-  const newCount = leads?.filter(l => l.status === "new").length ?? 0
+  const newCount       = leads?.filter(l => l.status === "new").length ?? 0
   const qualifiedCount = leads?.filter(l => l.status === "qualified").length ?? 0
+  const calCount       = leads?.filter(l => l.source === "cal_booking").length ?? 0
+
+  const criticalLeads = leads?.filter(l => {
+    if (l.status !== "new") return false
+    const hours = (Date.now() - new Date(l.created_at).getTime()) / (1000 * 60 * 60)
+    return hours > 12
+  }) ?? []
 
   return (
     <div className="p-8 space-y-8">
@@ -49,7 +78,7 @@ export default async function LeadsPage() {
             <UserPlus className="w-6 h-6 text-blue-500" /> Leads & Contactos Web
           </h1>
           <p className="text-sm text-neutral-500 mt-1">
-            Solicitudes recibidas desde el formulario de contacto de mavieautomations.com
+            Solicitudes desde el formulario de contacto y reservas de Cal.com
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -59,20 +88,43 @@ export default async function LeadsPage() {
               {newCount} nuevo{newCount !== 1 ? "s" : ""}
             </span>
           )}
+          {criticalLeads.length > 0 && (
+            <span className="inline-flex items-center gap-1.5 text-xs font-semibold bg-red-500/10 border border-red-500/20 text-red-400 px-3 py-1.5 rounded-full animate-pulse">
+              ⚠ {criticalLeads.length} sin contactar &gt;12h
+            </span>
+          )}
         </div>
       </div>
+
+      {/* Alerta crítica */}
+      {criticalLeads.length > 0 && (
+        <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-5">
+          <h3 className="text-sm font-semibold text-red-400 mb-2 flex items-center gap-2">
+            ⚠ Leads urgentes — llevan más de 12h sin respuesta
+          </h3>
+          <div className="flex flex-wrap gap-3">
+            {criticalLeads.map(l => {
+              const { label } = timeAgo(l.created_at)
+              return (
+                <a key={l.id} href={`mailto:${l.email}?subject=Mavie Automations - Respuesta a tu solicitud`}
+                  className="inline-flex items-center gap-2 text-xs bg-background border border-red-500/20 rounded-lg px-3 py-2 hover:bg-red-500/5 transition-colors">
+                  <span className="font-medium text-foreground">{l.contact_name}</span>
+                  <span className="text-red-400">{label}</span>
+                  <Mail className="w-3 h-3 text-neutral-500" />
+                </a>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       {/* KPIs */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
-          { label: "Total leads", value: count ?? 0, color: "text-foreground" },
-          { label: "Nuevos", value: newCount, color: "text-blue-400" },
-          { label: "Calificados", value: qualifiedCount, color: "text-emerald-400" },
-          {
-            label: "Tasa calificación",
-            value: count ? `${Math.round((qualifiedCount / count) * 100)}%` : "—",
-            color: "text-amber-400",
-          },
+          { label: "Total leads",       value: count ?? 0,       color: "text-foreground" },
+          { label: "Nuevos",            value: newCount,          color: "text-blue-400" },
+          { label: "Calificados",       value: qualifiedCount,    color: "text-emerald-400" },
+          { label: "Citas Cal.com",     value: calCount,          color: "text-violet-400" },
         ].map(k => (
           <div key={k.label} className="rounded-xl border border-neutral-800 bg-card p-5">
             <div className={`text-2xl font-bold mb-1 ${k.color}`}>{k.value}</div>
@@ -92,7 +144,7 @@ export default async function LeadsPage() {
           <div className="text-center py-20">
             <UserPlus className="w-10 h-10 text-neutral-700 mx-auto mb-4" />
             <p className="text-neutral-500 text-sm mb-1">Aún no hay leads registrados.</p>
-            <p className="text-neutral-600 text-xs">Cuando alguien rellene el formulario de /contacto aparecerá aquí.</p>
+            <p className="text-neutral-600 text-xs">Cuando alguien rellene el formulario o reserve una cita aparecerá aquí.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -101,20 +153,31 @@ export default async function LeadsPage() {
                 <tr>
                   <th className="px-6 py-3 font-medium">Contacto / Empresa</th>
                   <th className="px-6 py-3 font-medium">Email</th>
-                  <th className="px-6 py-3 font-medium">Servicio</th>
+                  <th className="px-6 py-3 font-medium">Servicio / Fuente</th>
                   <th className="px-6 py-3 font-medium">Estado</th>
-                  <th className="px-6 py-3 font-medium">Fecha</th>
-                  <th className="px-6 py-3 font-medium text-right">Acción</th>
+                  <th className="px-6 py-3 font-medium">Hace</th>
+                  <th className="px-6 py-3 font-medium text-right">Acciones</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-800/50">
                 {leads.map(lead => {
                   const st = statusConfig[lead.status] ?? statusConfig.new
                   const StatusIcon = st.icon
+                  const { label: agoLabel, urgency } = timeAgo(lead.created_at)
+                  const isCal = lead.source === "cal_booking"
+                  const isNew = lead.status === "new"
+
                   return (
-                    <tr key={lead.id} className="hover:bg-neutral-800/20 transition-colors">
+                    <tr key={lead.id} className={`hover:bg-neutral-800/20 transition-colors ${isNew && urgency === "critical" ? "bg-red-950/10" : ""}`}>
                       <td className="px-6 py-4">
-                        <div className="font-medium text-foreground">{lead.contact_name}</div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-foreground">{lead.contact_name}</span>
+                          {isCal && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-violet-500/10 border border-violet-500/20 text-violet-400 px-1.5 py-0.5 rounded-full">
+                              <CalendarCheck className="w-2.5 h-2.5" /> Cal
+                            </span>
+                          )}
+                        </div>
                         {lead.company_name && (
                           <div className="flex items-center gap-1 text-xs text-neutral-500 mt-0.5">
                             <Building2 className="w-3 h-3" />{lead.company_name}
@@ -139,27 +202,33 @@ export default async function LeadsPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="flex items-center gap-1.5 text-xs text-neutral-500">
-                          <Calendar className="w-3 h-3" />
+                        <div className="flex items-center gap-1.5 text-xs">
+                          <Calendar className="w-3 h-3 text-neutral-600 shrink-0" />
+                          <span className={isNew ? urgencyClass[urgency] : "text-neutral-500"}>
+                            {agoLabel}
+                          </span>
+                        </div>
+                        <div className="text-xs text-neutral-600 mt-0.5">
                           {new Date(lead.created_at).toLocaleDateString("es-ES", {
-                            day: "2-digit", month: "short", year: "numeric"
+                            day: "2-digit", month: "short"
                           })}
                         </div>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
+                        <div className="flex items-center justify-end gap-2 flex-wrap">
                           <a
                             href={`mailto:${lead.email}?subject=Mavie Automations - Respuesta a tu solicitud`}
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-neutral-800 bg-background hover:bg-neutral-800/40 text-neutral-400 hover:text-foreground transition-colors"
                           >
-                            <Mail className="w-3.5 h-3.5" /> Contactar
+                            <Mail className="w-3.5 h-3.5" /> Email
                           </a>
+                          {isNew && <MarkContactedBtn leadId={lead.id} />}
                           {lead.converted_client_id ? (
                             <Link
                               href={`/dashboard/clientes/${lead.converted_client_id}`}
                               className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg text-emerald-500 hover:bg-emerald-500/10 transition-colors"
                             >
-                              Ver ficha CRM <ArrowRight className="w-3 h-3" />
+                              Ver CRM <ArrowRight className="w-3 h-3" />
                             </Link>
                           ) : (
                             <ConvertLeadBtn leadId={lead.id} />
@@ -175,7 +244,7 @@ export default async function LeadsPage() {
         )}
       </div>
 
-      {/* Details panel: Last lead message */}
+      {/* Panel último lead sin contactar */}
       {leads && leads.length > 0 && leads.find(l => l.status === "new") && (
         <div className="rounded-xl border border-blue-500/20 bg-blue-500/5 p-6">
           <h3 className="text-sm font-semibold text-blue-300 mb-3 flex items-center gap-2">
@@ -183,12 +252,14 @@ export default async function LeadsPage() {
           </h3>
           {(() => {
             const lead = leads.find(l => l.status === "new")!
+            const { label: agoLabel, urgency } = timeAgo(lead.created_at)
             return (
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-sm">
                   <span className="text-neutral-500">De:</span>
                   <span className="text-foreground font-medium">{lead.contact_name}</span>
                   {lead.company_name && <span className="text-neutral-500">({lead.company_name})</span>}
+                  <span className={`text-xs ${urgencyClass[urgency]}`}>{agoLabel}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <span className="text-neutral-500">Email:</span>
