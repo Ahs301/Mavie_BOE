@@ -36,7 +36,12 @@ export async function GET(request: Request) {
   }
 
   const brevoKey = process.env.BREVO_API_KEY
-  const adminEmail = process.env.ADMIN_EMAILS?.split(",")[0] ?? "mavie.contact.dev@gmail.com"
+  const adminEmail = process.env.ADMIN_EMAILS?.split(",")[0]?.trim()
+
+  if (!adminEmail) {
+    console.error("[Leads Cron] ADMIN_EMAILS env var no configurada — alerta no enviada")
+    return NextResponse.json({ ok: true, alerted: 0, warning: "ADMIN_EMAILS missing" })
+  }
 
   if (brevoKey) {
     const serviceLabels: Record<string, string> = {

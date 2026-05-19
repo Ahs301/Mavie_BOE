@@ -1,19 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
-import { createClient } from '@supabase/supabase-js'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 function getStripe() {
   const key = process.env.STRIPE_SECRET_KEY?.trim()
   if (!key) throw new Error('[webhook] STRIPE_SECRET_KEY no configurada')
   return new Stripe(key, { apiVersion: '2026-03-25.dahlia' as const })
-}
-
-// Service role client — bypasses RLS, safe only in server-side webhook
-function createServiceClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  )
 }
 
 const PLAN_LIMITS: Record<string, { frequency: string; regions: string[] }> = {
@@ -76,7 +68,7 @@ export async function POST(req: NextRequest) {
 // ─── checkout.session.completed ───────────────────────────
 // Cliente nuevo ha pagado → crear/activar en BD
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
-  const supabase = createServiceClient()
+  const supabase = createAdminClient()
 
   const email = session.customer_details?.email
   const company = session.customer_details?.name ?? ''
@@ -141,7 +133,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 // ─── customer.subscription.deleted ────────────────────────
 // Suscripción cancelada → desactivar cliente y radar
 async function handleSubscriptionCancelled(subscription: Stripe.Subscription) {
-  const supabase = createServiceClient()
+  const supabase = createAdminClient()
   const stripeCustomerId = subscription.customer as string
 
   // Buscar cliente por stripe_customer_id
@@ -178,7 +170,7 @@ async function handleSubscriptionCancelled(subscription: Stripe.Subscription) {
 // ─── customer.subscription.updated ────────────────────────
 // Cambio de plan (upgrade/downgrade)
 async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
-  const supabase = createServiceClient()
+  const supabase = createAdminClient()
   const stripeCustomerId = subscription.customer as string
 
   // Solo procesar si está activa
@@ -220,7 +212,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
 // ─── invoice.payment_failed ───────────────────────────────
 // Fallo de cobro → marcar como moroso pero no desactivar aún (Stripe reintenta)
 async function handlePaymentFailed(invoice: Stripe.Invoice) {
-  const supabase = createServiceClient()
+  const supabase = createAdminClient()
   const stripeCustomerId = invoice.customer as string
 
   const { data: cliente } = await supabase

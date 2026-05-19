@@ -49,6 +49,11 @@ export async function POST(request: Request) {
   const eventType = String(booking.type ?? "llamada")
   const description = String(booking.description ?? "")
 
+  // Intentar extraer empresa de responses si el form Cal.com tiene ese campo
+  const responses = (booking?.responses as Record<string, unknown>) ?? {}
+  const companyRaw = responses.company ?? responses.empresa ?? responses.companyName ?? null
+  const company = typeof companyRaw === "string" ? companyRaw.trim() || null : null
+
   const messageLines = [
     `Reserva de llamada vía Cal.com`,
     `Fecha: ${startTime}`,
@@ -62,6 +67,7 @@ export async function POST(request: Request) {
     const { error: dbError } = await supabase.from("leads").insert([
       {
         contact_name: name,
+        company_name: company,
         email,
         message: messageLines.join("\n"),
         source: "cal_booking",
@@ -75,9 +81,13 @@ export async function POST(request: Request) {
     }
 
     const brevoKey = process.env.BREVO_API_KEY
-    const adminEmail = process.env.ADMIN_EMAILS?.split(",")[0] ?? "mavie.contact.dev@gmail.com"
+    const adminEmail = process.env.ADMIN_EMAILS?.split(",")[0]?.trim()
 
-    if (brevoKey) {
+    if (!adminEmail) {
+      console.error("[Cal Webhook] ADMIN_EMAILS env var no configurada — alerta no enviada")
+    }
+
+    if (brevoKey && adminEmail) {
       const startFormatted = startTime
         ? new Date(startTime).toLocaleString("es-ES", {
             weekday: "long",

@@ -9,46 +9,46 @@ import { ParticleBackground } from "@/components/ParticleBackground";
 const CAL_URL = process.env.NEXT_PUBLIC_CAL_BOOKING_URL || "https://cal.com/josep-ndwyo3/30min"
 
 export const metadata: Metadata = {
-  title: "Mavie Automations | Radar BOE Automático y Automatización Empresarial",
-  description: "Sistemas de detección automática de oportunidades públicas, scraping B2B y automatización de procesos para consultoras, despachos y empresas tecnológicas.",
+  title: "Mavie Automations | Consigue más clientes con automatización B2B",
+  description: "Ayudamos a consultoras y despachos a conseguir más clientes mediante la detección automática de subvenciones del BOE y prospección automatizada.",
 };
 
 const features = [
   {
     icon: Database,
     color: "blue",
-    title: "Sistemas Core (CRM & ERP)",
-    desc: "Desarrollo de cuadros de mando y paneles operativos desde cero. Conectamos toda tu operativa en una interfaz única, rápida y sin licenciamientos tóxicos.",
+    title: "Gestión de Clientes Eficiente",
+    desc: "Centralizamos toda tu operativa comercial en una única plataforma fácil de usar. Gestiona tus clientes sin pagar costosas licencias de software.",
   },
   {
     icon: Filter,
     color: "violet",
-    title: "Pipelines de Extracción",
-    desc: "Bases de datos autogeneradas. Rastreamos la web, directorios o registros públicos buscando clientes o competidores, 24/7.",
+    title: "Captación de Leads 24/7",
+    desc: "Llenamos tu calendario. Buscamos y filtramos automáticamente a los clientes exactos que necesitan los servicios de tu despacho o consultoría.",
   },
   {
     icon: Activity,
     color: "amber",
-    title: "Motores de Outreach",
-    desc: "Secuencias frías totalmente orquestadas (Brevo, Outlook). La máquina prospecta, filtra y entrega el lead templado a tu equipo humano.",
+    title: "Reuniones de Ventas Cerradas",
+    desc: "La máquina envía los correos, hace seguimiento y calienta al cliente. Tu equipo humano solo interviene para cerrar la venta en la llamada.",
   },
   {
     icon: Zap,
     color: "emerald",
-    title: "Automatización n8n/Make",
-    desc: "Adiós al copiar y pegar. Tu ecosistema se hablará de forma nativa vía APIs y Webhooks; desde la factura hasta el onboarding.",
+    title: "Ahorro de Horas Administrativas",
+    desc: "Eliminamos el trabajo manual. Conectamos tus herramientas para que todo fluya solo: desde facturas automáticas hasta avisos a clientes.",
   },
   {
     icon: Shield,
     color: "indigo",
-    title: "Arquitectura Privada",
-    desc: "Datos encriptados bajo RLS (Row Level Security). Tus bases de clientes no se comparten en plataformas de terceros genéricas.",
+    title: "Protección Total de Datos",
+    desc: "Garantizamos la privacidad y seguridad. Tus listas de clientes son 100% tuyas, bajo bases de datos seguras e independientes (cumpliendo GDPR).",
   },
   {
     icon: Clock,
     color: "cyan",
-    title: "Soporte DevOps B2B",
-    desc: "Nuestras construcciones incluyen alertas de fallos en Slack/Discord y monitorización de scripts para un uptime impecable.",
+    title: "Soporte Técnico Directo",
+    desc: "Nos aseguramos de que el sistema nunca falle. Monitoreamos tu negocio en tiempo real para que tú solo te preocupes de vender.",
   },
 ]
 
@@ -111,13 +111,13 @@ export default function Home() {
             </div>
 
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-tight mb-6 text-gradient animate-fade-in-up">
-              Detecta licitaciones<br />
-              del BOE antes<br />
-              que tu competencia.
+              Consigue ayudas y<br />
+              clientes antes que<br />
+              tu competencia.
             </h1>
 
             <p className="text-xl text-neutral-400 leading-relaxed mb-10 max-w-2xl animate-fade-in-up delay-100">
-              Detectamos licitaciones, ayudas y oportunidades públicas en el BOE antes que tu competencia. Automatización B2B que opera 24/7 sin margen de error.
+              Automatizamos la captación de subvenciones del BOE y la prospección de ventas para que tu despacho de consultoría facture más, trabajando menos.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 animate-fade-in-up delay-200">
@@ -217,19 +217,19 @@ export default function Home() {
                 Disponible ahora
               </div>
               <h2 className="text-3xl md:text-4xl font-bold text-foreground">
-                Radar Estratégico<br />
-                <span className="blue-gradient">BOE / DOUE</span>
+                Aumenta tu facturación con el<br />
+                <span className="blue-gradient">Radar BOE Automático</span>
               </h2>
               <p className="text-neutral-500 leading-relaxed text-lg">
-                Monitorización automática del Boletín Oficial del Estado y Diario Oficial de la UE. Filtrado inteligente por keywords, alertas instantáneas y resumen ejecutivo en tu bandeja de entrada cada mañana.
+                Deja de perder horas leyendo el Boletín Oficial del Estado. Te enviamos directamente al correo las subvenciones exactas que necesitan tus clientes para que puedas cobrar por gestionarlas antes que nadie.
               </p>
               <ul className="space-y-3">
                 {[
-                  "Detección en menos de 5 minutos",
-                  "Filtros positivos y negativos configurables",
-                  "Alertas por email con resumen ejecutivo",
-                  "Cobertura BOE nacional + autonómico",
-                  "Sin revisión manual del boletín",
+                  "Te avisamos de nuevas ayudas en menos de 5 minutos",
+                  "Filtramos solo lo que interesa a tus clientes (tu sector y ciudad)",
+                  "Recibe un resumen listo para reenviar a tus clientes",
+                  "Cubre BOE, DOUE y boletines autonómicos",
+                  "Vende más servicios de tramitación sin esfuerzo",
                 ].map(item => (
                   <li key={item} className="flex items-center gap-3 text-sm text-neutral-500">
                     <ChevronRight className="w-4 h-4 text-blue-500 shrink-0" />

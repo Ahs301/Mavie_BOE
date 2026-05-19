@@ -100,9 +100,13 @@ export async function POST(request: Request) {
     }
 
     const brevoKey = process.env.BREVO_API_KEY
-    const adminEmail = process.env.ADMIN_EMAILS?.split(",")[0]?.trim() ?? "mavie.contact.dev@gmail.com"
+    const adminEmail = process.env.ADMIN_EMAILS?.split(",")[0]?.trim()
 
-    if (brevoKey) {
+    if (!adminEmail) {
+      console.error("[API/contact] ADMIN_EMAILS env var no configurada — alerta no enviada")
+    }
+
+    if (brevoKey && adminEmail) {
       try {
         const serviceLabel = serviceLabels[data.service_interest] ?? data.service_interest
         await fetch("https://api.brevo.com/v3/smtp/email", {
@@ -167,6 +171,61 @@ export async function POST(request: Request) {
       } catch (emailErr) {
         // El lead ya está guardado en DB — el email es secundario
         console.error("[API/contact] Brevo notification error:", emailErr)
+      }
+
+      // Email de confirmación al lead (cierra cita mientras está caliente)
+      try {
+        await fetch("https://api.brevo.com/v3/smtp/email", {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            "api-key": brevoKey,
+          },
+          body: JSON.stringify({
+            sender: { name: "Josep — Mavie Automations", email: "jose@mavieautomations.com" },
+            replyTo: { email: "jose@mavieautomations.com", name: "Josep" },
+            to: [{ email: data.email, name: data.contact_name }],
+            subject: `Hemos recibido tu solicitud — Mavie Automations`,
+            htmlContent: `<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f3f4f6;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;padding:24px 0;">
+<tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;font-family:Arial,Helvetica,sans-serif;">
+  <tr>
+    <td style="background:#1e3a5f;padding:24px;border-radius:8px 8px 0 0;">
+      <p style="margin:0;font-size:20px;font-weight:700;color:#ffffff;">Gracias por escribirnos, ${escapeHtml(data.contact_name)}.</p>
+      <p style="margin:6px 0 0;font-size:14px;color:#93c5fd;">Tu solicitud ya está en nuestra bandeja.</p>
+    </td>
+  </tr>
+  <tr>
+    <td style="background:#ffffff;padding:24px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 8px 8px;font-size:14px;color:#374151;line-height:1.6;">
+      <p>He recibido tu mensaje y te responderé personalmente en menos de 24 horas.</p>
+      <p>Si quieres agilizarlo, puedes reservar 30 minutos directamente en mi calendario:</p>
+      <table cellpadding="0" cellspacing="0" style="margin:20px auto;">
+        <tr>
+          <td>
+            <a href="https://cal.com/josep-ndwyo3/30min" style="display:inline-block;background:#2563eb;color:#ffffff;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:700;font-size:15px;">Reservar llamada de 30 min</a>
+          </td>
+        </tr>
+      </table>
+      <p style="margin-top:24px;border-top:1px solid #e5e7eb;padding-top:16px;font-size:13px;color:#6b7280;">
+        Josep — Fundador, Mavie Automations<br/>
+        <a href="https://mavieautomations.com" style="color:#2563eb;text-decoration:none;">mavieautomations.com</a>
+      </p>
+    </td>
+  </tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>`,
+          }),
+        })
+      } catch (confirmErr) {
+        console.error("[API/contact] Confirmation email error:", confirmErr)
       }
     }
 
