@@ -91,6 +91,7 @@ const steps = [
 
 
 export default function Home() {
+  // Inicializamos la vista principal de la landing page (Deploy Trigger)
   return (
     <div className="flex flex-col">
 
