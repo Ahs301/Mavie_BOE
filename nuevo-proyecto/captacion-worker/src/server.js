@@ -282,6 +282,18 @@ const server = createServer((req, res) => {
     return send(202, { scrape: r1, send: r2 });
   }
 
+  // ── Trigger: scrape-todo (160k+ combos, 1 ciclo) ──
+  if (req.method === 'POST' && pathname === '/trigger/scrape-todo') {
+    const result = spawnProc('scrape', ['scrape-todo', '--limit', '40']);
+    return send(result.ok ? 202 : 409, result);
+  }
+
+  // ── Trigger: scrape-todo-start (bucle infinito) ──
+  if (req.method === 'POST' && pathname === '/trigger/scrape-todo-start') {
+    const result = spawnProc('scrape', ['scrape-todo-start', '--limit', '40']);
+    return send(result.ok ? 202 : 409, result);
+  }
+
   // ── Trigger: custom campaign ──
   if (req.method === 'POST' && pathname === '/trigger/custom-campaign') {
     readBody().then(payload => {

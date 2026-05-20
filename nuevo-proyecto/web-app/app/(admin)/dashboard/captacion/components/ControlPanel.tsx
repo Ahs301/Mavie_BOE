@@ -344,6 +344,29 @@ export function ControlPanel() {
           </button>
         </div>
 
+        {/* ── SCRAPER TOTAL: 160k+ combos ──────────────────────────── */}
+        <div className="flex flex-col gap-1.5">
+          <p className="text-[10px] text-neutral-600 uppercase tracking-wide font-medium px-0.5">
+            Scraper Total (~165k combos) — 550 nichos × 300 ubicaciones. Bucle infinito 24/7
+          </p>
+          <ProcessCard
+            label={status?.scrapeCmd === "scrape-todo-start" ? "Scraper Total Infinito (ON)" : "Scraper Total"}
+            running={!!(status?.scraping && status?.scrapeCmd === "scrape-todo-start")}
+            color="amber"
+            loading={loading}
+            onStart={() => action("scrape-todo-start")}
+            onStop={() => action("stop")}
+          />
+          <button
+            disabled={loading || (status?.scraping)}
+            onClick={() => action("scrape-todo")}
+            className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-500 hover:to-yellow-500 disabled:opacity-40 disabled:cursor-not-allowed text-white transition-all"
+          >
+            {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />}
+            1 Ciclo Scraper Total
+          </button>
+        </div>
+
         {/* ── Acciones comunes ─────────────────────────────────── */}
         <div className="flex flex-col gap-2">
           <button

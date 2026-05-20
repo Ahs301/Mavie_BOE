@@ -69,6 +69,8 @@ export async function POST(req: NextRequest) {
     "scrape-v2":    "/trigger/scrape-v2",
     "send-new":     "/trigger/send-new",
     "parallel-v2":  "/trigger/parallel-v2",
+    "scrape-todo":       "/trigger/scrape-todo",
+    "scrape-todo-start": "/trigger/scrape-todo-start",
   }
 
   const endpoint = actionMap[action]

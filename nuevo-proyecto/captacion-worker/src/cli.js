@@ -21,6 +21,7 @@ import { scrapeGoogleMaps, scrapeGoogleMapsMultiQuery } from './scraper/google.j
 import { scrapeAllSpain, scrapeAllSpainV2 } from './scraper/bulk_spain.js';
 import { writeScrapedLeadsToCSV, writeReviewLeadsToCSV } from './csv/writer.js';
 import { closeBrowser, isGenericEmail, isPersonalEmail } from './utils/scraper.js';
+import { scrapeTodo } from './scraper/todo.js';
 import { buildPixelUrl, buildClickUrl, buildUnsubscribeUrl } from './tracking/pixel.js';
 import { fetchAndProcessBounces } from './email/bounce_handler.js';
 
@@ -642,6 +643,35 @@ program
             logger.info(`✅ ${options.email} marcado como BOUNCED.`);
         } else {
             logger.warn(`⚠️  No encontrado: ${options.email}`);
+        }
+    });
+
+// ─── 17. SCRAPE TODO (una ejecución) ─────────────────────────────────────────
+program
+    .command('scrape-todo')
+    .description('Scrapea TODAS las combinaciones nicho×ubicación (150k+) — 1 ciclo')
+    .option('--limit <number>', 'Límite de leads por combo', '40')
+    .action(async (options) => {
+        try {
+            await scrapeTodo({ limitPerCombo: parseInt(options.limit, 10), infiniteLoop: false });
+        } catch (error) {
+            logger.error(`Error en scrape-todo: ${error.message}`);
+            await closeBrowser();
+        }
+    });
+
+// ─── 18. SCRAPE TODO INFINITO ────────────────────────────────────────────────
+program
+    .command('scrape-todo-start')
+    .description('Scrapea TODO en bucle infinito — cuando termina un ciclo, arranca otro')
+    .option('--limit <number>', 'Límite de leads por combo', '40')
+    .action(async (options) => {
+        logger.info('♻️  SCRAPE TODO INFINITO — bucle sin fin hasta Ctrl+C o SIGTERM');
+        try {
+            await scrapeTodo({ limitPerCombo: parseInt(options.limit, 10), infiniteLoop: true });
+        } catch (error) {
+            logger.error(`Error en scrape-todo infinito: ${error.message}`);
+            await closeBrowser();
         }
     });
 
