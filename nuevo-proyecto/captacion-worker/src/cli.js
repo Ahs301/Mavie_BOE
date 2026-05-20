@@ -20,7 +20,7 @@ import { fetchEmailFromWebsite } from './utils/scraper.js';
 import { scrapeGoogleMaps, scrapeGoogleMapsMultiQuery } from './scraper/google.js';
 import { scrapeAllSpain, scrapeAllSpainV2 } from './scraper/bulk_spain.js';
 import { writeScrapedLeadsToCSV, writeReviewLeadsToCSV } from './csv/writer.js';
-import { closeBrowser } from './utils/scraper.js';
+import { closeBrowser, isGenericEmail, isPersonalEmail } from './utils/scraper.js';
 import { buildPixelUrl, buildClickUrl, buildUnsubscribeUrl } from './tracking/pixel.js';
 import { fetchAndProcessBounces } from './email/bounce_handler.js';
 
@@ -115,14 +115,24 @@ async function sendAction(options) {
     for (const lead of leads) {
         lead.sourceFile = sourceFileName;
 
-        if (!lead.email && lead.website) {
-            logger.info(`Buscando email en web para ${lead.name || lead.website}...`);
-            const result = await fetchEmailFromWebsite(lead.website);
-            if (result?.email) {
-                lead.email = result.email;
-                logger.info(`✅ Email encontrado: ${lead.email}`);
-            } else {
-                logger.warn(`❌ Sin email en ${lead.website}`);
+        if (lead.website) {
+            const hasGenericEmail = lead.email && isGenericEmail(lead.email);
+            if (!lead.email || hasGenericEmail) {
+                const label = hasGenericEmail ? `mejorando email genérico ${lead.email}` : `buscando email`;
+                logger.info(`🔍 ${label} para ${lead.name || lead.website}...`);
+                const result = await fetchEmailFromWebsite(lead.website);
+                if (result?.email) {
+                    if (!hasGenericEmail || isPersonalEmail(result.email)) {
+                        lead.email = result.email;
+                        logger.info(`✅ Email encontrado: ${result.email}`);
+                    } else {
+                        logger.info(`ℹ️ Solo se encontró genérico: ${result.email}, manteniendo original: ${lead.email}`);
+                    }
+                } else if (!hasGenericEmail) {
+                    logger.warn(`❌ Sin email en ${lead.website}`);
+                } else {
+                    logger.info(`ℹ️ No se encontró mejor email para ${lead.website}, usando ${lead.email}`);
+                }
             }
         }
 

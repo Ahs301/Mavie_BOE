@@ -61,6 +61,9 @@ const ConfigSchema = z.object({
   // Notificaciones internas (hot lead alert)
   ALERT_EMAIL: z.string().email().optional(),
 
+  // OpenAI toggle — desactivar si no hay créditos o se prefiere solo heurísticas
+  DISABLE_AI: z.string().transform(v => v === 'true').default('false'),
+
   // Multi-SMTP rotación — opcionales (se activan solo si están presentes)
   RESEND_SMTP_PASS: z.string().optional(),
   RESEND_FROM_EMAIL: z.string().email().optional(),

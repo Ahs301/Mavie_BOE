@@ -130,7 +130,9 @@ export async function readCSV(filePath) {
 
         const lead = parsed.data;
         if (lead.email) {
+            try { lead.email = decodeURIComponent(lead.email); } catch (_) {}
             lead.email = lead.email.split(',')[0].toLowerCase().trim();
+            if (!isValidEmail(lead.email)) lead.email = '';
         } else {
             lead.email = '';
         }

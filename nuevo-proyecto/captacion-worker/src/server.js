@@ -62,7 +62,7 @@ function getStats() {
 }
 
 // ─── .env helpers ─────────────────────────────────────────────────────────────
-const EDITABLE_KEYS = ['MAX_PER_DAY', 'MAX_PER_HOUR', 'SEND_DELAY_MS', 'ENABLE_WARMUP', 'FROM_NAME', 'FROM_EMAIL'];
+const EDITABLE_KEYS = ['MAX_PER_DAY', 'MAX_PER_HOUR', 'SEND_DELAY_MS', 'ENABLE_WARMUP', 'FROM_NAME', 'FROM_EMAIL', 'DISABLE_AI'];
 
 function readEnvConfig() {
   if (!fs.existsSync(ENV_PATH)) return {};
@@ -316,3 +316,18 @@ server.listen(PORT, () => {
   console.log(`[Captacion Server] Puerto ${PORT} — listo en la vps`);
   if (!CRON_SECRET) console.warn('[Captacion Server] ADVERTENCIA: CRON_SECRET no configurado');
 });
+
+// Graceful shutdown — libera el puerto antes de que PM2 arranque la nueva instancia
+function shutdown(signal) {
+  console.log(`[Captacion Server] ${signal} recibido — cerrando...`);
+  for (const [key, child] of Object.entries(procs)) {
+    if (child) { child.kill('SIGTERM'); procs[key] = null; }
+  }
+  server.close(() => {
+    console.log('[Captacion Server] Puerto liberado. Saliendo.');
+    process.exit(0);
+  });
+  setTimeout(() => process.exit(1), 5000);
+}
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT',  () => shutdown('SIGINT'));

@@ -23,6 +23,28 @@ const IGNORED_DOMAINS = [
     'adobecc.com', 'typekit.com', 'hotjar.com', 'hubspot.com', 'mailchimp.com',
 ];
 const IGNORED_PREFIXES = ['noreply@', 'no-reply@', 'donotreply@', 'mailer@', 'bounce@', 'postmaster@', 'daemon@', 'auto@', 'newsletter@', 'marketing@'];
+const GENERIC_PREFIXES = ['info@', 'admin@', 'contacto@', 'contact@', 'hola@', 'hello@', 'correo@', 'mail@', 'comercial@', 'ventas@', 'administracion@', 'webmaster@', 'presupuestos@', 'reservas@', 'recepcion@', 'trabaja@', 'recursos@', 'privacidad@', 'soporte@', 'support@'];
+
+const DEEP_PATHS = [
+    '/equipo', '/nuestro-equipo', '/abogados', '/profesionales', '/staff',
+    '/socios', '/directivos', '/fundadores', '/nosotros/equipo', '/nosotros/abogados',
+    '/bufete/abogados', '/abogados/equipo', '/quienes-somos/equipo',
+    '/sobre-nosotros/equipo', '/team', '/people', '/our-team', '/our-people',
+    '/lawyers', '/attorneys', '/partners', '/management',
+    '/departamento-legal', '/departamento', '/nuestro-bufete',
+];
+
+export function isGenericEmail(email) {
+    if (!email) return false;
+    const lower = email.toLowerCase();
+    return GENERIC_PREFIXES.some(p => lower.startsWith(p));
+}
+
+export function isPersonalEmail(email) {
+    if (!email) return false;
+    const lower = email.toLowerCase();
+    return !IGNORED_PREFIXES.some(p => lower.startsWith(p)) && !GENERIC_PREFIXES.some(p => lower.startsWith(p));
+}
 
 // 30+ rutas de contacto cubren prácticamente cualquier sitio
 const CONTACT_PATHS = [
@@ -179,8 +201,7 @@ async function getBrowser() {
 export async function fetchEmailFromWebsite(url) {
     if (!url) return { email: null, pageFound: null, status: 'SIN_WEB' };
 
-    // Timeout global: si tarda más de 15s en total, descartamos y seguimos
-    const GLOBAL_TIMEOUT_MS = 15000;
+    const GLOBAL_TIMEOUT_MS = 30000;
     const timeout = new Promise(resolve =>
         setTimeout(() => resolve({ email: null, pageFound: null, status: 'TIMEOUT' }), GLOBAL_TIMEOUT_MS)
     );
@@ -188,7 +209,7 @@ export async function fetchEmailFromWebsite(url) {
     return Promise.race([timeout, _fetchEmailInternal(url)]);
 }
 
-async function _fetchEmailInternal(url) {
+async function _fetchEmailInternal(url, preferPersonal = true) {
     let targetUrl = url.trim();
     if (!targetUrl.startsWith('http')) targetUrl = `https://${targetUrl}`;
 
@@ -217,32 +238,70 @@ async function _fetchEmailInternal(url) {
             }
         });
 
-        // Solo probamos la raíz + 5 rutas clave (antes eran 30+)
-        const FAST_PATHS = ['/contacto', '/contact', '/sobre-nosotros', '/about', '/aviso-legal'];
-        const pagesToTry = [targetUrl, ...FAST_PATHS.map(p => baseUrl + p)];
+        const allEmails = new Set();
+        let lastPageFound = null;
+        let foundPersonal = null;
+        let foundGeneric = null;
 
-        for (const pageUrl of pagesToTry) {
+        // FASE 1: raíz + páginas de contacto rápidas
+        const FAST_PATHS = ['/contacto', '/contact', '/sobre-nosotros', '/about', '/aviso-legal'];
+        const fastUrls = [targetUrl, ...FAST_PATHS.map(p => baseUrl + p)];
+
+        for (const pageUrl of fastUrls) {
             try {
                 const response = await page.goto(pageUrl, { waitUntil: 'domcontentloaded', timeout: 6000 });
                 if (!response || (!response.ok() && pageUrl !== targetUrl)) continue;
 
                 const { emails } = await extractEmailsFromPage(page);
-
-                if (emails.length > 0) {
-                    await page.close();
-                    return { email: emails[0], pageFound: pageUrl, status: 'FOUND' };
+                for (const e of emails) {
+                    if (allEmails.has(e)) continue;
+                    allEmails.add(e);
+                    lastPageFound = pageUrl;
+                    if (isPersonalEmail(e) && !foundPersonal) foundPersonal = e;
+                    if (isGenericEmail(e) && !foundGeneric) foundGeneric = e;
                 }
-            } catch (_) {
-                continue;
-            }
+                if (foundPersonal) break;
+            } catch (_) { continue; }
+        }
+
+        // Si encontramos personal, lo devolvemos ya
+        if (foundPersonal) {
+            await page.close();
+            return { email: foundPersonal, pageFound: lastPageFound, status: 'FOUND' };
+        }
+
+        // FASE 2: páginas de equipo/profesionales si solo tenemos genérico o nada
+        const deepUrls = DEEP_PATHS.map(p => baseUrl + p);
+        for (const pageUrl of deepUrls) {
+            try {
+                const response = await page.goto(pageUrl, { waitUntil: 'domcontentloaded', timeout: 4000 });
+                if (!response || !response.ok()) continue;
+
+                const { emails } = await extractEmailsFromPage(page);
+                for (const e of emails) {
+                    if (allEmails.has(e)) continue;
+                    allEmails.add(e);
+                    lastPageFound = pageUrl;
+                    if (isPersonalEmail(e) && !foundPersonal) foundPersonal = e;
+                    if (isGenericEmail(e) && !foundGeneric) foundGeneric = e;
+                }
+                if (foundPersonal) break;
+            } catch (_) { continue; }
         }
 
         await page.close();
+
+        if (foundPersonal) {
+            return { email: foundPersonal, pageFound: lastPageFound, status: 'FOUND' };
+        }
+        if (foundGeneric) {
+            return { email: foundGeneric, pageFound: lastPageFound, status: 'FOUND' };
+        }
         return { email: null, pageFound: null, status: 'WEB_SIN_EMAIL' };
 
     } catch (err) {
         if (page) { try { await page.close(); } catch (_) { } }
-        if (err.message.includes('net::ERR') || err.message.includes('timeout')) {
+        if (err.message?.includes('net::ERR') || err.message?.includes('timeout')) {
             return { email: null, pageFound: null, status: 'WEB_CAIDA' };
         }
         return { email: null, pageFound: null, status: 'ERROR' };

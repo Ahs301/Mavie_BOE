@@ -12,7 +12,7 @@ function getGreeting(lead = null) {
 // ─── HTML mínimo (plain-text style) ──────────────────────────────────────────
 // No header, no gradientes, no CTA con colores, no logo.
 // Solo texto + firma simple. Indistinguible de un email escrito a mano.
-export function buildHtmlEmail(bodyText, _ctaLinkUnused, _trackingPixelUnused, unsubscribeUrl = '') {
+export function buildHtmlEmail(bodyText, ctaLink, trackingPixelUrl, unsubscribeUrl = '') {
     const { FROM_NAME, COMPANY_NAME, SIGNATURE_URL, SIGNATURE_LINKEDIN } = getConfig();
 
     const paragraphs = bodyText
@@ -26,6 +26,16 @@ export function buildHtmlEmail(bodyText, _ctaLinkUnused, _trackingPixelUnused, u
 
     const linkedinPart = SIGNATURE_LINKEDIN
         ? ` · <a href="${SIGNATURE_LINKEDIN}" style="color:#1a56db;text-decoration:none;">LinkedIn</a>`
+        : '';
+
+    const ctaButton = ctaLink
+        ? `<p style="margin:24px 0 0 0;text-align:center;">
+             <a href="${ctaLink}" style="display:inline-block;padding:12px 28px;border-radius:6px;background:#1a56db;color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;">Reservar demo 10 min</a>
+           </p>`
+        : '';
+
+    const trackingPixel = trackingPixelUrl
+        ? `<img src="${trackingPixelUrl}" width="1" height="1" style="display:block;width:1px;height:1px;border:0;" alt="" />`
         : '';
 
     const unsubLine = unsubscribeUrl
@@ -45,6 +55,8 @@ export function buildHtmlEmail(bodyText, _ctaLinkUnused, _trackingPixelUnused, u
 
     ${paragraphs}
 
+    ${ctaButton}
+
     <p style="margin:28px 0 2px 0;font-size:14px;color:#111827;line-height:1.4;">
       <strong>${FROM_NAME}</strong>
     </p>
@@ -54,6 +66,7 @@ export function buildHtmlEmail(bodyText, _ctaLinkUnused, _trackingPixelUnused, u
     </p>
 
     ${unsubLine}
+    ${trackingPixel}
   </div>
 </body>
 </html>`;
@@ -289,7 +302,8 @@ He montado un radar automático que filtra a diario el BOE y el BDNS y manda sol
 
     const { CALENDLY_URL } = getConfig();
     const calLink = CALENDLY_URL || 'https://cal.eu/josep-mes2ul/demo-radar-boe';
-    const body = `${getGreeting(lead)}\n\n${bodyContent}\n\nPodéis reservar aquí directamente si os viene mejor: ${calLink}\n\nUn saludo,`;
+    const openingLine = lead.openingLine ? `${lead.openingLine}\n\n` : '';
+    const body = `${getGreeting(lead)}\n\n${openingLine}${bodyContent}\n\nPodéis reservar aquí directamente si os viene mejor: ${calLink}\n\nUn saludo,`;
 
     return { subject, body, templateKey, abVariant };
 }

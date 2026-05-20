@@ -65,6 +65,12 @@ Tu respuesta DEBE ser JSON válido con esta estructura EXACTA (sin markdown):
 }`;
 
 export async function classifyLead(lead) {
+    const config = getConfig();
+    if (config.DISABLE_AI) {
+        logger.debug(`IA desactivada (DISABLE_AI=true), usando heurísticas para ${lead.name}`);
+        return classifyByHeuristics(lead);
+    }
+
     const aiClient = getClient();
 
     if (!aiClient || (!lead.category && !lead.description && !lead.website && !lead.name)) {
