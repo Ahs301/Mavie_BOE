@@ -7,6 +7,17 @@ import { scrapeGoogleMapsMultiQuery } from './google.js';
 import { appendScrapedLeadsToCSV, appendReviewLeadsToCSV } from '../csv/writer.js';
 import { closeBrowser } from '../utils/scraper.js';
 
+let shouldStop = false;
+
+process.on('SIGTERM', () => {
+  logger.info('🛑 SIGTERM recibido — terminando después del combo actual...');
+  shouldStop = true;
+});
+process.on('SIGINT', () => {
+  logger.info('🛑 SIGINT recibido — terminando después del combo actual...');
+  shouldStop = true;
+});
+
 const STATE_FILE = path.resolve(process.cwd(), 'todo_state.json');
 const CSV_LEADS = path.resolve(process.cwd(), 'Todo_Leads.csv');
 const CSV_REVIEW = path.resolve(process.cwd(), 'Todo_Revisar.csv');
@@ -189,7 +200,7 @@ export function saveTodoState(state) {
   fs.writeFileSync(STATE_FILE, JSON.stringify(state, null, 2), 'utf-8');
 }
 
-export async function scrapeTodo({ limitPerCombo = 40, infiniteLoop = false } = {}) {
+async function scrapeTodoCycle({ limitPerCombo = 40 } = {}) {
   const allItems = generateTodoList();
   const totalItems = allItems.length;
   const state = loadTodoState();
@@ -201,7 +212,7 @@ export async function scrapeTodo({ limitPerCombo = 40, infiniteLoop = false } = 
   }
 
   logger.info(`\n🔥 SCRAPER TOTAL — ${MEGA_NICHES.length} nichos × ${MEGA_LOCATIONS.length} ubicaciones = ${totalItems} combinaciones`);
-  logger.info(`   Límite por combo: ${limitPerCombo} leads | Loop infinito: ${infiniteLoop ? '✅' : '❌'}`);
+  logger.info(`   Límite por combo: ${limitPerCombo} leads`);
 
   if (state.completed && Object.keys(state.completed).length > 0) {
     const done = Object.keys(state.completed).length;
@@ -222,6 +233,15 @@ export async function scrapeTodo({ limitPerCombo = 40, infiniteLoop = false } = 
   let errorCount = 0;
 
   for (let i = 0; i < totalItems; i++) {
+    if (shouldStop) {
+      logger.info('🛑 Parada solicitada. Guardando estado y saliendo limpio...');
+      saveTodoState(state);
+      bar.stop();
+      await closeBrowser();
+      logger.info(`📊 Progreso guardado: ${Object.keys(state.completed).length}/${totalItems} combos`);
+      process.exit(0);
+    }
+
     bar.update(i);
     const item = allItems[i];
 
@@ -277,18 +297,30 @@ export async function scrapeTodo({ limitPerCombo = 40, infiniteLoop = false } = 
   logger.info(`   CSV leads: ${CSV_LEADS}`);
   logger.info(`   CSV revisión: ${CSV_REVIEW}`);
 
-  if (infiniteLoop) {
-    logger.info(`\n♻️  MODO INFINITO — todos los combos completados. Reiniciando en 60 segundos...`);
-    await sleep(60000);
+  await closeBrowser();
+  logger.info(`\n💡 Para enviar los leads: npm run outreach:send -- --file "${CSV_LEADS}"`);
+}
+
+export async function scrapeTodo(options = {}) {
+  const { limitPerCombo = 40, infiniteLoop = false } = options;
+  if (!infiniteLoop) {
+    return scrapeTodoCycle({ limitPerCombo });
+  }
+  while (true) {
+    const state = loadTodoState();
     state.completed = {};
     state.totalCycles = (state.totalCycles || 0) + 1;
     state.cycleStart = new Date().toISOString();
+    if (!state.startedAt) state.startedAt = new Date().toISOString();
     saveTodoState(state);
-    logger.info(`♻️  Ciclo #${state.totalCycles} iniciado. ¡Los resultados de Google Maps cambian cada día!`);
-    await scrapeTodo({ limitPerCombo, infiniteLoop: true });
-  } else {
-    await closeBrowser();
-    logger.info(`\n💡 Para reiniciar manualmente: node src/cli.js scrape-todo-start`);
-    logger.info(`💡 Para enviar los leads: npm run outreach:send -- --file "${CSV_LEADS}"`);
+
+    logger.info(`\n♻️  CICLO #${state.totalCycles} — Scraper Total infinito 24/7`);
+    try {
+      await scrapeTodoCycle({ limitPerCombo });
+    } catch (err) {
+      logger.error(`❌ Error en ciclo: ${err.message}`);
+    }
+    logger.info(`♻️  Ciclo #${state.totalCycles} completado. Reiniciando en 60 segundos...`);
+    await sleep(60000);
   }
 }

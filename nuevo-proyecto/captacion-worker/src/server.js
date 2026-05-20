@@ -229,7 +229,22 @@ const server = createServer((req, res) => {
   if (req.method === 'POST' && pathname === '/stop') {
     let stopped = 0;
     for (const [key, child] of Object.entries(procs)) {
-      if (child) { child.kill('SIGTERM'); procs[key] = null; stopped++; addLog('control', `${key} detenido manualmente`); }
+      if (child) {
+        child.kill('SIGTERM');
+        stopped++;
+        addLog('control', `${key} detenido (SIGTERM). Terminará después del combo actual.`);
+        // Force kill after 15s if still running
+        setTimeout(() => {
+          try {
+            if (procs[key] && !procs[key].killed) {
+              procs[key].kill('SIGKILL');
+              procs[key] = null;
+              procCmd[key] = null;
+              addLog('control', `${key} forzado con SIGKILL`);
+            }
+          } catch {}
+        }, 15000);
+      }
     }
     return send(200, { ok: true, stopped });
   }
