@@ -73,7 +73,6 @@ export function ControlPanel() {
   const [loading, setLoading]     = useState(false)
   const [toast, setToast]         = useState<{ msg: string; ok: boolean } | null>(null)
   const [customOpen, setCustomOpen] = useState(false)
-  const [logsOpen, setLogsOpen]   = useState(false)
   const [niche, setNiche]         = useState("")
   const [location, setLocation]   = useState("")
   const logsRef = useRef<HTMLDivElement>(null)
@@ -330,29 +329,25 @@ export function ControlPanel() {
         </div>
       )}
 
-      {/* ════════ Live Logs ════════ */}
+      {/* ════════ Live Logs (siempre visible) ════════ */}
       <div className="rounded-xl border border-neutral-800 bg-card overflow-hidden">
         <div className="px-4 py-2.5 border-b border-neutral-800 flex items-center justify-between">
-          <button onClick={() => setLogsOpen(o => !o)} className="flex items-center gap-1.5 text-[10px] font-semibold text-neutral-500 uppercase tracking-wide">
+          <span className="flex items-center gap-1.5 text-[10px] font-semibold text-neutral-500 uppercase tracking-wide">
             <Terminal className="w-3 h-3" /> Logs en vivo {logs.length > 0 && `(${logs.length})`}
-          </button>
-          <div className="flex items-center gap-2">
-            <button onClick={() => setLogs([])} className="text-[9px] text-neutral-700 hover:text-neutral-500 transition-colors">limpiar</button>
-          </div>
+          </span>
+          <button onClick={() => setLogs([])} className="text-[9px] text-neutral-700 hover:text-neutral-500 transition-colors">limpiar</button>
         </div>
-        {logsOpen && (
-          <div ref={logsRef} className="h-40 overflow-y-auto p-3 font-mono text-[9px] leading-relaxed bg-neutral-950 flex flex-col gap-0.5">
-            {logs.length === 0 ? (
-              <span className="text-neutral-700">Esperando actividad del motor...</span>
-            ) : logs.map((l, i) => (
-              <div key={i} className="flex gap-2 min-w-0">
-                <span className="text-neutral-700 shrink-0 tabular-nums">{new Date(l.ts).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</span>
-                <span className={`shrink-0 ${logColor(l.source)}`}>[{l.source}]</span>
-                <span className="text-neutral-300 break-all">{l.line}</span>
-              </div>
-            ))}
-          </div>
-        )}
+        <div ref={logsRef} className="h-48 overflow-y-auto p-3 font-mono text-[10px] leading-relaxed bg-neutral-950 flex flex-col gap-0.5">
+          {logs.length === 0 ? (
+            <span className="text-neutral-700">Esperando actividad del motor...</span>
+          ) : logs.map((l, i) => (
+            <div key={i} className="flex gap-2 min-w-0">
+              <span className="text-neutral-700 shrink-0 tabular-nums">{new Date(l.ts).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</span>
+              <span className={`shrink-0 ${logColor(l.source)}`}>[{l.source}]</span>
+              <span className="text-neutral-300 break-all">{l.line}</span>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Stop all */}
