@@ -294,6 +294,25 @@ const server = createServer((req, res) => {
     return send(result.ok ? 202 : 409, result);
   }
 
+  // ── Trigger: send-todo (envía leads del Scraper Total) ──
+  if (req.method === 'POST' && pathname === '/trigger/send-todo') {
+    const result = spawnProc('send', ['send-todo']);
+    return send(result.ok ? 202 : 409, result);
+  }
+
+  // ── Trigger: scrape-todo + send secuencial ──
+  if (req.method === 'POST' && pathname === '/trigger/scrape-todo-send') {
+    const result = spawnProc('scrape', ['scrape-todo-send', '--limit', '40']);
+    return send(result.ok ? 202 : 409, result);
+  }
+
+  // ── Trigger: parallel todo (scrape infinito + send en paralelo) ──
+  if (req.method === 'POST' && pathname === '/trigger/parallel-todo') {
+    const r1 = spawnProc('scrape', ['scrape-todo-start', '--limit', '40']);
+    const r2 = spawnProc('send',   ['send-todo']);
+    return send(202, { scrape: r1, send: r2 });
+  }
+
   // ── Trigger: custom campaign ──
   if (req.method === 'POST' && pathname === '/trigger/custom-campaign') {
     readBody().then(payload => {

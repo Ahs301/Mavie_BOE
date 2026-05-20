@@ -631,7 +631,22 @@ program
         logger.info(`✅ Bounces: ${result.bounced} marcados de ${result.processed} emails procesados.`);
     });
 
-// ─── 16. MARK BOUNCED (manual) ───────────────────────────────────────────────
+// ─── 16. SEND TODO (Scraper Total leads) ─────────────────────────────────────
+program
+    .command('send-todo')
+    .description('Envía los leads del Scraper Total (Todo_Leads.csv)')
+    .option('--dry-run', 'Modo simulado')
+    .action(async (options) => {
+        const file = 'Todo_Leads.csv';
+        if (!fs.existsSync(file)) {
+            logger.error(`No existe ${file}. Ejecuta scrape-todo primero.`);
+            return;
+        }
+        logger.info('🚀 SEND TODO — leads del Scraper Total...');
+        await sendAction({ file, dryRun: options.dryRun });
+    });
+
+// ─── 17. MARK BOUNCED (manual) ───────────────────────────────────────────────
 program
     .command('mark-bounced')
     .description('Marca manualmente un email como BOUNCED (rebotado)')
@@ -660,7 +675,27 @@ program
         }
     });
 
-// ─── 18. SCRAPE TODO INFINITO ────────────────────────────────────────────────
+// ─── 18. SCRAPE TODO + SEND (una ejecución secuencial) ───────────────────────
+program
+    .command('scrape-todo-send')
+    .description('Scrapea TODO en 1 ciclo + envía los leads encontrados automáticamente')
+    .option('--limit <number>', 'Límite de leads por combo', '40')
+    .action(async (options) => {
+        logger.info('🤖 SCRAPE-TODO-SEND: scrapea 1 ciclo, luego envía los leads.');
+        try {
+            await scrapeTodo({ limitPerCombo: parseInt(options.limit, 10), infiniteLoop: false });
+            const file = 'Todo_Leads.csv';
+            if (fs.existsSync(file)) {
+                logger.info('\n📧 FASE 2: Enviando leads del Scraper Total...');
+                await sendAction({ file, dryRun: false });
+            }
+        } catch (error) {
+            logger.error(`Error: ${error.message}`);
+            await closeBrowser();
+        }
+    });
+
+// ─── 19. SCRAPE TODO INFINITO ────────────────────────────────────────────────
 program
     .command('scrape-todo-start')
     .description('Scrapea TODO en bucle infinito — cuando termina un ciclo, arranca otro')
