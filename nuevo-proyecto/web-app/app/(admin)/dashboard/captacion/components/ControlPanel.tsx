@@ -142,7 +142,7 @@ export function ControlPanel() {
   }
 
   const running = status?.scraping || status?.sending
-  const scrapeTodoRunning = status?.scraping && status?.scrapeCmd === "scrape-todo-start"
+  const scrapeTodoRunning = Boolean(status?.scraping && status?.scrapeCmd === "scrape-todo-start")
 
   return (
     <div className="flex flex-col gap-4">
