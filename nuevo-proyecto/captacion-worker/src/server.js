@@ -50,6 +50,15 @@ function checkAuth(req) {
 function getStats() {
   const db = getDB();
   const row = (sql) => db.prepare(sql).get();
+  let todoCsvLines = 0, todoCsvBytes = 0;
+  try {
+    const csvPath = path.resolve(process.cwd(), 'Todo_Leads.csv');
+    if (fs.existsSync(csvPath)) {
+      const content = fs.readFileSync(csvPath, 'utf-8');
+      todoCsvLines = content.split('\n').filter(l => l.trim()).length - 1; // menos cabecera
+      todoCsvBytes = fs.statSync(csvPath).size;
+    }
+  } catch {}
   return {
     total:   row("SELECT COUNT(*) as n FROM leads").n,
     pending: row("SELECT COUNT(*) as n FROM leads WHERE status='PENDING'").n,
@@ -58,6 +67,8 @@ function getStats() {
     bounced: row("SELECT COUNT(*) as n FROM leads WHERE status='BOUNCED'").n,
     opened:  row("SELECT COUNT(*) as n FROM leads WHERE open_count > 0").n,
     clicked: row("SELECT COUNT(*) as n FROM leads WHERE click_count > 0").n,
+    todoCsvLines,
+    todoCsvSizeKB: Math.round(todoCsvBytes / 1024),
   };
 }
 

@@ -184,9 +184,20 @@ export function ControlPanel() {
         <div className="p-3 sm:p-4 flex flex-col gap-3">
           <p className="text-[10px] text-amber-400/60 leading-relaxed">
             <Layers className="w-3 h-3 inline-block mr-1" />
-            550 tipos de nicho × 300 ubicaciones = 165k combinaciones. En infinito, cuando acaba un ciclo,
-            espera 60s y empieza otro (Google Maps cambia cada día). Los leads se guardan en <code className="bg-amber-950/40 px-1 rounded">Todo_Leads.csv</code>.
+            550 tipos de nicho × 300 ubicaciones = 165k combinaciones. Los leads se guardan en <code className="bg-amber-950/40 px-1 rounded">Todo_Leads.csv</code>.
           </p>
+          <div className="flex items-center gap-3">
+            {status?.stats?.todoCsvLines !== undefined && (
+              <span className="inline-flex items-center gap-1.5 text-[10px] text-emerald-400 bg-emerald-500/10 border border-emerald-900/40 px-2.5 py-1 rounded-full">
+                <Layers className="w-2.5 h-2.5" />
+                {status.stats.todoCsvLines.toLocaleString('es-ES')} leads en Todo_Leads.csv
+                {status.stats.todoCsvSizeKB > 0 && <span className="text-emerald-600">({status.stats.todoCsvSizeKB} KB)</span>}
+              </span>
+            )}
+            {(!status?.stats || status.stats.todoCsvLines === undefined) && (
+              <span className="text-[10px] text-neutral-600">Todo_Leads.csv: esperando scraper...</span>
+            )}
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <ProcessCard
               label="Scraper Total Infinito"
