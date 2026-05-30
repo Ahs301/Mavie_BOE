@@ -277,6 +277,28 @@ Tengo un radar que hace ese seguimiento automático, con filtros por sector y te
             break;
         }
 
+        // Template para vender el servicio de captación B2B (no Radar BOE)
+        // Úsalo cuando el cliente objetivo es una empresa que necesita leads propios
+        case 'captacion_service': {
+            templateKey = 'initial_captacion_service';
+            const nombre = lead.name || 'vuestra empresa';
+            subjectOptions = [
+                `¿Cuántas reuniones de venta conseguís a la semana?`,
+                `Sistema de captación B2B automatizado para ${nombre}`,
+                `Una pregunta sobre vuestro proceso de captación de clientes`,
+            ];
+            bodyContent = `Soy Josep, de Mavie.
+
+Os escribo porque montamos sistemas de prospección B2B automatizados para empresas que quieren tener un flujo constante de reuniones con potenciales clientes, sin depender de referencias ni de publicidad.
+
+El sistema funciona así: scrapeamos bases de datos públicas para encontrar vuestro cliente ideal, enriquecemos los contactos con IA, y enviamos secuencias de emails personalizados de forma automática. Sin equipo de ventas adicional, sin CRM caro.
+
+Con una empresa similar a la vuestra conseguimos 8-12 reuniones cualificadas en el primer mes de funcionamiento.
+
+¿Tendría sentido que os contara cómo funciona en 10 minutos?`;
+            break;
+        }
+
         default: {
             templateKey = 'initial_general';
             subjectOptions = [

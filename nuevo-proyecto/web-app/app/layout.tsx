@@ -76,6 +76,49 @@ const websiteSchema = {
   '@type': 'WebSite',
   name: 'Mavie Automations',
   url: BASE_URL,
+  potentialAction: {
+    '@type': 'SearchAction',
+    target: `${BASE_URL}/radar-boe/{search_term_string}`,
+    'query-input': 'required name=search_term_string',
+  },
+}
+
+// Schema LocalBusiness para SEO local (Valencia)
+const localBusinessSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'LocalBusiness',
+  name: 'Mavie Automations',
+  url: BASE_URL,
+  logo: `${BASE_URL}/logo-mavie.png`,
+  image: `${BASE_URL}/og-image.png`,
+  description: 'Empresa de automatización B2B en Valencia. Radar BOE automático, captación de leads y automatización de procesos para consultoras y despachos.',
+  address: {
+    '@type': 'PostalAddress',
+    addressLocality: 'Valencia',
+    addressRegion: 'Comunidad Valenciana',
+    addressCountry: 'ES',
+  },
+  geo: {
+    '@type': 'GeoCoordinates',
+    latitude: 39.4699,
+    longitude: -0.3763,
+  },
+  telephone: '+34-633-448-806',
+  email: 'contacto@mavieautomations.com',
+  openingHoursSpecification: {
+    '@type': 'OpeningHoursSpecification',
+    dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+    opens: '09:00',
+    closes: '19:00',
+  },
+  areaServed: {
+    '@type': 'Country',
+    name: 'España',
+  },
+  priceRange: '€€',
+  sameAs: [
+    'https://www.linkedin.com/company/mavie-automations',
+  ],
 }
 
 // Schema Organization JSON-LD para SEO
@@ -86,7 +129,7 @@ const organizationSchema = {
   url: BASE_URL,
   logo: {
     '@type': 'ImageObject',
-    url: `${BASE_URL}/logo.png`,
+    url: `${BASE_URL}/logo-mavie.png`,
     width: 512,
     height: 512,
   },
@@ -119,6 +162,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }}
         />
       </head>
       <body className="min-h-screen bg-background text-foreground antialiased flex flex-col font-sans">

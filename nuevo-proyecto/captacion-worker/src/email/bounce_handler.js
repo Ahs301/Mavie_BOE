@@ -1,6 +1,6 @@
-// src/email/bounce_handler.js – gestión automática de rebotes por IMAP
+// src/email/bounce_handler.js – gestión automática de rebotes + detección de replies por IMAP
 import logger from '../utils/logger.js';
-import { markBounced } from '../db/index.js';
+import { markBounced, markReplied, findLeadByMessageId } from '../db/index.js';
 
 // Expresiones para detectar emails en mensajes de rebote
 const EMAIL_IN_BOUNCE_REGEX = /(?:failed|undelivered|rejected|unknown user)[\s\S]{0,300}?([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})/gi;
@@ -116,4 +116,98 @@ export async function fetchAndProcessBounces(db) {
     }
 
     return processBounces(db, rawMessages);
+}
+
+// ─── Auto-detección de replies ─────────────────────────────────────────────────
+
+/**
+ * Lee la bandeja IMAP, detecta replies a emails enviados por nosotros
+ * (via In-Reply-To / References) y los marca como REPLIED en la DB.
+ * Evita follow-ups a quien ya ha contestado sin intervención manual.
+ *
+ * @param {object} db - instancia better-sqlite3
+ * @returns {Promise<{ processed: number, replied: number }>}
+ */
+export async function fetchAndProcessReplies(db) {
+    const { IMAP_HOST, IMAP_PORT, IMAP_USER, IMAP_PASS } = process.env;
+
+    if (!IMAP_HOST || !IMAP_USER || !IMAP_PASS) {
+        logger.warn('⚠️  IMAP no configurado. Saltando detección de replies.');
+        return { processed: 0, replied: 0 };
+    }
+
+    let ImapFlow;
+    try {
+        const mod = await import('imapflow');
+        ImapFlow = mod.ImapFlow;
+    } catch {
+        logger.warn('⚠️  imapflow no instalado. Ejecuta: npm install imapflow');
+        return { processed: 0, replied: 0 };
+    }
+
+    const client = new ImapFlow({
+        host: IMAP_HOST,
+        port: parseInt(IMAP_PORT || '993', 10),
+        secure: true,
+        auth: { user: IMAP_USER, pass: IMAP_PASS },
+        logger: false,
+    });
+
+    let processed = 0;
+    let replied = 0;
+
+    try {
+        await client.connect();
+        await client.mailboxOpen('INBOX');
+
+        // Buscar emails recibidos en los últimos 30 días para no procesar toda la bandeja
+        const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+        const uids = await client.search({ since, seen: false });
+
+        if (uids.length === 0) {
+            logger.info('📭 No hay emails nuevos que revisar para replies.');
+            await client.logout();
+            return { processed: 0, replied: 0 };
+        }
+
+        logger.info(`📬 Revisando ${uids.length} emails para detectar replies...`);
+
+        for await (const msg of client.fetch(uids, {
+            envelope: true,
+            headers: ['in-reply-to', 'references'],
+        })) {
+            processed++;
+
+            // Recopilar todos los message-IDs que este email referencia
+            const inReplyTo = msg.envelope?.inReplyTo || '';
+            const referencesRaw = msg.headers?.get('references') || '';
+            const allRefs = [
+                inReplyTo,
+                ...referencesRaw.split(/\s+/),
+            ].map(id => id.replace(/[<>]/g, '').trim()).filter(Boolean);
+
+            if (allRefs.length === 0) continue;
+
+            // Buscar si alguna referencia coincide con un email que enviamos
+            for (const msgId of allRefs) {
+                const match = findLeadByMessageId(db, msgId);
+                if (!match) continue;
+
+                const changes = markReplied(db, match.email);
+                if (changes > 0) {
+                    replied++;
+                    logger.info(`💬 Reply detectado → ${match.email} marcado como REPLIED.`);
+                }
+                break; // con una referencia que coincide es suficiente
+            }
+        }
+
+        await client.logout();
+    } catch (err) {
+        logger.error(`Error en detección de replies IMAP: ${err.message}`);
+        try { await client.logout(); } catch (_) {}
+    }
+
+    logger.info(`📊 Replies: ${processed} emails procesados | ${replied} nuevos REPLIED marcados.`);
+    return { processed, replied };
 }

@@ -17,13 +17,24 @@ import {
 import { sendEmail, verifySMTP } from './email/sender.js';
 import { sleep, HourlyRateLimiter, DailyWarmupLimiter } from './utils/throttle.js';
 import { fetchEmailFromWebsite } from './utils/scraper.js';
+import { verifyEmail, shouldSkipEmail } from './utils/emailVerifier.js';
 import { scrapeGoogleMaps, scrapeGoogleMapsMultiQuery } from './scraper/google.js';
+import { scrapeAmarillasMultiQuery } from './scraper/amarillas.js';
+import { scrapeBorme, scrapeBormeByQuery } from './scraper/borme.js';
+import { scrapeBdns } from './scraper/bdns.js';
+import { scrapeBingMultiQuery } from './scraper/bing.js';
+import { enrichLeadsWithHunter } from './utils/hunterEnrich.js';
+import { enrichLeadsWithDecisionMaker } from './utils/decisionMaker.js';
 import { scrapeAllSpain, scrapeAllSpainV2 } from './scraper/bulk_spain.js';
 import { writeScrapedLeadsToCSV, writeReviewLeadsToCSV } from './csv/writer.js';
 import { closeBrowser, isGenericEmail, isPersonalEmail } from './utils/scraper.js';
 import { scrapeTodo } from './scraper/todo.js';
 import { buildPixelUrl, buildClickUrl, buildUnsubscribeUrl } from './tracking/pixel.js';
-import { fetchAndProcessBounces } from './email/bounce_handler.js';
+import { fetchAndProcessBounces, fetchAndProcessReplies } from './email/bounce_handler.js';
+import {
+    isBlacklisted, addToBlacklistEmail, addToBlacklistDomain,
+    removeFromBlacklistEmail, removeFromBlacklistDomain, getBlacklist,
+} from './db/index.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -86,6 +97,7 @@ program
 // ─── 2. SEND (core) ──────────────────────────────────────────────────────────
 async function sendAction(options) {
     const isDryRun = options.dryRun || options.dry_run;
+    const skipVerify = options.skipVerify || process.env.DISABLE_EMAIL_VERIFY === 'true';
     logger.info(`🚀 CAMPAÑA: ${options.file} (Dry-run: ${!!isDryRun})`);
 
     const config = getConfig();
@@ -96,7 +108,12 @@ async function sendAction(options) {
         process.exit(1);
     }
 
-    const { SEND_DELAY_MS, MAX_PER_HOUR, MAX_PER_DAY, DOMAIN_SETUP_DATE, ENABLE_WARMUP } = config;
+    let { SEND_DELAY_MS, MAX_PER_HOUR, MAX_PER_DAY, DOMAIN_SETUP_DATE, ENABLE_WARMUP } = config;
+    if (options.fastMode) {
+      SEND_DELAY_MS = 10000;
+      MAX_PER_HOUR = 60;
+      MAX_PER_DAY = 300;
+    }
     const rateLimiter = new HourlyRateLimiter(MAX_PER_HOUR);
 
     // Warmup: limita emails/día en primeras 2 semanas
@@ -144,6 +161,30 @@ async function sendAction(options) {
             logger.info(`Duplicado (${exists.reason}): ${lead.email}`);
             skipped++;
             continue;
+        }
+
+        // ─── Blacklist check ──────────────────────────────────────────────────
+        const domain = lead.email ? lead.email.split('@')[1] : null;
+        const blacklisted = isBlacklisted(db, lead.email, domain);
+        if (blacklisted) {
+            logger.info(`🚫 Blacklist (${blacklisted.reason}): ${lead.email}`);
+            skipped++;
+            continue;
+        }
+
+        // ─── Verificación email (MX + SMTP) ──────────────────────────────────
+        if (!skipVerify && !isDryRun) {
+            const v = await verifyEmail(lead.email);
+            if (shouldSkipEmail(v)) {
+                logger.info(`🚫 Email inválido: ${lead.email} — ${v.reason}`);
+                skipped++;
+                continue;
+            }
+            if (v.result === 'risky') {
+                logger.warn(`⚠️  ${lead.email}: SMTP no verificable (${v.reason}) — enviando igualmente`);
+            } else if (v.result !== 'valid') {
+                logger.debug(`ℹ️  ${lead.email}: ${v.result} — ${v.reason}`);
+            }
         }
 
         if (!isDryRun) {
@@ -207,6 +248,7 @@ program
     .description('Procesa CSV, clasifica con IA, envía emails HTML con PDF adjunto y registra en DB')
     .requiredOption('-f, --file <path>', 'Ruta al fichero CSV')
     .option('--dry-run', 'Modo simulado: no envía.')
+    .option('--skip-verify', 'Omitir verificación SMTP (más rápido, mayor riesgo de bounces)')
     .action(sendAction);
 
 // ─── 3. FOLLOWUP PREVIEW ─────────────────────────────────────────────────────
@@ -507,6 +549,111 @@ program
         }
     });
 
+// ─── 10b. SCRAPE AMARILLAS ───────────────────────────────────────────────────
+program
+    .command('scrape-amarillas')
+    .description('Scrapea Páginas Amarillas (sin Puppeteer) — complementa Google Maps con empresas distintas')
+    .requiredOption('-n, --niche <string>', 'Nicho (ej. "asesoría")')
+    .requiredOption('-l, --location <string>', 'Localización (ej. "Madrid")')
+    .option('--limit <number>', 'Límite de leads con email', '200')
+    .option('--no-variants', 'Desactivar variantes de búsqueda')
+    .action(async (options) => {
+        try {
+            const limit = parseInt(options.limit, 10);
+            const useVariants = options.variants !== false;
+            const safeNiche    = options.niche.replace(/[^a-z0-9à-üÀ-Ü ]/gi, '_').replace(/\s+/g, '_');
+            const safeLocation = options.location.replace(/[^a-z0-9à-üÀ-Ü ]/gi, '_').replace(/\s+/g, '_');
+
+            logger.info(`\n🟡 SCRAPER AMARILLAS — "${options.niche}" en "${options.location}" (variantes: ${useVariants ? '✅' : '❌'})\n`);
+
+            const { leads, reviewLeads } = await scrapeAmarillasMultiQuery(
+                options.niche, options.location, limit
+            );
+
+            const timestamp = new Date().toISOString().slice(0, 10);
+
+            if (leads.length > 0) {
+                const mainFile = `Amarillas_${safeNiche}_${safeLocation}_${timestamp}.csv`;
+                writeScrapedLeadsToCSV(leads, mainFile);
+                logger.info(`📨 Listo: node src/cli.js send --file "${mainFile}"`);
+            }
+            if (reviewLeads.length > 0) {
+                writeReviewLeadsToCSV(reviewLeads, `Revisar_Amarillas_${safeNiche}_${safeLocation}_${timestamp}.csv`);
+            }
+
+            const total = leads.length + reviewLeads.length;
+            const pctEmail = total > 0 ? Math.round((leads.length / total) * 100) : 0;
+            console.log(`\n📊 AMARILLAS: 🟢 ${leads.length} con email | 🟡 ${reviewLeads.length} sin email | 📌 ${pctEmail}% tasa\n`);
+        } catch (err) {
+            logger.error(`Error en scrape-amarillas: ${err.message}`);
+        }
+    });
+
+// ─── 10c. SCRAPE DUAL (Google Maps + Amarillas en paralelo) ──────────────────
+program
+    .command('scrape-dual')
+    .description('Scrapea Google Maps Y Páginas Amarillas en paralelo — máxima cobertura de empresas')
+    .requiredOption('-n, --niche <string>', 'Nicho')
+    .requiredOption('-l, --location <string>', 'Localización')
+    .option('--limit <number>', 'Límite por fuente', '150')
+    .action(async (options) => {
+        try {
+            const limit = parseInt(options.limit, 10);
+            const safeNiche    = options.niche.replace(/[^a-z0-9à-üÀ-Ü ]/gi, '_').replace(/\s+/g, '_');
+            const safeLocation = options.location.replace(/[^a-z0-9à-üÀ-Ü ]/gi, '_').replace(/\s+/g, '_');
+            const timestamp    = new Date().toISOString().slice(0, 10);
+
+            logger.info(`\n⚡ SCRAPE DUAL — "${options.niche}" en "${options.location}" (${limit} por fuente)\n`);
+
+            // Ejecutar ambos scrapers en paralelo
+            const [gmaps, amarillas] = await Promise.all([
+                scrapeGoogleMapsMultiQuery(options.niche, options.location, limit, true),
+                scrapeAmarillasMultiQuery(options.niche, options.location, limit),
+            ]);
+
+            // Fusionar y deduplicar por email (o nombre+teléfono)
+            const emailSeen  = new Set();
+            const keySeen    = new Set();
+            const combined   = [];
+            const combined_r = [];
+
+            for (const lead of [...gmaps.leads, ...amarillas.leads]) {
+                const dedupeKey = lead.email
+                    ? lead.email.toLowerCase()
+                    : `${(lead.name || '').toLowerCase()}|${(lead.phone || '').replace(/\s/g, '')}`;
+                if (!emailSeen.has(dedupeKey)) {
+                    emailSeen.add(dedupeKey);
+                    combined.push(lead);
+                }
+            }
+            for (const lead of [...gmaps.reviewLeads, ...amarillas.reviewLeads]) {
+                const key = `${(lead.name || '').toLowerCase()}|${(lead.phone || '').replace(/\s/g, '')}`;
+                if (!keySeen.has(key)) {
+                    keySeen.add(key);
+                    combined_r.push(lead);
+                }
+            }
+
+            if (combined.length > 0) {
+                const mainFile = `Dual_${safeNiche}_${safeLocation}_${timestamp}.csv`;
+                writeScrapedLeadsToCSV(combined, mainFile);
+                logger.info(`📨 Listo: node src/cli.js send --file "${mainFile}"`);
+            }
+            if (combined_r.length > 0) {
+                writeReviewLeadsToCSV(combined_r, `Revisar_Dual_${safeNiche}_${safeLocation}_${timestamp}.csv`);
+            }
+
+            await closeBrowser();
+            console.log(`\n📊 DUAL TOTAL:`);
+            console.log(`   Google Maps : 🟢 ${gmaps.leads.length} con email | 🟡 ${gmaps.reviewLeads.length} sin email`);
+            console.log(`   Amarillas   : 🟢 ${amarillas.leads.length} con email | 🟡 ${amarillas.reviewLeads.length} sin email`);
+            console.log(`   COMBINADO   : 🟢 ${combined.length} únicos con email (+${combined.length - gmaps.leads.length} extra de Amarillas)\n`);
+        } catch (err) {
+            logger.error(`Error en scrape-dual: ${err.message}`);
+            await closeBrowser();
+        }
+    });
+
 // ─── 11. SCRAPE SPAIN ────────────────────────────────────────────────────────
 program
     .command('scrape-spain')
@@ -631,11 +778,23 @@ program
         logger.info(`✅ Bounces: ${result.bounced} marcados de ${result.processed} emails procesados.`);
     });
 
+// ─── 15b. CHECK REPLIES ──────────────────────────────────────────────────────
+program
+    .command('check-replies')
+    .description('Lee la bandeja IMAP y marca automáticamente los leads que han respondido (REPLIED)')
+    .action(async () => {
+        const db = getDB(getConfig().DB_PATH);
+        logger.info('💬 Buscando replies en bandeja de entrada...');
+        const result = await fetchAndProcessReplies(db);
+        logger.info(`✅ Replies: ${result.replied} nuevos marcados de ${result.processed} emails revisados.`);
+    });
+
 // ─── 16. SEND TODO (Scraper Total leads) ─────────────────────────────────────
 program
     .command('send-todo')
     .description('Envía los leads del Scraper Total (Todo_Leads.csv)')
     .option('--dry-run', 'Modo simulado')
+    .option('--fast', 'Modo rápido: 10s entre emails, 60/hora (para batch diario)')
     .action(async (options) => {
         const file = 'Todo_Leads.csv';
         if (!fs.existsSync(file)) {
@@ -643,7 +802,12 @@ program
             return;
         }
         logger.info('🚀 SEND TODO — leads del Scraper Total...');
-        await sendAction({ file, dryRun: options.dryRun });
+        const opts = { file, dryRun: options.dryRun };
+        if (options.fast) {
+            opts.fastMode = true;
+            logger.info('⚡ Modo rápido activado — 10s entre emails, 60/hora');
+        }
+        await sendAction(opts);
     });
 
 // ─── 17. MARK BOUNCED (manual) ───────────────────────────────────────────────
@@ -708,6 +872,200 @@ program
             logger.error(`Error en scrape-todo infinito: ${error.message}`);
             await closeBrowser();
         }
+    });
+
+// ─── 20. SCRAPE BORME ────────────────────────────────────────────────────────
+program
+    .command('scrape-borme')
+    .description('Scrapea BORME (Registro Mercantil): nuevas empresas + nombre del administrador')
+    .option('--days <number>', 'Días hábiles atrás a mirar', '0')
+    .option('--limit <number>', 'Máximo de empresas', '200')
+    .option('--query <text>', 'Buscar por texto en nombre/sector (en lugar de por fecha)')
+    .option('--hunter', 'Enriquecer emails con Hunter.io (gasta cuota del plan gratis)')
+    .option('--decision-maker', 'Buscar decisor en la web de cada empresa (lento)')
+    .action(async (options) => {
+        try {
+            const maxLeads = parseInt(options.limit, 10);
+            const days = parseInt(options.days, 10);
+            const timestamp = new Date().toISOString().slice(0, 10);
+
+            let leads;
+            if (options.query) {
+                logger.info(`\n📋 BORME búsqueda: "${options.query}"\n`);
+                leads = await scrapeBormeByQuery(options.query, maxLeads);
+            } else {
+                logger.info(`\n📋 BORME: últimos ${days} días hábiles\n`);
+                leads = await scrapeBorme({ days, maxLeads });
+            }
+
+            if (leads.length === 0) {
+                logger.warn('BORME: sin resultados');
+                return;
+            }
+
+            // Enriquecer con Hunter.io si se pide
+            if (options.hunter) {
+                logger.info('🎯 Enriqueciendo con Hunter.io...');
+                leads = await enrichLeadsWithHunter(leads);
+            }
+
+            // Buscar decisor en web si se pide
+            if (options.decisionMaker) {
+                logger.info('👤 Buscando decisores en webs...');
+                leads = await enrichLeadsWithDecisionMaker(leads);
+            }
+
+            const leadsWithEmail = leads.filter(l => l.email);
+            const leadsToReview = leads.filter(l => !l.email);
+
+            if (leadsWithEmail.length > 0) {
+                const file = `BORME_${timestamp}.csv`;
+                writeScrapedLeadsToCSV(leadsWithEmail, file);
+                logger.info(`📨 Listo: node src/cli.js send --file "${file}"`);
+            }
+            if (leadsToReview.length > 0) {
+                writeReviewLeadsToCSV(leadsToReview, `Revisar_BORME_${timestamp}.csv`);
+            }
+
+            const contactosConocidos = leads.filter(l => l.contact_name).length;
+            console.log(`\n📊 BORME:`);
+            console.log(`   🟢 ${leadsWithEmail.length} con email`);
+            console.log(`   🟡 ${leadsToReview.length} sin email (revisar manualmente)`);
+            console.log(`   👤 ${contactosConocidos} con nombre de administrador\n`);
+        } catch (err) {
+            logger.error(`Error en scrape-borme: ${err.message}`);
+        }
+    });
+
+// ─── 21. SCRAPE BING ─────────────────────────────────────────────────────────
+program
+    .command('scrape-bing')
+    .description('Scrapea Bing Maps Local Search — complementa Google Maps sin captchas (requiere BING_MAPS_KEY)')
+    .requiredOption('-n, --niche <string>', 'Nicho (ej. "asesoría")')
+    .requiredOption('-l, --location <string>', 'Localización (ej. "Madrid")')
+    .option('--limit <number>', 'Límite de leads con email', '150')
+    .action(async (options) => {
+        try {
+            const limit = parseInt(options.limit, 10);
+            const safeNiche = options.niche.replace(/[^a-z0-9à-üÀ-Ü ]/gi, '_').replace(/\s+/g, '_');
+            const safeLocation = options.location.replace(/[^a-z0-9à-üÀ-Ü ]/gi, '_').replace(/\s+/g, '_');
+            const timestamp = new Date().toISOString().slice(0, 10);
+
+            logger.info(`\n🔵 SCRAPER BING — "${options.niche}" en "${options.location}"\n`);
+
+            const { leads, reviewLeads } = await scrapeBingMultiQuery(options.niche, options.location, limit);
+
+            if (leads.length > 0) {
+                const file = `Bing_${safeNiche}_${safeLocation}_${timestamp}.csv`;
+                writeScrapedLeadsToCSV(leads, file);
+                logger.info(`📨 Listo: node src/cli.js send --file "${file}"`);
+            }
+            if (reviewLeads.length > 0) {
+                writeReviewLeadsToCSV(reviewLeads, `Revisar_Bing_${safeNiche}_${safeLocation}_${timestamp}.csv`);
+            }
+
+            const total = leads.length + reviewLeads.length;
+            const pct = total > 0 ? Math.round((leads.length / total) * 100) : 0;
+            console.log(`\n📊 BING: 🟢 ${leads.length} con email | 🟡 ${reviewLeads.length} sin email | 📌 ${pct}% tasa\n`);
+        } catch (err) {
+            logger.error(`Error en scrape-bing: ${err.message}`);
+        }
+    });
+
+// ─── 22. SCRAPE BDNS ─────────────────────────────────────────────────────────
+program
+    .command('scrape-bdns')
+    .description('Scrapea BDNS (Base Datos Nacional Subvenciones) — leads calientes que ya gestionan ayudas')
+    .requiredOption('-q, --query <string>', 'Término de búsqueda (ej. "asesoría subvenciones")')
+    .option('--limit <number>', 'Máximo de leads', '100')
+    .option('--mode <mode>', 'beneficiarios | convocatorias | both', 'beneficiarios')
+    .option('--hunter', 'Enriquecer emails con Hunter.io')
+    .action(async (options) => {
+        try {
+            const maxLeads = parseInt(options.limit, 10);
+            const timestamp = new Date().toISOString().slice(0, 10);
+
+            logger.info(`\n📋 BDNS: "${options.query}" (modo: ${options.mode})\n`);
+
+            let leads = await scrapeBdns(options.query, { maxLeads, mode: options.mode });
+
+            if (leads.length === 0) {
+                logger.warn('BDNS: sin resultados');
+                return;
+            }
+
+            if (options.hunter) {
+                logger.info('🎯 Enriqueciendo con Hunter.io...');
+                leads = await enrichLeadsWithHunter(leads);
+            }
+
+            const leadsWithEmail = leads.filter(l => l.email);
+            const leadsToReview = leads.filter(l => !l.email);
+            const safeQuery = options.query.replace(/[^a-z0-9à-üÀ-Ü ]/gi, '_').replace(/\s+/g, '_').slice(0, 20);
+
+            if (leadsWithEmail.length > 0) {
+                const file = `BDNS_${safeQuery}_${timestamp}.csv`;
+                writeScrapedLeadsToCSV(leadsWithEmail, file);
+                logger.info(`📨 Listo: node src/cli.js send --file "${file}"`);
+            }
+            if (leadsToReview.length > 0) {
+                writeReviewLeadsToCSV(leadsToReview, `Revisar_BDNS_${safeQuery}_${timestamp}.csv`);
+            }
+
+            console.log(`\n📊 BDNS: 🟢 ${leadsWithEmail.length} con email | 🟡 ${leadsToReview.length} sin email\n`);
+        } catch (err) {
+            logger.error(`Error en scrape-bdns: ${err.message}`);
+        }
+    });
+
+// ─── 23. BLACKLIST ───────────────────────────────────────────────────────────
+program
+    .command('blacklist-add')
+    .description('Añade un email a la blacklist (nunca se le enviará más nada)')
+    .requiredOption('-e, --email <string>', 'Email a blacklistear')
+    .option('-r, --reason <string>', 'Motivo', 'manual')
+    .action((options) => {
+        const db = getDB(getConfig().DB_PATH);
+        addToBlacklistEmail(db, options.email, options.reason);
+        logger.info(`✅ ${options.email} añadido a blacklist_emails`);
+    });
+
+program
+    .command('blacklist-domain')
+    .description('Añade un dominio completo a la blacklist (nadie de ese dominio recibirá emails)')
+    .requiredOption('-d, --domain <string>', 'Dominio a blacklistear (ej. empresa.com)')
+    .option('-r, --reason <string>', 'Motivo', 'manual')
+    .action((options) => {
+        const db = getDB(getConfig().DB_PATH);
+        addToBlacklistDomain(db, options.domain, options.reason);
+        logger.info(`✅ ${options.domain} añadido a blacklist_domains`);
+    });
+
+program
+    .command('blacklist-remove')
+    .description('Elimina un email de la blacklist')
+    .requiredOption('-e, --email <string>', 'Email a eliminar de la blacklist')
+    .action((options) => {
+        const db = getDB(getConfig().DB_PATH);
+        const changes = removeFromBlacklistEmail(db, options.email);
+        if (changes > 0) logger.info(`✅ ${options.email} eliminado de blacklist`);
+        else logger.warn(`⚠️  No encontrado: ${options.email}`);
+    });
+
+program
+    .command('blacklist-list')
+    .description('Muestra todos los emails y dominios en blacklist')
+    .action(() => {
+        const db = getDB(getConfig().DB_PATH);
+        const { emails, domains } = getBlacklist(db);
+
+        console.log(`\n🚫 BLACKLIST`);
+        console.log(`${'='.repeat(55)}`);
+        console.log(`\n📧 Emails bloqueados: ${emails.length}`);
+        emails.forEach(e => console.log(`  • ${e.email} — ${e.reason || 'sin motivo'}`));
+        console.log(`\n🌐 Dominios bloqueados: ${domains.length}`);
+        domains.forEach(d => console.log(`  • ${d.domain} — ${d.reason || 'sin motivo'}`));
+        console.log('');
     });
 
 program.parse(process.argv);

@@ -4,9 +4,25 @@ import Link from 'next/link'
 import { serviceSchema, breadcrumbSchema, jsonLdScript } from '@/lib/seo'
 
 export const metadata: Metadata = {
-  title: 'Outreach B2B Inteligente | Prospección Automatizada',
-  description: 'Automatiza la captación B2B con tecnología combinada de Scraping, Inteligencia Artificial y Cold Emailing con alta entregabilidad.',
+  title: 'Prospección B2B Automatizada — Outreach con IA y Cold Email | Mavie Automations',
+  description: 'Sistema de captación B2B que combina scraping de empresas, clasificación con IA y cold emailing hiper-personalizado. Llena tu calendario de reuniones cualificadas sin contratar más comerciales.',
+  keywords: [
+    'prospección B2B automatizada', 'outreach con IA', 'cold email B2B',
+    'captación clientes automática', 'scraping leads B2B', 'automatización ventas',
+    'outreach inteligente', 'leads cualificados automáticos',
+  ],
   alternates: { canonical: 'https://mavieautomations.com/soluciones/prospeccion' },
+  openGraph: {
+    title: 'Prospección B2B Automatizada con IA | Mavie Automations',
+    description: 'Scraping + IA + cold email de alta entregabilidad. Llena tu calendario sin contratar más comerciales.',
+    type: 'website',
+    url: 'https://mavieautomations.com/soluciones/prospeccion',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Prospección B2B Automatizada | Mavie Automations',
+    description: 'Captación B2B con IA: scraping, clasificación automática y cold email de alta entregabilidad.',
+  },
 }
 
 const schema = serviceSchema({

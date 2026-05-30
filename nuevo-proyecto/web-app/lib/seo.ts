@@ -4,7 +4,7 @@ export const organizationRef = {
   "@type": "Organization",
   name: "Mavie Automations",
   url: SITE_URL,
-  logo: `${SITE_URL}/logo.png`,
+  logo: `${SITE_URL}/logo-mavie.png`,
 } as const
 
 interface ServiceOffer {

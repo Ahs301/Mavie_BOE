@@ -38,20 +38,20 @@ export function Footer() {
             <Link href="/" aria-label="Mavie Automations">
               <MavieLogo size={28} showWordmark />
             </Link>
-            <p className="text-sm text-neutral-500 leading-relaxed max-w-xs">
+            <p className="text-sm text-neutral-400 leading-relaxed max-w-xs">
               Ingeniería de datos y automatización B2B. Sistemas que detectan oportunidades y optimizan procesos 24/7.
             </p>
             <div className="space-y-2">
               <a
                 href="mailto:mavie.contact.dev@gmail.com"
-                className="flex items-center gap-2 text-sm text-neutral-500 hover:text-foreground transition-colors"
+                className="flex items-center gap-2 text-sm text-neutral-400 hover:text-foreground transition-colors"
               >
                 <Mail className="w-3.5 h-3.5 shrink-0" />
                 mavie.contact.dev@gmail.com
               </a>
               <a
                 href="tel:+34633448806"
-                className="flex items-center gap-2 text-sm text-neutral-500 hover:text-foreground transition-colors"
+                className="flex items-center gap-2 text-sm text-neutral-400 hover:text-foreground transition-colors"
               >
                 <Phone className="w-3.5 h-3.5 shrink-0" />
                 +34 633 448 806
@@ -60,7 +60,7 @@ export function Footer() {
                 href="https://www.linkedin.com/company/mavie-automations"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 text-sm text-neutral-500 hover:text-blue-400 transition-colors"
+                className="flex items-center gap-2 text-sm text-neutral-400 hover:text-blue-400 transition-colors"
               >
                 <ExternalLink className="w-3.5 h-3.5 shrink-0" />
                 LinkedIn
@@ -70,11 +70,11 @@ export function Footer() {
 
           {/* Soluciones */}
           <div>
-            <h4 className="mb-4 text-sm font-semibold text-foreground">Soluciones</h4>
+            <h3 className="mb-4 text-sm font-semibold text-foreground">Soluciones</h3>
             <ul className="space-y-2.5">
               {footerLinks.soluciones.map((l) => (
                 <li key={l.label}>
-                  <Link href={l.href} className="text-sm text-neutral-500 hover:text-foreground transition-colors">
+                  <Link href={l.href} className="text-sm text-neutral-400 hover:text-foreground transition-colors">
                     {l.label}
                   </Link>
                 </li>
@@ -84,11 +84,11 @@ export function Footer() {
 
           {/* Radar BOE Verticales */}
           <div>
-            <h4 className="mb-4 text-sm font-semibold text-foreground">Radar BOE</h4>
+            <h3 className="mb-4 text-sm font-semibold text-foreground">Radar BOE</h3>
             <ul className="space-y-2.5">
               {footerLinks.radarBoe.map((l) => (
                 <li key={l.href}>
-                  <Link href={l.href} className="text-sm text-neutral-500 hover:text-foreground transition-colors">
+                  <Link href={l.href} className="text-sm text-neutral-400 hover:text-foreground transition-colors">
                     {l.label}
                   </Link>
                 </li>
@@ -98,11 +98,11 @@ export function Footer() {
 
           {/* Empresa */}
           <div>
-            <h4 className="mb-4 text-sm font-semibold text-foreground">Empresa</h4>
+            <h3 className="mb-4 text-sm font-semibold text-foreground">Empresa</h3>
             <ul className="space-y-2.5">
               {footerLinks.empresa.map((l) => (
                 <li key={l.label}>
-                  <Link href={l.href} className="text-sm text-neutral-500 hover:text-foreground transition-colors">
+                  <Link href={l.href} className="text-sm text-neutral-400 hover:text-foreground transition-colors">
                     {l.label}
                   </Link>
                 </li>
@@ -112,8 +112,8 @@ export function Footer() {
 
           {/* CTA + Legal */}
           <div>
-            <h4 className="mb-4 text-sm font-semibold text-foreground">¿Hablamos?</h4>
-            <p className="text-sm text-neutral-500 mb-4">Diagnóstico gratuito en 30 min. Sin compromiso.</p>
+            <h3 className="mb-4 text-sm font-semibold text-foreground">¿Hablamos?</h3>
+            <p className="text-sm text-neutral-400 mb-4">Diagnóstico gratuito en 30 min. Sin compromiso.</p>
             <Link
               href="/contacto"
               className="inline-flex items-center gap-2 text-sm font-semibold text-blue-500 hover:text-blue-400 transition-colors group"
@@ -123,11 +123,11 @@ export function Footer() {
             </Link>
 
             <div className="mt-8">
-              <h4 className="mb-3 text-sm font-semibold text-neutral-500">Legal</h4>
+              <h4 className="mb-3 text-sm font-semibold text-neutral-400">Legal</h4>
               <ul className="space-y-2">
                 {footerLinks.legal.map((l) => (
                   <li key={l.label}>
-                    <Link href={l.href} className="text-xs text-neutral-500 hover:text-neutral-400 transition-colors">
+                    <Link href={l.href} className="text-xs text-neutral-400 hover:text-neutral-200 transition-colors">
                       {l.label}
                     </Link>
                   </li>
@@ -139,11 +139,11 @@ export function Footer() {
 
         {/* Bottom bar */}
         <div className="mt-12 border-t border-neutral-800 pt-6 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <p className="text-xs text-neutral-500">
+          <p className="text-xs text-neutral-400">
             © {new Date().getFullYear()} Mavie Automations · Valencia, España
           </p>
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1.5 text-xs text-neutral-500 border border-emerald-900/40 bg-emerald-950/20 rounded-full px-3 py-1">
+            <div className="flex items-center gap-1.5 text-xs text-neutral-400 border border-emerald-900/40 bg-emerald-950/20 rounded-full px-3 py-1">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
               Todos los sistemas operativos
             </div>

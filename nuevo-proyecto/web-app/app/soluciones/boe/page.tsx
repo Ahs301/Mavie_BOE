@@ -134,7 +134,7 @@ export default function RadarBOEPage() {
             </div>
             <div className="flex flex-wrap gap-6 mt-10">
               {["Sin intervención manual", "Implantación en 72h", "Sin IT compleja", "Cancelación mensual"].map((item) => (
-                <div key={item} className="flex items-center gap-2 text-sm text-neutral-500">
+                <div key={item} className="flex items-center gap-2 text-sm text-neutral-400">
                   <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" />{item}
                 </div>
               ))}
@@ -154,7 +154,7 @@ export default function RadarBOEPage() {
               <div key={uc.type} className="rounded-xl border border-neutral-800 bg-neutral-900/40 p-6 hover:border-blue-900/40 hover:bg-blue-950/10 hover:-translate-y-0.5 transition-all">
                 <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mb-4" />
                 <h3 className="text-sm font-semibold text-white mb-3">{uc.type}</h3>
-                <p className="text-sm text-neutral-500 leading-relaxed">{uc.desc}</p>
+                <p className="text-sm text-neutral-400 leading-relaxed">{uc.desc}</p>
               </div>
             ))}
           </div>
@@ -175,7 +175,7 @@ export default function RadarBOEPage() {
                   <f.icon className="w-5 h-5 text-neutral-400 group-hover:text-blue-400 transition-colors" />
                 </div>
                 <h3 className="text-sm font-semibold text-white mb-2">{f.title}</h3>
-                <p className="text-sm text-neutral-500 leading-relaxed">{f.desc}</p>
+                <p className="text-sm text-neutral-400 leading-relaxed">{f.desc}</p>
               </div>
             ))}
           </div>
@@ -193,8 +193,8 @@ export default function RadarBOEPage() {
             <table className="w-full text-sm border-collapse">
               <thead>
                 <tr className="border-b border-neutral-800">
-                  <th className="text-left py-3 pr-6 text-neutral-500 font-medium w-1/3"></th>
-                  <th className="py-3 px-4 text-neutral-500 font-medium text-center">BOE.es gratuito</th>
+                  <th className="text-left py-3 pr-6 text-neutral-400 font-medium w-1/3"></th>
+                  <th className="py-3 px-4 text-neutral-400 font-medium text-center">BOE.es gratuito</th>
                   <th className="py-3 px-4 text-emerald-400 font-semibold text-center bg-emerald-950/20 rounded-t-lg">Radar BOE Mavie</th>
                 </tr>
               </thead>
@@ -210,7 +210,7 @@ export default function RadarBOEPage() {
                 ].map(([feature, free, mavie], i) => (
                   <tr key={i} className="border-b border-neutral-800/50">
                     <td className="py-3 pr-6 text-neutral-400">{feature}</td>
-                    <td className="py-3 px-4 text-neutral-500 text-center">{free}</td>
+                    <td className="py-3 px-4 text-neutral-400 text-center">{free}</td>
                     <td className="py-3 px-4 text-neutral-200 text-center bg-emerald-950/10">{mavie}</td>
                   </tr>
                 ))}
@@ -234,10 +234,10 @@ export default function RadarBOEPage() {
                   <div className="inline-flex items-center gap-1.5 rounded-full bg-blue-900/30 border border-blue-800/40 px-2.5 py-1 text-xs font-semibold text-blue-400 mb-4 w-fit">Más popular</div>
                 )}
                 <h3 className="text-lg font-bold text-white mb-1">{item.name}</h3>
-                <p className="text-sm text-neutral-500 mb-6">{item.desc}</p>
+                <p className="text-sm text-neutral-400 mb-6">{item.desc}</p>
                 <div className="mb-6">
                   <span className="text-4xl font-bold text-white">{item.price}€</span>
-                  <span className="text-sm text-neutral-500 ml-2">/{item.period}</span>
+                  <span className="text-sm text-neutral-400 ml-2">/{item.period}</span>
                 </div>
                 <ul className="space-y-3 mb-8 flex-1">
                   {item.features.map((f) => (

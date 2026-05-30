@@ -87,6 +87,13 @@ export function runMigrations(db) {
     { name: 'ab_variant', def: 'INTEGER DEFAULT 0' },
     { name: 'followup_count', def: 'INTEGER DEFAULT 0' },
     { name: 'last_subject', def: 'TEXT' },
+    // Decisor real (de BORME, decisionMaker, etc.)
+    { name: 'contact_name', def: 'TEXT' },
+    { name: 'contact_title', def: 'TEXT' },
+    // NIF para cruzar con BORME
+    { name: 'nif', def: 'TEXT' },
+    // Fuente de datos
+    { name: 'source', def: 'TEXT' },
   ];
 
   for (const col of newCols) {
@@ -95,6 +102,24 @@ export function runMigrations(db) {
       logger.info(`  ↳ Columna añadida: leads.${col.name}`);
     }
   }
+
+  // ── Tablas de blacklist (dominios y emails que nunca contactar) ────────────
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS blacklist_emails (
+      email      TEXT PRIMARY KEY,
+      reason     TEXT,
+      created_at TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS blacklist_domains (
+      domain     TEXT PRIMARY KEY,
+      reason     TEXT,
+      created_at TEXT NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_bl_emails  ON blacklist_emails(email);
+    CREATE INDEX IF NOT EXISTS idx_bl_domains ON blacklist_domains(domain);
+  `);
 
   logger.info('Migraciones completadas.');
 }

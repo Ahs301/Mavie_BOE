@@ -4,71 +4,73 @@ import { getAllCiudadSlugs } from './radar-boe/_data/ciudades'
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = 'https://mavieautomations.com';
+  const now = new Date().toISOString();
+  const lastMonth = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
   const staticPages: MetadataRoute.Sitemap = [
     {
       url: `${baseUrl}`,
-      lastModified: '2026-04-27',
-      changeFrequency: 'monthly',
+      lastModified: now,
+      changeFrequency: 'weekly',
       priority: 1,
     },
     {
       url: `${baseUrl}/servicios`,
-      lastModified: '2026-04-15',
+      lastModified: lastMonth,
       changeFrequency: 'monthly',
       priority: 0.8,
     },
     {
       url: `${baseUrl}/soluciones`,
-      lastModified: '2026-04-15',
+      lastModified: lastMonth,
       changeFrequency: 'weekly',
       priority: 0.9,
     },
     {
       url: `${baseUrl}/soluciones/boe`,
-      lastModified: '2026-04-27',
+      lastModified: now,
       changeFrequency: 'weekly',
-      priority: 0.9,
+      priority: 0.95,
     },
     {
       url: `${baseUrl}/sobre-nosotros`,
-      lastModified: '2026-04-27',
+      lastModified: lastMonth,
       changeFrequency: 'monthly',
       priority: 0.7,
     },
     {
       url: `${baseUrl}/contacto`,
-      lastModified: '2026-04-15',
+      lastModified: lastMonth,
       changeFrequency: 'yearly',
       priority: 0.6,
     },
     {
       url: `${baseUrl}/soluciones/prospeccion`,
-      lastModified: '2026-04-15',
+      lastModified: lastMonth,
       changeFrequency: 'weekly',
       priority: 0.8,
     },
     {
       url: `${baseUrl}/privacidad`,
-      lastModified: '2026-04-15',
+      lastModified: lastMonth,
       changeFrequency: 'yearly',
       priority: 0.3,
     },
     {
       url: `${baseUrl}/terminos`,
-      lastModified: '2026-04-28',
+      lastModified: lastMonth,
       changeFrequency: 'yearly',
       priority: 0.3,
     },
     {
       url: `${baseUrl}/aviso-legal`,
-      lastModified: '2026-04-15',
+      lastModified: lastMonth,
       changeFrequency: 'yearly',
       priority: 0.3,
     },
     {
       url: `${baseUrl}/cookies`,
-      lastModified: '2026-04-15',
+      lastModified: lastMonth,
       changeFrequency: 'yearly',
       priority: 0.3,
     },
@@ -79,7 +81,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const hubPage: MetadataRoute.Sitemap = [
     {
       url: `${baseUrl}/radar-boe`,
-      lastModified: '2026-04-15',
+      lastModified: now,
       changeFrequency: 'weekly',
       priority: 0.9,
     },
@@ -88,7 +90,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // 12 vertical pages
   const verticalPages: MetadataRoute.Sitemap = getAllVerticalSlugs().map((slug) => ({
     url: `${baseUrl}/radar-boe/${slug}`,
-    lastModified: '2026-04-15',
+    lastModified: lastMonth,
     changeFrequency: 'monthly' as const,
     priority: 0.8,
   }))
@@ -96,7 +98,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // 20 city pages
   const ciudadPages: MetadataRoute.Sitemap = getAllCiudadSlugs().map((slug) => ({
     url: `${baseUrl}/radar-boe/ciudad/${slug}`,
-    lastModified: '2026-04-15',
+    lastModified: lastMonth,
     changeFrequency: 'monthly' as const,
     priority: 0.7,
   }))

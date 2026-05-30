@@ -5,13 +5,50 @@ import {
 } from "lucide-react";
 import type { Metadata } from "next";
 import { ParticleBackground } from "@/components/ParticleBackground";
+import { faqPageSchema, jsonLdScript } from "@/lib/seo";
 
 const CAL_URL = process.env.NEXT_PUBLIC_CAL_BOOKING_URL || "https://cal.com/josep-ndwyo3/30min"
 
 export const metadata: Metadata = {
-  title: "Mavie Automations | Consigue más clientes con automatización B2B",
-  description: "Ayudamos a consultoras y despachos a conseguir más clientes mediante la detección automática de subvenciones del BOE y prospección automatizada.",
+  title: "Mavie Automations | Radar BOE Automático y Captación de Leads B2B",
+  description: "Detecta subvenciones, licitaciones y oportunidades del BOE de forma automática. Prospección B2B automatizada para consultoras y despachos. Implantación en 72h.",
+  keywords: [
+    'radar BOE', 'alertas BOE automáticas', 'monitorización BOE',
+    'subvenciones automáticas', 'licitaciones BOE', 'captación leads B2B',
+    'automatización consultoras', 'automatización despachos abogados',
+    'boe abogados', 'ayudas públicas automáticas', 'Mavie Automations',
+  ],
+  alternates: {
+    canonical: 'https://mavieautomations.com',
+  },
 };
+
+const homeFaqs = faqPageSchema([
+  {
+    pregunta: "¿Qué es el Radar BOE de Mavie Automations?",
+    respuesta: "El Radar BOE es un sistema de monitorización automática del Boletín Oficial del Estado (BOE), el Diario Oficial de la UE (DOUE) y boletines autonómicos. Detecta licitaciones, subvenciones y cambios normativos relevantes para tu empresa y te los envía por email en menos de 5 minutos desde su publicación.",
+  },
+  {
+    pregunta: "¿Cuánto tiempo tarda la implantación del sistema?",
+    respuesta: "Menos de 72 horas. Realizamos una reunión técnica de 30 minutos para configurar tus keywords y destinatarios, y al día siguiente ya recibes tus primeras alertas. Sin instalación de software ni cambios en tu IT.",
+  },
+  {
+    pregunta: "¿Para qué tipo de empresas está pensado?",
+    respuesta: "Principalmente para consultoras, despachos de abogados, gestorías, asesorías y cualquier empresa B2B que necesite estar al día con oportunidades públicas o captar clientes de forma automatizada. También para startups que buscan financiación pública y empresas que licitan.",
+  },
+  {
+    pregunta: "¿Cuánto cuesta el servicio de Radar BOE?",
+    respuesta: "Desde 79€/mes sin permanencia para el plan Básico (BOE nacional, 10 keywords). El plan Pro cuesta 179€/mes e incluye BOE, DOUE y autonómicos con alertas instantáneas. Puedes cancelar cuando quieras, sin costes de setup.",
+  },
+  {
+    pregunta: "¿Puedo cancelar el servicio en cualquier momento?",
+    respuesta: "Sí. No hay permanencia ni penalización por cancelación. Pagas mes a mes y puedes cancelar cuando quieras desde tu panel de cliente sin necesidad de contactar con nadie.",
+  },
+  {
+    pregunta: "¿Cómo funciona la prospección B2B automatizada?",
+    respuesta: "Nuestro sistema identifica y filtra empresas que encajan con el perfil de tu cliente ideal, y gestiona el envío de emails de captación de forma automatizada. Tu equipo solo interviene para cerrar la venta en la llamada. Llenamos tu calendario de reuniones cualificadas.",
+  },
+]);
 
 const features = [
   {
@@ -94,6 +131,7 @@ export default function Home() {
   // Inicializamos la vista principal de la landing page (Deploy Trigger)
   return (
     <div className="flex flex-col">
+      <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript({ data: homeFaqs })} />
 
       {/* ── HERO ── */}
       <section className="relative min-h-[88vh] flex items-center overflow-hidden">
@@ -141,7 +179,7 @@ export default function Home() {
             {/* Trust signals */}
             <div className="flex flex-wrap gap-x-6 gap-y-3 mt-10 animate-fade-in-up delay-300">
               {["Sin permanencias", "Implantación en 72h", "Datos bajo RLS privada", "Sin revisión manual"].map((item) => (
-                <div key={item} className="flex items-center gap-2 text-xs text-neutral-500">
+                <div key={item} className="flex items-center gap-2 text-xs text-neutral-600 dark:text-neutral-400">
                   <ChevronRight className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
                   {item}
                 </div>
@@ -158,7 +196,7 @@ export default function Home() {
             {stats.map(s => (
               <div key={s.label} className="text-center px-6 first:pl-0 last:pr-0">
                 <div className="text-3xl md:text-4xl font-bold text-foreground mb-1 tabular-nums" style={{ fontFamily: 'var(--font-syne)' }}>{s.value}</div>
-                <div className="text-xs text-neutral-500 font-medium uppercase tracking-wide">{s.label}</div>
+                <div className="text-xs text-neutral-600 dark:text-neutral-400 font-medium uppercase tracking-wide">{s.label}</div>
               </div>
             ))}
           </div>
@@ -171,13 +209,13 @@ export default function Home() {
           <div className="max-w-2xl mb-16">
             <div className="flex items-center gap-3 mb-6">
               <span className="h-px flex-1 bg-neutral-800 max-w-[40px]" />
-              <span className="text-xs font-semibold text-neutral-500 uppercase tracking-widest">Proceso</span>
+              <span className="text-xs font-semibold text-neutral-600 dark:text-neutral-400 uppercase tracking-widest">Proceso</span>
             </div>
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
               En marcha en 72 horas.<br />
               <span className="blue-gradient">Sin complejidad técnica.</span>
             </h2>
-            <p className="text-neutral-500 text-lg leading-relaxed">
+            <p className="text-neutral-600 dark:text-neutral-400 text-lg leading-relaxed">
               Tres pasos desde la reunión inicial hasta el primer radar activo.
             </p>
           </div>
@@ -196,7 +234,7 @@ export default function Home() {
                   <step.icon className="w-5 h-5 text-neutral-500 dark:text-neutral-400 group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-colors" />
                 </div>
                 <h3 className="text-base font-semibold text-foreground mb-2">{step.title}</h3>
-                <p className="text-sm text-neutral-500 leading-relaxed">{step.desc}</p>
+                <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">{step.desc}</p>
               </div>
             ))}
           </div>
@@ -208,7 +246,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center gap-3 mb-12">
             <span className="h-px flex-1 bg-neutral-800 max-w-[40px]" />
-            <span className="text-xs font-semibold text-neutral-500 uppercase tracking-widest">Producto estrella</span>
+            <span className="text-xs font-semibold text-neutral-600 dark:text-neutral-400 uppercase tracking-widest">Producto estrella</span>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
@@ -221,7 +259,7 @@ export default function Home() {
                 Aumenta tu facturación con el<br />
                 <span className="blue-gradient">Radar BOE Automático</span>
               </h2>
-              <p className="text-neutral-500 leading-relaxed text-lg">
+              <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed text-lg">
                 Deja de perder horas leyendo el Boletín Oficial del Estado. Te enviamos directamente al correo las subvenciones exactas que necesitan tus clientes para que puedas cobrar por gestionarlas antes que nadie.
               </p>
               <ul className="space-y-3">
@@ -232,7 +270,7 @@ export default function Home() {
                   "Cubre BOE, DOUE y boletines autonómicos",
                   "Vende más servicios de tramitación sin esfuerzo",
                 ].map(item => (
-                  <li key={item} className="flex items-center gap-3 text-sm text-neutral-500">
+                  <li key={item} className="flex items-center gap-3 text-sm text-neutral-600 dark:text-neutral-400">
                     <ChevronRight className="w-4 h-4 text-blue-500 shrink-0" />
                     {item}
                   </li>
@@ -263,8 +301,8 @@ export default function Home() {
                   <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/70" />
                   <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/70" />
                 </div>
-                <span className="text-xs text-neutral-500 ml-2 font-mono truncate hidden sm:block">mavie — radar-boe · monitor</span>
-                <span className="text-xs text-neutral-500 ml-2 font-mono truncate sm:hidden">radar-boe</span>
+                <span className="text-xs text-neutral-400 ml-2 font-mono truncate hidden sm:block">mavie — radar-boe · monitor</span>
+                <span className="text-xs text-neutral-400 ml-2 font-mono truncate sm:hidden">radar-boe</span>
                 <div className="ml-auto flex items-center gap-1.5 text-xs text-emerald-400 font-mono shrink-0">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                   activo
@@ -276,7 +314,7 @@ export default function Home() {
                 <div className="flex gap-3 items-start">
                   <span className="text-neutral-600 shrink-0 pt-px">08:02:11</span>
                   <span className="text-blue-400 shrink-0 pt-px font-semibold">SCAN</span>
-                  <span className="text-neutral-500">BOE-A-2026 · 143 entradas procesadas</span>
+                  <span className="text-neutral-400">BOE-A-2026 · 143 entradas procesadas</span>
                 </div>
                 <div className="flex gap-3 items-start">
                   <span className="text-neutral-600 shrink-0 pt-px">08:02:14</span>
@@ -313,11 +351,11 @@ export default function Home() {
               {/* Summary footer */}
               <div className="mx-4 sm:mx-5 mb-5 mt-1 rounded-xl border border-neutral-800 bg-neutral-900 px-4 sm:px-5 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="text-center sm:text-left">
-                  <div className="text-xs text-neutral-500 font-mono mb-1">resultados hoy</div>
+                  <div className="text-xs text-neutral-400 font-mono mb-1">resultados hoy</div>
                   <div className="text-2xl font-bold text-foreground">4 <span className="text-emerald-400 text-sm font-normal">coincidencias</span></div>
                 </div>
                 <div className="text-center sm:text-right">
-                  <div className="text-xs text-neutral-500 font-mono mb-1">próximo escaneo</div>
+                  <div className="text-xs text-neutral-400 font-mono mb-1">próximo escaneo</div>
                   <div className="text-sm text-neutral-300 font-mono">en 43 min</div>
                 </div>
                 <div className="w-full sm:w-auto px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 transition-colors text-white text-xs font-semibold cursor-default text-center">
@@ -335,7 +373,7 @@ export default function Home() {
           <div className="max-w-2xl mb-16">
             <div className="flex items-center gap-3 mb-6">
               <span className="h-px flex-1 bg-neutral-800 max-w-[40px]" />
-              <span className="text-xs font-semibold text-neutral-500 uppercase tracking-widest">Capacidades</span>
+              <span className="text-xs font-semibold text-neutral-600 dark:text-neutral-400 uppercase tracking-widest">Capacidades</span>
             </div>
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
               Tecnología que trabaja<br />mientras tu equipo no puede.
@@ -357,10 +395,40 @@ export default function Home() {
                     <f.icon className={`w-5 h-5 text-neutral-400 ${s.icon} transition-colors duration-200`} />
                   </div>
                   <h3 className="text-base font-semibold text-foreground mb-2">{f.title}</h3>
-                  <p className="text-sm text-neutral-500 leading-relaxed">{f.desc}</p>
+                  <p className="text-sm text-neutral-400 leading-relaxed">{f.desc}</p>
                 </div>
               )
             })}
+          </div>
+        </div>
+      </section>
+
+      {/* ── FAQ ── */}
+      <section className="py-24 px-6 border-b border-neutral-800">
+        <div className="max-w-7xl mx-auto">
+          <div className="max-w-2xl mb-16">
+            <div className="flex items-center gap-3 mb-6">
+              <span className="h-px flex-1 bg-neutral-800 max-w-[40px]" />
+              <span className="text-xs font-semibold text-neutral-600 dark:text-neutral-400 uppercase tracking-widest">Preguntas frecuentes</span>
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+              Todo lo que necesitas saber
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl">
+            {[
+              { q: "¿Qué es el Radar BOE de Mavie?", a: "Un sistema que monitoriza el BOE, el DOUE y boletines autonómicos automáticamente 24/7, detecta licitaciones y subvenciones relevantes para tu empresa y te las manda por email en menos de 5 minutos." },
+              { q: "¿Cuánto tarda la implantación?", a: "Menos de 72 horas. Una reunión de 30 minutos para configurar tus keywords y al día siguiente ya recibes alertas. Sin instalación de software." },
+              { q: "¿Para qué empresas está pensado?", a: "Consultoras, despachos de abogados, gestorías, asesorías y cualquier B2B que necesite detectar oportunidades públicas o captar clientes de forma automatizada." },
+              { q: "¿Cuánto cuesta?", a: "Desde 79€/mes sin permanencia. Plan Pro a 179€/mes con BOE + DOUE + autonómicos. Sin setup fee, cancelas cuando quieras." },
+              { q: "¿Puedo cancelar cuando quiera?", a: "Sí. Sin permanencia ni penalización. Pagas mes a mes y cancelas desde tu panel de cliente cuando quieras." },
+              { q: "¿Cómo funciona la prospección B2B?", a: "Identificamos empresas que encajan con tu cliente ideal y gestionamos el envío de emails automatizados. Tu equipo solo interviene para cerrar la venta." },
+            ].map((faq) => (
+              <div key={faq.q} className="rounded-xl border border-neutral-800 bg-neutral-950/50 p-6">
+                <h3 className="text-sm font-semibold text-foreground mb-3">{faq.q}</h3>
+                <p className="text-sm text-neutral-400 leading-relaxed">{faq.a}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>

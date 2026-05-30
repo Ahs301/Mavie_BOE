@@ -30,6 +30,7 @@
     "server": "node src/server.js"
   },
   "dependencies": {
+    "cheerio": "^1.0.0",
     "@supabase/supabase-js": "^2.49.4",
     "better-sqlite3": "^12.9.0",
     "puppeteer-extra": "^3.3.6",

@@ -1,14 +1,28 @@
 import Link from "next/link";
 import { MoveRight, Zap, Target, Search, Database } from "lucide-react";
+import type { Metadata } from "next";
+import { SITE_URL } from "@/lib/seo";
 
-export const metadata = {
-  title: "Catálogo de Soluciones | Mavie Automations",
-  description: "Explora nuestros productos de automatización empaquetados y soluciones a medida para empresas y consultoras B2B.",
-  keywords: ["soluciones automatización", "B2B", "captación B2B", "Radar BOE", "Extracción de datos", "CRM automático"],
+export const metadata: Metadata = {
+  title: "Soluciones de Automatización B2B — Radar BOE, Outreach y Scraping | Mavie Automations",
+  description: "Catálogo de soluciones de automatización para empresas B2B: Radar BOE/DOUE, prospección automatizada, scraping ETL y CRM a medida. Desde 79€/mes sin permanencia.",
+  keywords: [
+    "soluciones automatización B2B", "radar BOE empresas", "captación B2B automática",
+    "scraping empresarial", "CRM automático", "outreach B2B", "licitaciones automáticas",
+  ],
+  alternates: {
+    canonical: `${SITE_URL}/soluciones`,
+  },
   openGraph: {
-    title: "Catálogo de Soluciones | Mavie Automations",
-    description: "Nuestros productos de automatización empaquetados y soluciones a medida para empresas B2B.",
+    title: "Soluciones B2B — Radar BOE, Outreach y Scraping | Mavie Automations",
+    description: "Productos de automatización empaquetados y soluciones a medida para empresas B2B. Radar BOE desde 79€/mes.",
     type: "website",
+    url: `${SITE_URL}/soluciones`,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Soluciones B2B | Mavie Automations",
+    description: "Radar BOE, outreach automatizado y scraping ETL para consultoras y despachos.",
   },
 };
 

@@ -278,6 +278,60 @@ export function ControlPanel() {
         </div>
       </div>
 
+      {/* ════════ Scheduler automático 7:00 AM ════════ */}
+      {status && 'scheduler' in status && (
+        <div className="rounded-xl border border-sky-900/40 bg-sky-500/5 overflow-hidden">
+          <div className="px-4 py-2.5 border-b border-sky-900/30 flex items-center justify-between">
+            <span className="text-[10px] font-semibold text-sky-400 flex items-center gap-1.5">
+              <Layers className="w-3 h-3" /> Envío diario 7:00 AM
+            </span>
+            <div className="flex items-center gap-2">
+              {(status as any).scheduler?.running ? (
+                <span className="flex items-center gap-1 text-[10px] text-emerald-400 bg-emerald-500/10 border border-emerald-900/40 px-2 py-0.5 rounded-full">
+                  <Loader2 className="w-2 h-2 animate-spin" /> Activo
+                </span>
+              ) : (
+                <span className="text-[10px] text-neutral-500">Detenido</span>
+              )}
+              {(status as any).scheduler?.sendInProgress && (
+                <span className="flex items-center gap-1 text-[10px] text-blue-400 bg-blue-500/10 border border-blue-900/40 px-2 py-0.5 rounded-full">
+                  <Loader2 className="w-2 h-2 animate-spin" /> Enviando...
+                </span>
+              )}
+            </div>
+          </div>
+          <div className="p-3 flex flex-col gap-2">
+            <div className="grid grid-cols-3 gap-2 text-[10px] text-neutral-400 mb-1">
+              <div className="bg-neutral-900/50 rounded px-2 py-1">
+                <span className="block text-neutral-600">Último envío</span>
+                <span className="font-medium text-neutral-300">{(status as any).scheduler?.lastSendDate || 'Nunca'}</span>
+              </div>
+              <div className="bg-neutral-900/50 rounded px-2 py-1">
+                <span className="block text-neutral-600">Hoy enviado</span>
+                <span className={`font-medium ${(status as any).scheduler?.alreadySentToday ? 'text-emerald-400' : 'text-amber-400'}`}>
+                  {(status as any).scheduler?.alreadySentToday ? 'Sí' : 'No'}
+                </span>
+              </div>
+              <div className="bg-neutral-900/50 rounded px-2 py-1">
+                <span className="block text-neutral-600">Próximo</span>
+                <span className="font-medium text-neutral-300">{(status as any).scheduler?.nextRun || 'Esperando'}</span>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <button disabled={loading} onClick={() => action("send-todo-now")}
+                className="flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-lg text-[10px] font-semibold bg-sky-600 hover:bg-sky-500 disabled:opacity-40 disabled:cursor-not-allowed text-white transition-colors"
+              ><Zap className="w-2.5 h-2.5" /> Enviar ahora (hasta 300)</button>
+              <button disabled={loading || (status as any).scheduler?.running} onClick={() => action("scheduler-start")}
+                className="flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-lg text-[10px] font-medium border border-emerald-700 hover:border-emerald-600 text-emerald-400 hover:text-emerald-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >Activar 7:00 AM</button>
+              <button disabled={loading || !(status as any).scheduler?.running} onClick={() => action("scheduler-stop")}
+                className="flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-lg text-[10px] font-medium border border-red-700 hover:border-red-600 text-red-400 hover:text-red-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >Desactivar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ════════ Acciones comunes ════════ */}
       <div className="rounded-xl border border-neutral-800 bg-card overflow-hidden">
         <div className="px-4 py-2.5 border-b border-neutral-800 flex items-center justify-between">

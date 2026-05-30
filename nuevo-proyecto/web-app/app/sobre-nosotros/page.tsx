@@ -1,14 +1,25 @@
 import Link from "next/link";
 import { MoveRight, Cpu, LineChart, ShieldCheck } from "lucide-react";
+import type { Metadata } from "next";
+import { SITE_URL } from "@/lib/seo";
 
-export const metadata = {
-  title: "Sobre Mavie | Ingeniería de Automatización y Datos B2B",
-  description: "Conoce la visión de Mavie Automations. Transformamos procesos manuales ineficientes en ecosistemas digitales autónomos para empresas tecnológicas y consultoras.",
-  keywords: ["automatización B2B", "datos B2B", "ingeniería de datos", "ecosistemas digitales", "Mavie Automations", "procesos ineficientes"],
+export const metadata: Metadata = {
+  title: "Sobre Mavie Automations — Josep Cervera, Valencia | Ingeniería de Automatización B2B",
+  description: "Conoce a Josep Cervera y la visión de Mavie Automations. Empresa de ingeniería de automatización y datos B2B en Valencia. Transformamos procesos manuales en ecosistemas digitales autónomos.",
+  keywords: ["automatización B2B Valencia", "Josep Cervera ingeniero", "Mavie Automations fundador", "ingeniería de datos B2B", "empresa automatización Valencia"],
+  alternates: {
+    canonical: `${SITE_URL}/sobre-nosotros`,
+  },
   openGraph: {
-    title: "Sobre Mavie | Ingeniería de Automatización y Datos B2B",
-    description: "Transformamos procesos manuales ineficientes en ecosistemas digitales autónomos.",
+    title: "Sobre Mavie Automations | Ingeniería de Automatización B2B en Valencia",
+    description: "Empresa de ingeniería de automatización y datos B2B. Fundada por Josep Cervera en Valencia. Sistemas que facturan, sin humo tecnológico.",
     type: "website",
+    url: `${SITE_URL}/sobre-nosotros`,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Sobre Mavie Automations | Josep Cervera, Valencia",
+    description: "Ingeniería de automatización y datos B2B. Sistemas robustos, sin dashboards vacíos.",
   },
 };
 

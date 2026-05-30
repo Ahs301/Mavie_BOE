@@ -9,6 +9,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { getDB } from './db/index.js';
 import { getSmtpStats } from './email/sender.js';
+import { startScheduler, stopScheduler, getSchedulerStatus, triggerDailySend, markSendComplete } from './scheduler.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const CLI_PATH = path.join(__dirname, 'cli.js');
@@ -173,6 +174,8 @@ function spawnProc(key, args, campaignId = null) {
     procCmd[key] = null;
     addLog(key, `--- Proceso terminado (código ${code}) ---`);
     if (campaignId) await syncCampaignToSupabase(campaignId, code, statsBefore);
+    // Notify scheduler if this was a scheduled send
+    markSendComplete(code === 0);
   });
 
   return { ok: true };
@@ -215,6 +218,7 @@ const server = createServer((req, res) => {
       scrapeCmd:    procCmd.scrape,
       sendCmd:      procCmd.send,
       stats,
+      scheduler:    getSchedulerStatus(),
     });
   }
 
@@ -339,6 +343,109 @@ const server = createServer((req, res) => {
     return send(202, { scrape: r1, send: r2 });
   }
 
+  // ── Scheduler: start ──
+  if (req.method === 'POST' && pathname === '/trigger/scheduler-start') {
+    startScheduler(() => spawnProc('send', ['send-todo', '--fast']));
+    return send(200, { ok: true, status: getSchedulerStatus() });
+  }
+
+  // ── Scheduler: stop ──
+  if (req.method === 'POST' && pathname === '/trigger/scheduler-stop') {
+    stopScheduler();
+    return send(200, { ok: true, status: getSchedulerStatus() });
+  }
+
+  // ── Scheduler: status ──
+  if (req.method === 'GET' && pathname === '/scheduler') {
+    return send(200, { status: getSchedulerStatus() });
+  }
+
+  // ── Scheduler: send-now (manual trigger, no espera a las 7:00) ──
+  if (req.method === 'POST' && pathname === '/trigger/send-todo-now') {
+    const result = triggerDailySend();
+    if (!result.ok) return send(409, result);
+    return send(202, { ok: true });
+  }
+
+  // ── Trigger: scrape-amarillas (custom niche+location) ──
+  if (req.method === 'POST' && pathname === '/trigger/scrape-amarillas') {
+    readBody().then(payload => {
+      if (!payload.niche || !payload.location) {
+        return send(400, { error: 'Faltan parámetros: niche y location' });
+      }
+      const limitStr = (payload.limit || 150).toString();
+      const result = spawnProc('scrape', ['scrape-amarillas', '-n', payload.niche, '-l', payload.location, '--limit', limitStr]);
+      send(result.ok ? 202 : 409, result);
+    }).catch(err => send(400, { error: err.message }));
+    return;
+  }
+
+  // ── Trigger: scrape-dual (Google Maps + Amarillas en paralelo) ──
+  if (req.method === 'POST' && pathname === '/trigger/scrape-dual') {
+    readBody().then(payload => {
+      if (!payload.niche || !payload.location) {
+        return send(400, { error: 'Faltan parámetros: niche y location' });
+      }
+      const limitStr = (payload.limit || 150).toString();
+      const result = spawnProc('scrape', ['scrape-dual', '-n', payload.niche, '-l', payload.location, '--limit', limitStr], payload.campaign_id ?? null);
+      send(result.ok ? 202 : 409, result);
+    }).catch(err => send(400, { error: err.message }));
+    return;
+  }
+
+  // ── Trigger: check-replies ──
+  if (req.method === 'POST' && pathname === '/trigger/check-replies') {
+    const result = spawnProc('send', ['check-replies']);
+    return send(result.ok ? 202 : 409, result);
+  }
+
+  // ── Trigger: check-bounces ──
+  if (req.method === 'POST' && pathname === '/trigger/check-bounces') {
+    const result = spawnProc('send', ['check-bounces']);
+    return send(result.ok ? 202 : 409, result);
+  }
+
+  // ── Trigger: scrape-borme (nuevas empresas del Registro Mercantil) ──
+  if (req.method === 'POST' && pathname === '/trigger/scrape-borme') {
+    readBody().then(payload => {
+      const args = ['scrape-borme', '--limit', (payload.limit || 200).toString()];
+      if (payload.days) args.push('--days', payload.days.toString());
+      if (payload.query) args.push('--query', payload.query);
+      if (payload.hunter) args.push('--hunter');
+      const result = spawnProc('scrape', args, payload.campaign_id ?? null);
+      send(result.ok ? 202 : 409, result);
+    }).catch(err => send(400, { error: err.message }));
+    return;
+  }
+
+  // ── Trigger: scrape-bing (Bing Maps Local Search) ──
+  if (req.method === 'POST' && pathname === '/trigger/scrape-bing') {
+    readBody().then(payload => {
+      if (!payload.niche || !payload.location) {
+        return send(400, { error: 'Faltan parámetros: niche y location' });
+      }
+      const limitStr = (payload.limit || 150).toString();
+      const result = spawnProc('scrape', ['scrape-bing', '-n', payload.niche, '-l', payload.location, '--limit', limitStr], payload.campaign_id ?? null);
+      send(result.ok ? 202 : 409, result);
+    }).catch(err => send(400, { error: err.message }));
+    return;
+  }
+
+  // ── Trigger: scrape-bdns (Base Datos Nacional Subvenciones) ──
+  if (req.method === 'POST' && pathname === '/trigger/scrape-bdns') {
+    readBody().then(payload => {
+      if (!payload.query) {
+        return send(400, { error: 'Falta parámetro: query' });
+      }
+      const args = ['scrape-bdns', '-q', payload.query, '--limit', (payload.limit || 100).toString()];
+      if (payload.mode) args.push('--mode', payload.mode);
+      if (payload.hunter) args.push('--hunter');
+      const result = spawnProc('scrape', args, payload.campaign_id ?? null);
+      send(result.ok ? 202 : 409, result);
+    }).catch(err => send(400, { error: err.message }));
+    return;
+  }
+
   // ── Trigger: custom campaign ──
   if (req.method === 'POST' && pathname === '/trigger/custom-campaign') {
     readBody().then(payload => {
@@ -372,6 +479,9 @@ const server = createServer((req, res) => {
 server.listen(PORT, () => {
   console.log(`[Captacion Server] Puerto ${PORT} — listo en la vps`);
   if (!CRON_SECRET) console.warn('[Captacion Server] ADVERTENCIA: CRON_SECRET no configurado');
+  // Auto-start scheduler for daily 7:00 AM send
+  startScheduler(() => spawnProc('send', ['send-todo', '--fast']));
+  console.log('[Captacion Server] Scheduler automático 7:00 AM iniciado');
 });
 
 // Graceful shutdown — libera el puerto antes de que PM2 arranque la nueva instancia

@@ -36,6 +36,60 @@ export function leadExists(db, { email, domain }) {
   return null;
 }
 
+// ─── BLACKLIST ─────────────────────────────────────────────────────────────────
+
+export function isBlacklisted(db, email, domain = null) {
+  if (email) {
+    const cleanEmail = email.toLowerCase().trim();
+    const byEmail = db.prepare(`SELECT 1 FROM blacklist_emails WHERE email = ?`).get(cleanEmail);
+    if (byEmail) return { reason: 'email_blacklisted' };
+
+    // Comprobar dominio del email
+    const emailDomain = cleanEmail.split('@')[1];
+    if (emailDomain) {
+      const byEmailDomain = db.prepare(`SELECT 1 FROM blacklist_domains WHERE domain = ?`).get(emailDomain);
+      if (byEmailDomain) return { reason: 'domain_blacklisted' };
+    }
+  }
+
+  if (domain) {
+    const cleanDomain = domain.toLowerCase().replace(/^www\./, '').trim();
+    const byDomain = db.prepare(`SELECT 1 FROM blacklist_domains WHERE domain = ?`).get(cleanDomain);
+    if (byDomain) return { reason: 'domain_blacklisted' };
+  }
+
+  return null;
+}
+
+export function addToBlacklistEmail(db, email, reason = '') {
+  const now = new Date().toISOString();
+  db.prepare(`INSERT OR REPLACE INTO blacklist_emails (email, reason, created_at) VALUES (?, ?, ?)`)
+    .run(email.toLowerCase().trim(), reason || null, now);
+}
+
+export function addToBlacklistDomain(db, domain, reason = '') {
+  const now = new Date().toISOString();
+  const clean = domain.toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0].trim();
+  db.prepare(`INSERT OR REPLACE INTO blacklist_domains (domain, reason, created_at) VALUES (?, ?, ?)`)
+    .run(clean, reason || null, now);
+}
+
+export function removeFromBlacklistEmail(db, email) {
+  return db.prepare(`DELETE FROM blacklist_emails WHERE email = ?`)
+    .run(email.toLowerCase().trim()).changes;
+}
+
+export function removeFromBlacklistDomain(db, domain) {
+  const clean = domain.toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0].trim();
+  return db.prepare(`DELETE FROM blacklist_domains WHERE domain = ?`).run(clean).changes;
+}
+
+export function getBlacklist(db) {
+  const emails = db.prepare(`SELECT email, reason, created_at FROM blacklist_emails ORDER BY created_at DESC`).all();
+  const domains = db.prepare(`SELECT domain, reason, created_at FROM blacklist_domains ORDER BY created_at DESC`).all();
+  return { emails, domains };
+}
+
 export function insertLead(db, lead) {
   const now = new Date().toISOString();
   const id = uuidv4();
@@ -43,8 +97,9 @@ export function insertLead(db, lead) {
     INSERT INTO leads (
       id, name, email, website, domain, city, category, description,
       type, sector, personalization, opening_line, status, created_at, updated_at,
-      source_file, template_key, ab_variant
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      source_file, template_key, ab_variant,
+      contact_name, contact_title, nif, source
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     id,
     lead.name || null,
@@ -62,7 +117,11 @@ export function insertLead(db, lead) {
     now, now,
     lead.sourceFile || null,
     lead.templateKey || null,
-    lead.abVariant || 0
+    lead.abVariant || 0,
+    lead.contact_name || null,
+    lead.contact_title || null,
+    lead.nif || null,
+    lead.source || null
   );
   return id;
 }
@@ -268,4 +327,15 @@ export function getLeadMessageId(db, leadId) {
 
 export function getLead(db, leadId) {
   return db.prepare(`SELECT * FROM leads WHERE id = ?`).get(leadId) || null;
+}
+
+export function findLeadByMessageId(db, messageId) {
+  if (!messageId) return null;
+  const clean = messageId.replace(/[<>]/g, '').trim();
+  return db.prepare(
+    `SELECT s.lead_id, l.email FROM sends s
+     JOIN leads l ON l.id = s.lead_id
+     WHERE s.message_id = ? OR s.message_id = ?
+     LIMIT 1`
+  ).get(clean, `<${clean}>`) || null;
 }

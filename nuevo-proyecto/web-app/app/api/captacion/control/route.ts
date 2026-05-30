@@ -31,6 +31,7 @@ export async function GET(req: NextRequest) {
     let endpoint = "/status"
     if (action === "logs")   endpoint = `/logs?since=${since}`
     if (action === "config") endpoint = "/config"
+    if (action === "scheduler") endpoint = "/scheduler"
 
     const r = await fetch(vpsUrl(endpoint), {
       headers: vpsHeaders(),
@@ -74,6 +75,9 @@ export async function POST(req: NextRequest) {
     "send-todo":               "/trigger/send-todo",
     "scrape-todo-send":        "/trigger/scrape-todo-send",
     "parallel-todo":           "/trigger/parallel-todo",
+    "scheduler-start":         "/trigger/scheduler-start",
+    "scheduler-stop":          "/trigger/scheduler-stop",
+    "send-todo-now":           "/trigger/send-todo-now",
   }
 
   const endpoint = actionMap[action]

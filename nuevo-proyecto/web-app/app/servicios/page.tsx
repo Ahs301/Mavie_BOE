@@ -1,10 +1,30 @@
 import Link from "next/link";
 import { ShieldCheck, Workflow, Database, LineChart, ArrowRight, Server, Code2, Zap } from "lucide-react";
 import type { Metadata } from "next";
+import { SITE_URL } from "@/lib/seo";
 
 export const metadata: Metadata = {
-  title: "Ecosistema y Precios | Mavie Automations",
-  description: "Desarrollo de CRMs a medida, pipelines de scraping y motores de automatización B2B. Conoce nuestra metodología de Setup + Mantenimiento.",
+  title: "Servicios de Automatización B2B — Scraping, CRM y Outreach | Mavie Automations",
+  description: "Desarrollamos ecosistemas operativos a medida: scraping ETL, CRMs privados, outreach engines y automatización de procesos con n8n y APIs. Setup desde 1.200€ + mantenimiento mensual.",
+  keywords: [
+    "automatización B2B a medida", "scraping empresarial", "CRM a medida",
+    "outreach automatizado", "n8n automatización", "ETL datos empresariales",
+    "desarrollo CRM Next.js", "automatización procesos Valencia",
+  ],
+  alternates: {
+    canonical: `${SITE_URL}/servicios`,
+  },
+  openGraph: {
+    title: "Servicios B2B — Scraping, CRM y Automatización | Mavie Automations",
+    description: "Ecosistemas operativos a medida: scraping ETL, CRMs privados, outreach engines y automatización de procesos. Sin licencias SaaS, sin inflación de nóminas.",
+    type: "website",
+    url: `${SITE_URL}/servicios`,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Servicios B2B | Mavie Automations",
+    description: "Scraping ETL, CRM a medida y automatización de procesos para empresas B2B.",
+  },
 };
 
 export default function ServicesPage() {
