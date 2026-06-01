@@ -40,7 +40,14 @@ export async function middleware(request: NextRequest) {
       },
     })
 
-    const { data: { user }, error } = await supabase.auth.getUser()
+    // Timeout de 4s — si Supabase no responde, redirige a login en vez de timeout 504
+    const authResult = await Promise.race([
+      supabase.auth.getUser(),
+      new Promise<{ data: { user: null }; error: Error }>((resolve) =>
+        setTimeout(() => resolve({ data: { user: null }, error: new Error('supabase_timeout') }), 4000)
+      ),
+    ])
+    const { data: { user }, error } = authResult
 
     if (isDashboard) {
       if (error || !user) {
